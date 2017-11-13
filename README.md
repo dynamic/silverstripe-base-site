@@ -4,6 +4,7 @@ Base page types for SilverStripe websites
 
 [![Build Status](https://travis-ci.com/dynamic/silverstripe-base-site.svg?token=hFT1sXd4nNmguE972zHN&branch=master)](https://travis-ci.com/dynamic/silverstripe-base-site)
 
+[![codecov](https://codecov.io/gh/dynamic/silverstripe-base-site/branch/master/graph/badge.svg?token=8qD1GBbxzV)](https://codecov.io/gh/dynamic/silverstripe-base-site)
 
 ## Requirements
 
