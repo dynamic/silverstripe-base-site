@@ -48,7 +48,7 @@
     "autoload": {
         "psr-4": {
             "Dynamic\\Base\\": "src/",
-            "Dynamic\\Base\\Tests\\": "tests/"
+            "Dynamic\\Base\\Test\\": "tests/"
         }
     },
     "minimum-stability": "dev",
