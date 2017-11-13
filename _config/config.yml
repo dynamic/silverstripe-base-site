@@ -1,0 +1,24 @@
+---
+Name: silverstripebasesiteconfig
+---
+SilverStripe\CMS\Model\SiteTree:
+  extensions:
+    - Dynamic\CoreTools\ORM\CoreToolsPageFieldsDataExtension
+Dynamic\Base\Page\HomePage:
+  extensions:
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+Dynamic\Base\Page\ElementPage:
+  extensions:
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+SilverStripe\UserForms\Model\EditableFormField:
+  extensions:
+    - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+SilverStripe\UserForms\Model\EditableCustomRule:
+  extensions:
+    - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+SilverStripe\Blog\Model\Blog:
+  extensions:
+    #- SilverStripe\Widgets\Extensions\WidgetPageExtension
+SilverStripe\Blog\Model\BlogPost:
+  extensions:
+    #- SilverStripe\Widgets\Extensions\WidgetPageExtension
