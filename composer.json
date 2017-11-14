@@ -13,6 +13,12 @@
     ],
     "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://dynamicinc:I68blegDd@toran.dynamicagency.com/repo/private/"
+        }
+    ],
     "require": {
         "silverstripe/recipe-cms": "^1.0",
         "silverstripe/blog": "^3.0",
@@ -42,7 +48,7 @@
     "autoload": {
         "psr-4": {
             "Dynamic\\Base\\": "src/",
-            "Dynamic\\Base\\Tests\\": "tests/"
+            "Dynamic\\Base\\Test\\": "tests/"
         }
     },
     "minimum-stability": "dev",
