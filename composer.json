@@ -26,6 +26,7 @@
         "silverstripe/googlesitemaps": "^1.8",
         "silverstripe/securityreport": "dev-master",
         "silverstripe/userforms": "^5.0",
+        "silverstripe/vendor-plugin": "^1.0",
         "silverstripe/widgets": "^2.0",
         "dynamic/core-tools": "^3.0@dev",
         "dynamic/dynamic-elements": "^2.0@dev",
