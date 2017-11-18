@@ -92,6 +92,7 @@ class HomePageTest extends SapphireTest
     /**
      *
      */
+    /*
     public function testProvidePermissions()
     {
         $object = $this->objFromFixture(HomePage::class, 'default');
@@ -100,4 +101,5 @@ class HomePageTest extends SapphireTest
         );
         $this->assertEquals($expected, $object->providePermissions());
     }
+    */
 }
