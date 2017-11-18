@@ -2,23 +2,32 @@
 
 namespace Dynamic\Base\Test;
 
-use Dynamic\Base\Page\ContactPage;
+use Dynamic\Base\Page\ElementPage;
+use Dynamic\Base\Page\HomePage;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Member;
 
-class ContactPageTest extends SapphireTest
+class ElementPageTest extends SapphireTest
 {
     /**
      * @var string
      */
     protected static $fixture_file = 'fixtures.yml';
 
+    public function testGetCMSFields()
+    {
+        $object = $this->objFromFixture(ElementPage::class, 'default');
+        $fields = $object->getCMSFields();
+        $this->assertInstanceOf(FieldList::class, $fields);
+    }
+
     /**
      *
      */
     public function testCanView()
     {
-        $object = $this->objFromFixture(ContactPage::class, 'default');
+        $object = $this->objFromFixture(ElementPage::class, 'default');
 
         $admin = $this->objFromFixture(Member::class, 'admin');
         $this->assertTrue($object->canView($admin));
@@ -35,7 +44,7 @@ class ContactPageTest extends SapphireTest
      */
     public function testCanEdit()
     {
-        $object = $this->objFromFixture(ContactPage::class, 'default');
+        $object = $this->objFromFixture(ElementPage::class, 'default');
 
         $admin = $this->objFromFixture(Member::class, 'admin');
         $this->assertTrue($object->canEdit($admin));
@@ -52,7 +61,7 @@ class ContactPageTest extends SapphireTest
      */
     public function testCanDelete()
     {
-        $object = $this->objFromFixture(ContactPage::class, 'default');
+        $object = $this->objFromFixture(ElementPage::class, 'default');
 
         $admin = $this->objFromFixture(Member::class, 'admin');
         $this->assertTrue($object->canDelete($admin));
@@ -69,7 +78,7 @@ class ContactPageTest extends SapphireTest
      */
     public function testCanCreate()
     {
-        $object = $this->objFromFixture(ContactPage::class, 'default');
+        $object = $this->objFromFixture(ElementPage::class, 'default');
 
         $admin = $this->objFromFixture(Member::class, 'admin');
         $this->assertTrue($object->canCreate($admin));
@@ -87,9 +96,9 @@ class ContactPageTest extends SapphireTest
     /*
     public function testProvidePermissions()
     {
-        $object = $this->objFromFixture(ContactPage::class, 'default');
+        $object = $this->objFromFixture(ElementPage::class, 'default');
         $expected = array(
-            'Contact_CRUD' => 'Create, Update and Delete a Contact Page',
+            'HomePage_CRUD' => 'Create, Update and Delete a Contact Page',
         );
         $this->assertEquals($expected, $object->providePermissions());
     }

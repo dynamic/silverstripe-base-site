@@ -20,6 +20,10 @@ SilverStripe\Security\Permission:
     Code: SearchPage_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
+  element:
+    Code: Element_CRUD
+    Type: 1
+    Group: =>SilverStripe\Security\Group.site-owners
   social:
     Code: Social_CRUD
     Type: 1

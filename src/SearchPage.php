@@ -74,8 +74,22 @@ class SearchPage extends \Page implements PermissionProvider
      */
     public function providePermissions()
     {
-        return array(
-            'SearchPage_CRUD' => 'Create, Update and Delete a Search Page',
-        );
+        return [
+            'SearchPage_CRUD' => [
+                'name' => _t(
+                    'BASE_SITE.SEARCHPAGE_CRUD',
+                    'Manage search pages'
+                ),
+                'category' => _t(
+                    'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
+                    'Base Website Permissions'
+                ),
+                'help' => _t(
+                    'SearchPage.CREATE_PERMISSION_SEARCHPAGE_PERMISSION',
+                    'Ability to add, edit and create search pages'
+                ),
+                'sort' => 400,
+            ]
+        ];
     }
 }

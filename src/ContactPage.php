@@ -65,8 +65,22 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
      */
     public function providePermissions()
     {
-        return array(
-            'Contact_CRUD' => 'Create, Update and Delete a Contact Page',
-        );
+        return [
+            'Contact_CRUD' => [
+                'name' => _t(
+                    'BASE_SITE.CONTACTPAGE_CRUD',
+                    'Manage Contact Pages'
+                ),
+                'category' => _t(
+                    'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
+                    'Base Website Permissions'
+                ),
+                'help' => _t(
+                    'Contactpage.CREATE_PERMISSION_CONTACTPAGE_PERMISSION',
+                    'Ability to add, edit and delete contact pages'
+                ),
+                'sort' => 400,
+            ]
+        ];
     }
 }

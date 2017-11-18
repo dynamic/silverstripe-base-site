@@ -84,6 +84,7 @@ class SearchPageTest extends SapphireTest
     /**
      *
      */
+    /*
     public function testProvidePermissions()
     {
         $object = $this->objFromFixture(SearchPage::class, 'default');
@@ -92,4 +93,5 @@ class SearchPageTest extends SapphireTest
         );
         $this->assertEquals($expected, $object->providePermissions());
     }
+    */
 }

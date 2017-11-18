@@ -75,8 +75,22 @@ class HomePage extends \Page implements PermissionProvider
      */
     public function providePermissions()
     {
-        return array(
-            'HomePage_CRUD' => 'Create, Update and Delete a Contact Page',
-        );
+        return [
+            'HomePage_CRUD' => [
+                'name' => _t(
+                    'BASE_SITE.HOMEPAGE_CRUD',
+                    'Manage Home Page'
+                ),
+                'category' => _t(
+                    'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
+                    'Base Website Permissions'
+                ),
+                'help' => _t(
+                    'Homepage.CREATE_PERMISSION_HOMEPAGE_PERMISSION',
+                    'Ability to add, edit and delete home pages'
+                ),
+                'sort' => 400,
+            ]
+        ];
     }
 }
