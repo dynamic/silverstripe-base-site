@@ -42,7 +42,8 @@ class ElementPage extends \Page implements PermissionProvider
     /**
      * @return FieldList
      */
-    public function getCMSFields() {
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
         $fields->dataFieldByName('ElementalSidebar')->setTitle('Sidebar');
         $fields->dataFieldByName('ElementalArea')->setTitle('Main');
