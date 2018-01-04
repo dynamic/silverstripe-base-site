@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\Page;
 
+use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\UserForms\Model\UserDefinedForm;
@@ -22,6 +23,11 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
      * @var string
      */
     private static $description = 'Create a contact form. Includes company contact information and map';
+
+    /**
+     * @var string
+     */
+    private static $table_name = 'ContactPage';
 
     /**
      * @param null|Member $member

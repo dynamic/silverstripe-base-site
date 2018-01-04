@@ -40,6 +40,11 @@ class ElementPage extends \Page implements PermissionProvider
     ];
 
     /**
+     * @var string
+     */
+    private static $table_name = 'ElementPage';
+
+    /**
      * @return FieldList
      */
     public function getCMSFields()

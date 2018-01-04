@@ -3,6 +3,7 @@
 namespace Dynamic\Base\Page;
 
 use DNADesign\Elemental\Models\ElementalArea;
+use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
@@ -29,6 +30,11 @@ class HomePage extends \Page implements PermissionProvider
     private static $defaults = array(
         'ShowInMenus' => 0
     );
+
+    /**
+     * @var string
+     */
+    private static $table_name = 'HomePage';
 
     /**
      * @param null|Member $member
