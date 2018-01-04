@@ -30,6 +30,11 @@ class SearchPage extends \Page implements PermissionProvider
     );
 
     /**
+     * @var string
+     */
+    private static $table_name = 'SearchPage';
+
+    /**
      * @param null $member
      * @return bool
      */

@@ -39,6 +39,11 @@ class ElementPage extends \Page implements PermissionProvider
     ];
 
     /**
+     * @var string
+     */
+    private static $table_name = 'ElementPage';
+
+    /**
      * @param null|Member $member
      *
      * @return bool
