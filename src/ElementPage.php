@@ -6,6 +6,7 @@ use DNADesign\Elemental\Models\ElementalArea;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Forms\FieldList;
 
 class ElementPage extends \Page implements PermissionProvider
 {
@@ -42,6 +43,17 @@ class ElementPage extends \Page implements PermissionProvider
      * @var string
      */
     private static $table_name = 'ElementPage';
+
+    /**
+     * @return FieldList
+     */
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+        $fields->dataFieldByName('ElementalSidebar')->setTitle('Sidebar');
+        $fields->dataFieldByName('ElementalArea')->setTitle('Main');
+        return $fields;
+    }
 
     /**
      * @param null|Member $member
