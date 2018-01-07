@@ -69,3 +69,13 @@ Dynamic\Base\Page\SearchPage:
 Dynamic\Base\Page\ElementPage:
   default:
     Title: "Elements"
+SilverStripe\Blog\Model\Blog:
+  default:
+    Title: "Blog"
+SilverStripe\Blog\Model\BlogPost:
+  one:
+    Title: "Blog Post One"
+    ParentID: =>SilverStripe\Blog\Model\Blog.default
+  two:
+    Title: "Blog Post Two"
+    ParentID: =>SilverStripe\Blog\Model\Blog.default
