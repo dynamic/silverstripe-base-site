@@ -36,6 +36,7 @@ class SearchPage extends \Page implements PermissionProvider
 
     /**
      * @param null $member
+     *
      * @return bool
      */
     public function canView($member = null, $context = [])
@@ -45,6 +46,7 @@ class SearchPage extends \Page implements PermissionProvider
 
     /**
      * @param null $member
+     *
      * @return bool|int
      */
     public function canEdit($member = null, $context = [])
@@ -54,6 +56,7 @@ class SearchPage extends \Page implements PermissionProvider
 
     /**
      * @param null $member
+     *
      * @return bool|int
      */
     public function canDelete($member = null, $context = [])
@@ -63,6 +66,7 @@ class SearchPage extends \Page implements PermissionProvider
 
     /**
      * @param null $member
+     *
      * @return bool|int
      */
     public function canCreate($member = null, $context = [])
@@ -94,7 +98,7 @@ class SearchPage extends \Page implements PermissionProvider
                     'Ability to add, edit and create search pages'
                 ),
                 'sort' => 400,
-            ]
+            ],
         ];
     }
 }

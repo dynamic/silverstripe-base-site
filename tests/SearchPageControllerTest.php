@@ -8,11 +8,10 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 
 /**
- * Class SearchPageControllerTest
+ * Class SearchPageControllerTest.
  */
 class SearchPageControllerTest extends FunctionalTest
 {
-
     /**
      * @var bool
      */
@@ -24,7 +23,7 @@ class SearchPageControllerTest extends FunctionalTest
     protected static $use_draft_site = true;
 
     /**
-     * Tests SearchForm()
+     * Tests SearchForm().
      */
     public function testSearchForm()
     {

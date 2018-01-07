@@ -81,7 +81,7 @@ class SearchPageTest extends SapphireTest
         $this->assertFalse($object->canCreate($member));
     }
 
-    /**
+    /*
      *
      */
     /*

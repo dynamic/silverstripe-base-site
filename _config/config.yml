@@ -36,4 +36,4 @@ SilverStripe\UserForms\Model\EditableCustomRule:
 SilverStripe\Blog\Model\BlogPost:
   extensions:
     - Dynamic\CoreTools\ORM\PreviewExtension
-    - Dynamic\CoreTools\ORM\CoreToolsBlogPostDataExtension
+    - Dynamic\Base\ORM\BlogPostDataExtension

@@ -36,7 +36,7 @@ class ElementPage extends \Page implements PermissionProvider
      * @var array
      */
     private static $owns = [
-        'ElementalSidebar'
+        'ElementalSidebar',
     ];
 
     /**
@@ -72,6 +72,7 @@ class ElementPage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canEdit($member = null, $context = [])
@@ -81,6 +82,7 @@ class ElementPage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canDelete($member = null, $context = [])
@@ -90,6 +92,7 @@ class ElementPage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canCreate($member = null, $context = [])
@@ -117,7 +120,7 @@ class ElementPage extends \Page implements PermissionProvider
                     'Ability to add, edit and delete content block pages'
                 ),
                 'sort' => 400,
-            ]
+            ],
         ];
     }
 }

@@ -6,5 +6,4 @@ use SilverStripe\UserForms\Control\UserDefinedFormController;
 
 class ContactPageController extends UserDefinedFormController
 {
-
 }

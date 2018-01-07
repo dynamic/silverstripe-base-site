@@ -3,7 +3,6 @@
 namespace Dynamic\Base\Test;
 
 use Dynamic\Base\Page\ElementPage;
-use Dynamic\Base\Page\HomePage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Member;
@@ -90,7 +89,7 @@ class ElementPageTest extends SapphireTest
         $this->assertFalse($object->canCreate($member));
     }
 
-    /**
+    /*
      *
      */
     /*

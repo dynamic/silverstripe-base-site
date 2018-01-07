@@ -12,12 +12,12 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
     /**
      * @var string
      */
-    private static $singular_name = "Contact Page";
+    private static $singular_name = 'Contact Page';
 
     /**
      * @var string
      */
-    private static $plural_name = "Contact Pages";
+    private static $plural_name = 'Contact Pages';
 
     /**
      * @var string
@@ -38,9 +38,10 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
     {
         return true;
     }
-    
+
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canEdit($member = null, $context = [])
@@ -50,6 +51,7 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canDelete($member = null, $context = [])
@@ -59,6 +61,7 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canCreate($member = null, $context = [])
@@ -86,7 +89,7 @@ class ContactPage extends UserDefinedForm implements PermissionProvider
                     'Ability to add, edit and delete contact pages'
                 ),
                 'sort' => 400,
-            ]
+            ],
         ];
     }
 }
