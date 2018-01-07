@@ -50,8 +50,13 @@ class ElementPage extends \Page implements PermissionProvider
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        $fields->dataFieldByName('ElementalSidebar')->setTitle('Sidebar');
-        $fields->dataFieldByName('ElementalArea')->setTitle('Main');
+
+        $sidebar = $fields->dataFieldByName('ElementalSidebar')->setTitle('Sidebar');
+        $fields->removeByName('ElementalSidebar');
+        $fields->addFieldToTab('Root.Sidebar', $sidebar);
+
+        $fields->dataFieldByName('ElementalArea')->setTitle('Main Content');
+
         return $fields;
     }
 
