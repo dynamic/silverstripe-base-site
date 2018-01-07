@@ -33,3 +33,7 @@ SilverStripe\UserForms\Model\EditableFormField:
 SilverStripe\UserForms\Model\EditableCustomRule:
   extensions:
     - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+SilverStripe\Blog\Model\BlogPost:
+  extensions:
+    - Dynamic\CoreTools\ORM\PreviewExtension
+    - Dynamic\CoreTools\ORM\CoreToolsBlogPostDataExtension
