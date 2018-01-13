@@ -40,7 +40,7 @@ class BlogPostDataExtension extends DataExtension
             ->exclude('ID', $this->owner->ID)
         ;
 
-        if ($this->owner->Tags()) {
+        if ($this->owner->Tags()->count() > 0) {
             $posts->filterAny(array(
                 'Tags.ID' => $this->owner->Tags()->map('ID', 'ID')->toArray(),
             ));
