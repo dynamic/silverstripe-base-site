@@ -33,6 +33,6 @@ class BlogPostDataExtensionTest extends SapphireTest
     {
         $object = $this->objFromFixture(BlogPost::class, 'one');
         $expected = $this->objFromFixture(BlogPost::class, 'two');
-        $this->assertEquals($object->getRelatedArticles()->first(), $expected);
+        $this->assertEquals($object->getRelatedPosts()->first(), $expected);
     }
 }
