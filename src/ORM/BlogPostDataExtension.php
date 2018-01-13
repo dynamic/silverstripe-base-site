@@ -37,11 +37,14 @@ class BlogPostDataExtension extends DataExtension
             ->filter(array(
                 'ParentID' => $this->owner->ParentID,
             ))
-            ->filterAny(array(
-                'Tags.ID' => $this->owner->Tags()->map('ID', 'ID')->toArray(),
-            ))
             ->exclude('ID', $this->owner->ID)
         ;
+
+        if ($this->owner->Tags()) {
+            $posts->filterAny(array(
+                'Tags.ID' => $this->owner->Tags()->map('ID', 'ID')->toArray(),
+            ));
+        }
 
         return $posts;
     }
