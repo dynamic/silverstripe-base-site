@@ -37,6 +37,7 @@
         "dnadesign/silverstripe-elemental": "^2@dev",
         "dnadesign/silverstripe-elemental-userforms": "^1.0@dev",
         "dnadesign/silverstripe-elemental-virtual": "^1.0@dev",
+        "dnadesign/silverstripe-elemental-list": "^1.0@dev",
         "axllent/silverstripe-email-obfuscator": "^2.0@dev",
         "axllent/silverstripe-version-truncator": "^2.0@dev",
         "axllent/silverstripe-scaled-uploads": "^2.1@dev",
