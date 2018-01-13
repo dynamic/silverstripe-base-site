@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\CoreTools\Tests;
+namespace Dynamic\Base\Test;
 
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Core\Injector\Injector;
@@ -13,7 +13,7 @@ class BlogPostDataExtensionTest extends SapphireTest
      * @var array
      */
     protected static $fixture_file = array(
-        '../Fixtures.yml',
+        '../fixtures.yml',
     );
 
     /**
