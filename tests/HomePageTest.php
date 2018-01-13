@@ -89,7 +89,7 @@ class HomePageTest extends SapphireTest
         $this->assertFalse($object->canCreate($member));
     }
 
-    /**
+    /*
      *
      */
     /*

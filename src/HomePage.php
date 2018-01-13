@@ -2,7 +2,6 @@
 
 namespace Dynamic\Base\Page;
 
-use DNADesign\Elemental\Models\ElementalArea;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -28,7 +27,7 @@ class HomePage extends \Page implements PermissionProvider
      * @var array
      */
     private static $defaults = array(
-        'ShowInMenus' => 0
+        'ShowInMenus' => 0,
     );
 
     /**
@@ -48,6 +47,7 @@ class HomePage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canEdit($member = null, $context = [])
@@ -57,6 +57,7 @@ class HomePage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canDelete($member = null, $context = [])
@@ -66,13 +67,15 @@ class HomePage extends \Page implements PermissionProvider
 
     /**
      * @param null|Member $member
+     *
      * @return bool|int
      */
     public function canCreate($member = null, $context = [])
     {
-        if (!HomePage::get()->first()) {
+        if (!self::get()->first()) {
             return Permission::check('HomePage_CRUD', 'any', $member);
         }
+
         return false;
     }
 
@@ -96,7 +99,7 @@ class HomePage extends \Page implements PermissionProvider
                     'Ability to add, edit and delete home pages'
                 ),
                 'sort' => 400,
-            ]
+            ],
         ];
     }
 }
