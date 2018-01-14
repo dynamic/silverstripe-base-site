@@ -9,7 +9,7 @@ SilverStripe\CMS\Model\SiteTree:
     - Dynamic\CoreTools\ORM\CoreToolsPageFieldsDataExtension
 Dynamic\Base\Page\HomePage:
   extensions:
-    - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - DNADesign\Elemental\Extensions\ElementalAreasExtension
 Dynamic\Base\Page\ElementPage:
   extensions:
     - DNADesign\Elemental\Extensions\ElementalPageExtension
