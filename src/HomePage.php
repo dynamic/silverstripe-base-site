@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\Page;
 
+use DNADesign\Elemental\Models\ElementalArea;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -26,6 +27,20 @@ class HomePage extends \Page implements PermissionProvider
     /**
      * @var array
      */
+    private static $has_one = [
+        'ElementalHomePage' => ElementalArea::class,
+    ];
+
+    /**
+     * @var array
+     */
+    private static $owns = [
+        'ElementalHomePage',
+    ];
+
+    /**
+     * @var array
+     */
     private static $defaults = array(
         'ShowInMenus' => 0,
     );
@@ -34,6 +49,18 @@ class HomePage extends \Page implements PermissionProvider
      * @var string
      */
     private static $table_name = 'HomePage';
+
+    /**
+     * @return \SilverStripe\Forms\FieldList
+     */
+    public function getCMSFields()
+    {
+        $fields = parent::getCMSFields();
+
+        $fields->dataFieldByName('ElementalHomePage')->setTitle('Content');
+
+        return $fields;
+    }
 
     /**
      * @param null|Member $member
