@@ -26,6 +26,8 @@ class BlogPostDataExtension extends DataExtension
             ->setFolderName('Uploads/Blog')
         ;
         $fields->insertBefore($featured, 'Content');
+
+        $fields->dataFieldByName('ElementalArea')->setTitle('Content');
     }
 
     /**
