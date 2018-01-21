@@ -26,20 +26,6 @@ class ElementPage extends \Page implements PermissionProvider
     private static $description = 'Flexible page layout via content blocks';
 
     /**
-     * @var array
-     */
-    private static $has_one = [
-        'ElementalSidebar' => ElementalArea::class,
-    ];
-
-    /**
-     * @var array
-     */
-    private static $owns = [
-        'ElementalSidebar',
-    ];
-
-    /**
      * @var string
      */
     private static $table_name = 'ElementPage';
@@ -51,9 +37,7 @@ class ElementPage extends \Page implements PermissionProvider
     {
         $fields = parent::getCMSFields();
 
-        $sidebar = $fields->dataFieldByName('ElementalSidebar')->setTitle('Sidebar');
-        $fields->removeByName('ElementalSidebar');
-        $fields->addFieldToTab('Root.Sidebar', $sidebar);
+
 
         $fields->dataFieldByName('ElementalArea')->setTitle('Main Content');
 
