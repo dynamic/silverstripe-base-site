@@ -27,7 +27,10 @@ class BlogPostDataExtension extends DataExtension
         ;
         $fields->insertBefore($featured, 'Content');
 
-        $fields->dataFieldByName('ElementalArea')->setTitle('Content');
+        $content = $fields->dataFieldByName('ElementalArea');
+        if ($content) {
+            $content->setTitle('Content');
+        }
     }
 
     /**
