@@ -4,15 +4,13 @@ Name: silverstripebasesiteconfig
 SilverStripe\Admin\LeftAndMain:
   application_name: 'Dynamic'
   application_link: 'http://www.dynamicagency.com'
+
 SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Dynamic\CoreTools\ORM\CoreToolsPageFieldsDataExtension
-Dynamic\Base\Page\HomePage:
-  extensions:
-    - DNADesign\Elemental\Extensions\ElementalAreasExtension
-Dynamic\Base\Page\ElementPage:
-  extensions:
     - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - Dynamic\Base\ORM\ElementalSiteTreeDataExtension
+
 Dynamic\CoreTools\Model\GlobalSiteSetting:
   extensions:
     - Dynamic\CoreTools\ORM\GoogleAnalyticsConfig
@@ -21,18 +19,23 @@ Dynamic\CoreTools\Model\GlobalSiteSetting:
     - Dynamic\CoreTools\ORM\TemplateConfig
     - Dynamic\CoreTools\ORM\UtilityNavigationManager
     - Dynamic\CoreTools\ORM\FooterNavigationManager
+
 Dynamic\CoreTools\Model\ContentObject:
   extensions:
     - Dynamic\CoreTools\ORM\Linkable
+
 SilverStripe\ORM\DataList:
   extensions:
     - Dynamic\CoreTools\ORM\CoreToolsDataListDataExtension
+
 SilverStripe\UserForms\Model\EditableFormField:
   extensions:
     - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+
 SilverStripe\UserForms\Model\EditableCustomRule:
   extensions:
     - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+
 SilverStripe\Blog\Model\BlogPost:
   extensions:
     - Dynamic\CoreTools\ORM\PreviewExtension

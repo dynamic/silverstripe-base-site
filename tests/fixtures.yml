@@ -8,20 +8,12 @@ SilverStripe\Security\Permission:
     Code: ADMIN
     Type: 1
     Group: =>SilverStripe\Security\Group.administrators
-  contact:
-    Code: Contact_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
   home:
     Code: HomePage_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
   search:
     Code: SearchPage_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
-  element:
-    Code: Element_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
   social:
@@ -56,19 +48,11 @@ Dynamic\Base\Page\HomePage:
     URLSegment: "home"
     ParentID: 0
     Sort: 1
-Dynamic\Base\Page\ContactPage:
-  default:
-    Title: "Contact Us"
-    ParentID: 0
-    Sort: 5
 Dynamic\Base\Page\SearchPage:
   default:
     Title: "Search"
     ParentID: 0
     Sort: 7
-Dynamic\Base\Page\ElementPage:
-  default:
-    Title: "Elements"
 SilverStripe\Blog\Model\Blog:
   default:
     Title: "Blog"
