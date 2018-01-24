@@ -57,6 +57,11 @@ class HomePage extends \Page implements PermissionProvider
     {
         $fields = parent::getCMSFields();
 
+        $fields->removeByName([
+            'ElementalArea',
+            'Sidebar',
+        ]);
+
         $fields->dataFieldByName('ElementalHomePage')->setTitle('Content');
 
         return $fields;
