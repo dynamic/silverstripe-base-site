@@ -40,3 +40,16 @@ SilverStripe\Blog\Model\BlogPost:
   extensions:
     - Dynamic\CoreTools\ORM\PreviewExtension
     - Dynamic\Base\ORM\BlogPostDataExtension
+
+DNADesign\Elemental\Models\BaseElement:
+  extensions:
+    - Dynamic\Elements\ORM\ElementPermissions
+    - Dynamic\Elements\ORM\ElementalPermissions
+
+DNADesign\Elemental\Models\ElementalArea:
+  extensions:
+    - Dynamic\Elements\ORM\ElementalPermissions
+
+Dynamic\Elements\Model\BaseElementObject:
+  extensions:
+    - Dynamic\Elements\ORM\ElementalPermissions
