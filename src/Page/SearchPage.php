@@ -95,7 +95,7 @@ class SearchPage extends \Page implements PermissionProvider
                 ),
                 'help' => _t(
                     'SearchPage.CREATE_PERMISSION_SEARCHPAGE_PERMISSION',
-                    'Ability to add, edit and create search pages'
+                    'Ability to add, edit and create Search pages'
                 ),
                 'sort' => 400,
             ],
