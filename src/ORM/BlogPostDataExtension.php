@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\ORM;
 
+use DNADesign\Elemental\Models\ElementContent;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
@@ -47,5 +48,18 @@ class BlogPostDataExtension extends DataExtension
         }
 
         return $posts;
+    }
+
+    /**
+     * Returns the content of the first content element block
+     *
+     * @return HTMLText
+     */
+    public function getContent()
+    {
+        return $this->owner->ElementalArea()
+            ->Elements()->filter(array(
+                'ClassName' => ElementContent::class
+            ))->first()->HTML;
     }
 }
