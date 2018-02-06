@@ -44,7 +44,6 @@ class BlogPostDataExtensionTest extends SapphireTest
     public function testGetContent()
     {
         $expected = "Test";
-
         /** @var BlogPost $post */
         $post = $this->objFromFixture(BlogPost::class, 'one');
         $this->assertEquals('', $post->getContent());
@@ -60,6 +59,5 @@ class BlogPostDataExtensionTest extends SapphireTest
         $element->write();
 
         $this->assertEquals($expected, $post->getContent());
-
     }
 }
