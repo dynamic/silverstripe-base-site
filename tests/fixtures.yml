@@ -3,6 +3,7 @@ SilverStripe\Security\Group:
     Title: "Administrators"
   site-owners:
     Title: "Site Owners"
+
 SilverStripe\Security\Permission:
   administrators:
     Code: ADMIN
@@ -20,6 +21,7 @@ SilverStripe\Security\Permission:
     Code: Social_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
+
 SilverStripe\Security\Member:
   admin:
     FirstName: "Default"
@@ -38,9 +40,11 @@ SilverStripe\Security\Member:
     Surname: "Member"
     Email: "user"
     Password: "user"
+
 Page:
   about:
     Title: "About Us"
+
 Dynamic\Base\Page\HomePage:
   default:
     Title: "Welcome To My Website"
@@ -48,14 +52,17 @@ Dynamic\Base\Page\HomePage:
     URLSegment: "home"
     ParentID: 0
     Sort: 1
+
 Dynamic\Base\Page\SearchPage:
   default:
     Title: "Search"
     ParentID: 0
     Sort: 7
+
 SilverStripe\Blog\Model\Blog:
   default:
     Title: "Blog"
+
 SilverStripe\Blog\Model\BlogPost:
   one:
     Title: "Blog Post One"
