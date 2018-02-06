@@ -2,8 +2,10 @@
 
 namespace Dynamic\Base\Test;
 
+use DNADesign\Elemental\Models\ElementContent;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Manifest\ClassLoader;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 
@@ -12,7 +14,9 @@ class BlogPostDataExtensionTest extends SapphireTest
     /**
      * @var array
      */
-    protected static $fixture_file = '../fixtures.yml';
+    protected static $fixture_file = array(
+        '../fixtures.yml',
+    );
 
     /**
      *
@@ -40,14 +44,22 @@ class BlogPostDataExtensionTest extends SapphireTest
     public function testGetContent()
     {
         $expected = "Test";
+
         /** @var BlogPost $post */
         $post = $this->objFromFixture(BlogPost::class, 'one');
         $this->assertEquals('', $post->getContent());
 
-        $post->ElementalArea()
+        $post->ElementalArea()->Elements()->add(ElementContent::create());
+        $this->assertEquals('', $post->getContent());
+
+        $element = $post->ElementalArea()
             ->Elements()->filter(array(
                 'ClassName' => ElementContent::class
-            ))->first()->HTML = $expected;
+            ))->first();
+        $element->HTML = $expected;
+        $element->write();
+
         $this->assertEquals($expected, $post->getContent());
+
     }
 }

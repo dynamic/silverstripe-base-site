@@ -8,6 +8,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 
 class BlogPostDataExtension extends DataExtension
 {
@@ -57,9 +58,13 @@ class BlogPostDataExtension extends DataExtension
      */
     public function getContent()
     {
-        return $this->owner->ElementalArea()
+        $content = $this->owner->ElementalArea()
             ->Elements()->filter(array(
                 'ClassName' => ElementContent::class
-            ))->first()->HTML;
+            ))->first();
+        if ($content && $content->exists()) {
+            return $content->HTML;
+        }
+        return DBHTMLText::create();
     }
 }
