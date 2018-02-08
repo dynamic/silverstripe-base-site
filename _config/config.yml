@@ -19,6 +19,7 @@ Dynamic\CoreTools\Model\GlobalSiteSetting:
     - Dynamic\CoreTools\ORM\TemplateConfig
     - Dynamic\CoreTools\ORM\UtilityNavigationManager
     - Dynamic\CoreTools\ORM\FooterNavigationManager
+    - Dynamic\CoreTools\ORM\SocialConfig
 
 Dynamic\CoreTools\Model\ContentObject:
   extensions:
