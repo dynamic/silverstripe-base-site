@@ -35,7 +35,7 @@ class HomePageTest extends SapphireTest
         $this->assertTrue($object->canView($siteowner));
 
         $member = $this->objFromFixture(Member::class, 'default');
-        $this->assertTrue($object->canView($member));
+        $this->assertFalse($object->canView($member));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Dynamic\Base\Page;
 
 use DNADesign\Elemental\Models\ElementalArea;
+use DNADesign\Elemental\Models\ElementContent;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -74,7 +75,7 @@ class HomePage extends \Page implements PermissionProvider
      */
     public function canView($member = null, $context = [])
     {
-        return true;
+        return Permission::check('HomePage_CRUD', 'any', $member);
     }
 
     /**
@@ -133,5 +134,26 @@ class HomePage extends \Page implements PermissionProvider
                 'sort' => 400,
             ],
         ];
+    }
+
+    /**
+     * @throws \SilverStripe\ORM\ValidationException
+     */
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        if (!$this->owner->ID) {
+            if (!$this->owner->ElementalHomePageID) {
+                $area = ElementalArea::create();
+                $area->write();
+
+                $this->owner->ElementAreaID = $area->ID;
+            }
+            $content = ElementContent::create();
+            $content->Title = "Main Content";
+            $content->ParentID = $this->owner->ElementalHomePage()->ID;
+            $content->write();
+        }
     }
 }
