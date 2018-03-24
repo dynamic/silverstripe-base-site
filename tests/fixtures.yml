@@ -13,6 +13,10 @@ SilverStripe\Security\Permission:
     Code: HomePage_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
+  campaign:
+    Code: CamLan_CRUD
+    Type: 1
+    Group: =>SilverStripe\Security\Group.site-owners
   search:
     Code: SearchPage_CRUD
     Type: 1

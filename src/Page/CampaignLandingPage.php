@@ -2,8 +2,26 @@
 
 namespace Dynamic\Base\Page;
 
-class CampaignLandingPage extends \Page
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+
+class CampaignLandingPage extends \Page implements PermissionProvider
 {
+    /**
+     * @var string
+     */
+    private static $singular_name = 'Campaign Landing Page';
+
+    /**
+     * @var string
+     */
+    private static $plural_name = 'Campaign Landing Pages';
+
+    /**
+     * @var string
+     */
+    private static $description = 'Create a landing page for your marketing campaign';
+
     /**
      * @var array
      */
@@ -25,5 +43,69 @@ class CampaignLandingPage extends \Page
         ]);
 
         return $fields;
+    }
+
+    /**
+     * @param null|Member $member
+     *
+     * @return bool
+     */
+    public function canView($member = null, $context = [])
+    {
+        return Permission::check('CamLan_CRUD', 'any', $member);
+    }
+
+    /**
+     * @param null|Member $member
+     *
+     * @return bool|int
+     */
+    public function canEdit($member = null, $context = [])
+    {
+        return Permission::check('CamLan_CRUD', 'any', $member);
+    }
+
+    /**
+     * @param null|Member $member
+     *
+     * @return bool|int
+     */
+    public function canDelete($member = null, $context = [])
+    {
+        return Permission::check('CamLan_CRUD', 'any', $member);
+    }
+
+    /**
+     * @param null|Member $member
+     *
+     * @return bool|int
+     */
+    public function canCreate($member = null, $context = [])
+    {
+        return Permission::check('CamLan_CRUD', 'any', $member);
+    }
+
+    /**
+     * @return array
+     */
+    public function providePermissions()
+    {
+        return [
+            'CamLan_CRUD' => [
+                'name' => _t(
+                    'BASE_SITE.CAMLAN_CRUD',
+                    'Manage Campaign Landing Page'
+                ),
+                'category' => _t(
+                    'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
+                    'Base Website Permissions'
+                ),
+                'help' => _t(
+                    'CampaignLandingPage.CREATE_PERMISSION_TWOCOL_PERMISSION',
+                    'Ability to manage campaign landing pages in the CMS'
+                ),
+                'sort' => 400,
+            ],
+        ];
     }
 }
