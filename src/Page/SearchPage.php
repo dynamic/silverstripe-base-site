@@ -87,7 +87,7 @@ class SearchPage extends \Page implements PermissionProvider
             'SearchPage_CRUD' => [
                 'name' => _t(
                     'BASE_SITE.SEARCHPAGE_CRUD',
-                    'Manage search pages'
+                    'Manage Search Pages'
                 ),
                 'category' => _t(
                     'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
@@ -95,7 +95,7 @@ class SearchPage extends \Page implements PermissionProvider
                 ),
                 'help' => _t(
                     'SearchPage.CREATE_PERMISSION_SEARCHPAGE_PERMISSION',
-                    'Ability to add, edit and create Search pages'
+                    'Ability to manage search pages'
                 ),
                 'sort' => 400,
             ],

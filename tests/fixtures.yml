@@ -21,6 +21,10 @@ SilverStripe\Security\Permission:
     Code: Social_CRUD
     Type: 1
     Group: =>SilverStripe\Security\Group.site-owners
+  twocol:
+    Code: TwoCol_CRUD
+    Type: 1
+    Group: =>SilverStripe\Security\Group.site-owners
 
 SilverStripe\Security\Member:
   admin:
@@ -52,6 +56,10 @@ Dynamic\Base\Page\HomePage:
     URLSegment: "home"
     ParentID: 0
     Sort: 1
+
+Dynamic\Base\Page\TwoColumnPage:
+  default:
+    Title: 'Two Column Page'
 
 Dynamic\Base\Page\CampaignLandingPage:
   spring:

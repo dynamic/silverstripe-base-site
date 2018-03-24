@@ -129,7 +129,7 @@ class HomePage extends \Page implements PermissionProvider
                 ),
                 'help' => _t(
                     'Homepage.CREATE_PERMISSION_HOMEPAGE_PERMISSION',
-                    'Ability to add, edit and delete home pages'
+                    'Ability to manage home pages in the CMS'
                 ),
                 'sort' => 400,
             ],
