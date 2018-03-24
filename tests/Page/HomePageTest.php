@@ -92,17 +92,12 @@ class HomePageTest extends SapphireTest
         $this->assertFalse($object->canCreate($member));
     }
 
-    /*
+    /**
      *
      */
-    /*
     public function testProvidePermissions()
     {
         $object = $this->objFromFixture(HomePage::class, 'default');
-        $expected = array(
-            'HomePage_CRUD' => 'Create, Update and Delete a Contact Page',
-        );
-        $this->assertEquals($expected, $object->providePermissions());
+        $this->assertTrue(is_array(, $object->providePermissions()));
     }
-    */
 }
