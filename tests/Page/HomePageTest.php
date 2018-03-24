@@ -14,6 +14,9 @@ class HomePageTest extends SapphireTest
      */
     protected static $fixture_file = '../fixtures.yml';
 
+    /**
+     *
+     */
     public function testGetCMSFields()
     {
         $object = $this->objFromFixture(HomePage::class, 'default');
