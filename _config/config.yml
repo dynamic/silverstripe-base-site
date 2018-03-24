@@ -5,6 +5,10 @@ SilverStripe\Admin\LeftAndMain:
   application_name: 'Dynamic'
   application_link: 'http://www.dynamicagency.com'
 
+Dynamic\Base\Page\TwoColumnPage:
+  extensions:
+    - Dynamic\Base\ORM\SidebarManager
+
 SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Dynamic\CoreTools\ORM\CoreToolsPageFieldsDataExtension

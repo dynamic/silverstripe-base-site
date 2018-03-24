@@ -28,11 +28,8 @@ class ElementalSiteTreeDataExtension extends DataExtension
      */
     public function updateCMSFields(FieldList $fields)
     {
-        $sidebar = $fields->dataFieldByName('ElementalSidebar');
-        if ($sidebar) {
-            $sidebar->setTitle('Sidebar');
+        if (!$this->owner->hasExtension(SidebarManager::class)) {
             $fields->removeByName('ElementalSidebar');
-            $fields->addFieldToTab('Root.Sidebar', $sidebar);
         }
 
         $content = $fields->dataFieldByName('ElementalArea');
