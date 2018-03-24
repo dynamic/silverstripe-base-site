@@ -53,6 +53,10 @@ Dynamic\Base\Page\HomePage:
     ParentID: 0
     Sort: 1
 
+Dynamic\Base\Page\CampaignLandingPage:
+  spring:
+    Title: "Spring Campaign"
+
 Dynamic\Base\Page\SearchPage:
   default:
     Title: "Search"
