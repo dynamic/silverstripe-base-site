@@ -98,6 +98,6 @@ class HomePageTest extends SapphireTest
     public function testProvidePermissions()
     {
         $object = $this->objFromFixture(HomePage::class, 'default');
-        $this->assertTrue(is_array(, $object->providePermissions()));
+        $this->assertTrue(is_array($object->providePermissions()));
     }
 }
