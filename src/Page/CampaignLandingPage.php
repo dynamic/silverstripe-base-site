@@ -37,10 +37,12 @@ class CampaignLandingPage extends \Page implements PermissionProvider
     {
         $fields = parent::getCMSFields();
 
-        $fields->removeByName([
-            'Sidebar',
-            'ElementalSidebar',
-        ]);
+        $fields->removeByName(
+            [
+                'Sidebar',
+                'ElementalSidebar',
+            ]
+        );
 
         return $fields;
     }
@@ -52,7 +54,7 @@ class CampaignLandingPage extends \Page implements PermissionProvider
      */
     public function canView($member = null, $context = [])
     {
-        return Permission::check('CamLan_CRUD', 'any', $member);
+        return parent::canView($member);
     }
 
     /**
