@@ -22,6 +22,7 @@
         "dynamic/core-tools": "^3.0@dev",
         "dynamic/silverstripe-elemental-blocks": "^2.0@dev",
         "dynamic/silverstripe-elemental-blog": "^1.0@dev",
+        "dynamic/silverstripe-elemental-flexslider": "^1.0@dev",
         "jonom/silverstripe-betternavigator": "^4.0@dev",
         "silverstripe/blog": "^3.0@dev",
         "silverstripe/elemental-blocks": "^1.0@dev",
