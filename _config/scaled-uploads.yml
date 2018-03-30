@@ -1,3 +1,7 @@
+---
+Name: basesitescaleduploads
+---
+
 Axllent\ScaledUploads\ScaledUploads:
   max_width: 1400
-  max_height: 800
+  max_height: 1000
