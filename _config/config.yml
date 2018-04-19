@@ -41,3 +41,7 @@ SilverStripe\Blog\Model\BlogPost:
   extensions:
     - Dynamic\CoreTools\ORM\PreviewExtension
     - Dynamic\Base\ORM\BlogPostDataExtension
+
+DNADesign\Elemental\ElementalEditor:
+  extensions:
+    - Dynamic\Base\ORM\ElementalEditorExtension
