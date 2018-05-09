@@ -20,7 +20,6 @@
         "dnadesign/silverstripe-elemental": "^2.0@dev",
         "dnadesign/silverstripe-elemental-userforms": "^1.0@dev",
         "dynamic/core-tools": "^3.0@dev",
-        "dynamic/silverstripe-elemental-blocks": "^2.0@dev",
         "dynamic/silverstripe-elemental-blog": "^1.0@dev",
         "dynamic/silverstripe-elemental-flexslider": "^1.0@dev",
         "jonom/silverstripe-betternavigator": "^4.0@dev",
@@ -44,7 +43,7 @@
     "extra": {
         "installer-name": "base-site",
         "branch-alias": {
-            "dev-master": "1.0.x-dev"
+            "dev-master": "2.0.x-dev"
         }
     },
     "autoload": {
