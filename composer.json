@@ -54,7 +54,7 @@
         }
     },
     "repositories": [
-        {"type": "composer", "url": "https://repo.packagist.com/dynamic/"},
+        {"type": "composer", "url": "https://repo.packagist.com/dynamic/"}
     ],
     "minimum-stability": "dev",
     "prefer-stable": true
