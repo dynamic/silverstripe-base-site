@@ -19,12 +19,19 @@ class BlogPostDataExtensionTest extends SapphireTest
     );
 
     /**
+     * @var array
+     */
+    protected static $extra_dataobjects = [
+        TestBlogPost::class,
+    ];
+
+    /**
      *
      */
     public function testUpdateCMSFields()
     {
         /** @var BlogPost $object */
-        $object = Injector::inst()->create(BlogPost::class);
+        $object = Injector::inst()->create(TestBlogPost::class);
         $fields = $object->getCMSFields();
         $this->assertInstanceOf(FieldList::class, $fields);
     }
