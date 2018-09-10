@@ -27,7 +27,7 @@
         "silverstripe/blog": "^3.0@dev",
         "silverstripe/elemental-blocks": "^1.0@dev",
         "silverstripe/googlesitemaps": "^1.8@dev",
-        "silverstripe/recipe-cms": "^1.0@dev",
+        "silverstripe/recipe-cms": "^1.0@dev || ^4.0@dev",
         "silverstripe/securityreport": "^2.0@dev",
         "silverstripe/userforms": "^5.0@dev",
         "silverstripe/vendor-plugin": "^1.0@dev",
