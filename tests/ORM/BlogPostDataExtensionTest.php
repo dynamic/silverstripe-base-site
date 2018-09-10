@@ -42,9 +42,9 @@ class BlogPostDataExtensionTest extends SapphireTest
     public function testGetRelatedPosts()
     {
         /** @var BlogPost $object */
-        $object = $this->objFromFixture(BlogPost::class, 'one');
+        $object = $this->objFromFixture(TestBlogPost::class, 'one');
         /** @var BlogPost $expected */
-        $expected = $this->objFromFixture(BlogPost::class, 'two');
+        $expected = $this->objFromFixture(TestBlogPost::class, 'two');
         $this->assertEquals($expected, $object->getRelatedPosts()->first());
     }
 
@@ -52,7 +52,7 @@ class BlogPostDataExtensionTest extends SapphireTest
     {
         $expected = "Test";
         /** @var BlogPost $post */
-        $post = $this->objFromFixture(BlogPost::class, 'one');
+        $post = $this->objFromFixture(TestBlogPost::class, 'one');
         $this->assertEquals('', $post->getContent());
 
         $post->ElementalArea()->Elements()->add(ElementContent::create());
