@@ -71,7 +71,7 @@ SilverStripe\Blog\Model\Blog:
   default:
     Title: "Blog"
 
-SilverStripe\Blog\Model\BlogPost:
+Dynamic\Base\Test\TestBlogPost:
   one:
     Title: "Blog Post One"
     ParentID: =>SilverStripe\Blog\Model\Blog.default

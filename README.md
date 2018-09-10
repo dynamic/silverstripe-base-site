@@ -18,7 +18,49 @@ This is how you install silverstripe-base-site.
 
 ## Example usage
 
-You use silverstripe-base-site like this.
+Recommended configuration:
+
+```
+SilverStripe\Admin\LeftAndMain:
+  application_name: 'Dynamic'
+  application_link: 'http://www.dynamicagency.com'
+
+Dynamic\Base\Page\HomePage:
+  extensions:
+    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+
+Dynamic\Base\Page\BlockPage:
+  extensions:
+    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+
+Dynamic\Base\Page\CampaignLandingPage:
+  extensions:
+    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+
+SilverStripe\ORM\DataList:
+  extensions:
+  - Dynamic\CoreTools\ORM\CoreToolsDataListDataExtension
+
+SilverStripe\UserForms\Model\EditableFormField:
+  extensions:
+  - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+
+SilverStripe\UserForms\Model\EditableCustomRule:
+  extensions:
+  - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
+
+SilverStripe\Blog\Model\BlogPost:
+  extensions:
+  - Dynamic\CoreTools\ORM\PreviewExtension
+  - Dynamic\Base\ORM\BlogPostDataExtension
+
+DNADesign\Elemental\ElementalEditor:
+  extensions:
+  - Dynamic\Base\ORM\ElementalEditorExtension
+```
 
 ## Documentation
 

@@ -65,7 +65,9 @@ class HomePage extends \Page implements PermissionProvider
             ]
         );
 
-        $fields->dataFieldByName('ElementalHomePage')->setTitle('Content');
+        if ($block = $fields->dataFieldByName('ElementalHomePage')) {
+            $block->setTitle('Content');
+        }
 
         return $fields;
     }
