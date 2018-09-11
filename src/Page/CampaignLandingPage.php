@@ -23,6 +23,11 @@ class CampaignLandingPage extends \Page implements PermissionProvider
     private static $description = 'Create a landing page for your marketing campaign';
 
     /**
+     * @var string
+     */
+    private static $table_name = 'CampaignLandingPage';
+
+    /**
      * @var array
      */
     private static $defaults = [

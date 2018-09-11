@@ -18,4 +18,9 @@ class BlockPage extends \Page
      * @var string
      */
     private static $description = 'Flexible layout page created using content blocks';
+
+    /**
+     * @var string
+     */
+    private static $table_name = 'BlockPage';
 }
