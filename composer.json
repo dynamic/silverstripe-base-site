@@ -21,17 +21,20 @@
         "dnadesign/silverstripe-elemental-list": "^1.1@dev",
         "dnadesign/silverstripe-elemental-userforms": "^2.0@dev",
         "dnadesign/silverstripe-elemental-virtual": "^1.0@dev",
+        "dynamic/silverstripe-company-config": "^1.0@dev",
         "dynamic/core-tools": "^4.0@dev",
         "dynamic/silverstripe-elemental-testimonials": "^1.0@dev",
         "dynamic/silverstripe-elemental-blog": "^1.0@dev",
-        "dynamic/silverstripe-elemental-flexslider": "^1.0@dev",
-        "dynamic/silverstripe-elemental-features": "^1.0@dev",
-        "dynamic/silverstripe-elemental-promos": "^1.0@dev",
-        "dynamic/silverstripe-elemental-image": "^1.0@dev",
-        "dynamic/silverstripe-elemental-oembed": "^1.0@dev",
         "dynamic/silverstripe-elemental-customer-service": "^1.0@dev",
         "dynamic/silverstripe-elemental-embedded-code": "^1.0@dev",
+        "dynamic/silverstripe-elemental-features": "^1.0@dev",
+        "dynamic/silverstripe-elemental-flexslider": "^1.0@dev",
+        "dynamic/silverstripe-elemental-image": "^1.0@dev",
+        "dynamic/silverstripe-elemental-oembed": "^1.0@dev",
+        "dynamic/silverstripe-elemental-promos": "^1.0@dev",
         "dynamic/silverstripe-elemental-section-navigation": "^1.0@dev",
+        "dynamic/silverstripe-integration-config": "^1.0@dev",
+        "dynamic/silverstripe-template-config": "^1.0@dev",
         "jonom/silverstripe-betternavigator": "^4.0@dev",
         "silverstripe/blog": "^3.0@dev",
         "silverstripe/elemental-fileblock": "^1.0@dev",
@@ -65,7 +68,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "https://dynamicinc:I68blegDd@toran.dynamicagency.com/repo/private/"
+            "url": "https://repo.packagist.com/dynamic/"
         }
     ],
     "minimum-stability": "dev",
