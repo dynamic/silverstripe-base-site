@@ -14,6 +14,7 @@
         }
     ],
     "require": {
+        "axllent/silverstripe-bootstrap-forms": "^2.0@dev",
         "axllent/silverstripe-email-obfuscator": "^2.0@dev",
         "axllent/silverstripe-scaled-uploads": "^2.1@dev",
         "axllent/silverstripe-version-truncator": "^2.0@dev",
@@ -38,12 +39,16 @@
         "jonom/silverstripe-betternavigator": "^4.0@dev",
         "silverstripe/blog": "^3.0@dev",
         "silverstripe/elemental-fileblock": "^1.0@dev",
+        "silverstripe/recaptcha": "^3.0@dev",
         "silverstripe/recipe-cms": "^1.0@dev || ^4.0@dev",
+        "silverstripe/redirectedurls": "dev-master",
         "silverstripe/securityreport": "^2.0@dev",
+        "silverstripe/spamprotection": "^3.0@dev",
         "silverstripe/userforms": "^5.0@dev",
         "silverstripe/vendor-plugin": "^1.0@dev",
         "silverstripe/widgets": "^2.0@dev",
-        "wilr/silverstripe-googlesitemaps": "^2.1"
+        "tractorcow/silverstripe-sitemap2": "^4.0@dev",
+        "vulcandigital/silverstripe-seo": "^1.0@dev"
     },
     "require-dev": {
         "lekoala/silverstripe-debugbar": "^2.0@dev",
