@@ -14,6 +14,7 @@
         }
     ],
     "require": {
+        "axllent/silverstripe-cms-tweaks": "^2.0",
         "axllent/silverstripe-bootstrap-forms": "^2.0@dev",
         "axllent/silverstripe-email-obfuscator": "^2.0@dev",
         "axllent/silverstripe-scaled-uploads": "^2.1@dev",
