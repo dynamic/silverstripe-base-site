@@ -25,20 +25,32 @@ SilverStripe\Admin\LeftAndMain:
   application_name: 'Dynamic'
   application_link: 'http://www.dynamicagency.com'
 
+SilverStripe\CMS\Model\SiteTree:
+  extensions:
+    - Dynamic\CoreTools\ORM\CMSDesign
+
+Page:
+  extensions:
+    - Dynamic\CoreTools\ORM\DynamicPageHealthExtension
+    - Dynamic\CoreTools\ORM\DynamicPageSeoExtension
+
 Dynamic\Base\Page\HomePage:
   extensions:
     - Dynamic\CoreTools\ORM\HeaderImageDataExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - Dynamic\CoreTools\ORM\ElementalSearch
 
 Dynamic\Base\Page\BlockPage:
   extensions:
     - Dynamic\CoreTools\ORM\HeaderImageDataExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - Dynamic\CoreTools\ORM\ElementalSearch
 
 Dynamic\Base\Page\CampaignLandingPage:
   extensions:
     - Dynamic\CoreTools\ORM\HeaderImageDataExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - Dynamic\CoreTools\ORM\ElementalSearch
 
 SilverStripe\ORM\DataList:
   extensions:
@@ -54,6 +66,8 @@ SilverStripe\UserForms\Model\EditableCustomRule:
 
 SilverStripe\Blog\Model\BlogPost:
   extensions:
+  - DNADesign\Elemental\Extensions\ElementalPageExtension
+  - Dynamic\CoreTools\ORM\ElementalSearch
   - Dynamic\CoreTools\ORM\PreviewExtension
   - Dynamic\Base\ORM\BlogPostDataExtension
 
