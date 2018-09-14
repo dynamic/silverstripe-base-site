@@ -14,6 +14,7 @@
         }
     ],
     "require": {
+        "axllent/silverstripe-bootstrap-forms": "^2.0@dev",
         "axllent/silverstripe-email-obfuscator": "^2.0@dev",
         "axllent/silverstripe-scaled-uploads": "^2.1@dev",
         "axllent/silverstripe-version-truncator": "^2.0@dev",
@@ -43,7 +44,8 @@
         "silverstripe/userforms": "^5.0@dev",
         "silverstripe/vendor-plugin": "^1.0@dev",
         "silverstripe/widgets": "^2.0@dev",
-        "wilr/silverstripe-googlesitemaps": "^2.1"
+        "tractorcow/silverstripe-sitemap2": "^4.0@dev",
+        "vulcandigital/silverstripe-seo": "^1.0@dev"
     },
     "require-dev": {
         "lekoala/silverstripe-debugbar": "^2.0@dev",
