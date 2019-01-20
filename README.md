@@ -29,11 +29,6 @@ SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Dynamic\CoreTools\ORM\CMSDesign
 
-Page:
-  extensions:
-    - Dynamic\CoreTools\ORM\DynamicPageHealthExtension
-    - Dynamic\CoreTools\ORM\DynamicPageSeoExtension
-
 Dynamic\Base\Page\HomePage:
   extensions:
     - Dynamic\CoreTools\ORM\HeaderImageDataExtension
