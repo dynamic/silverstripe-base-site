@@ -63,10 +63,7 @@
         "process-timeout": 600
     },
     "extra": {
-        "installer-name": "base-site",
-        "branch-alias": {
-            "dev-master": "2.0.x-dev"
-        }
+        "installer-name": "base-site"
     },
     "autoload": {
         "psr-4": {
