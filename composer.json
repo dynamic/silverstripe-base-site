@@ -39,7 +39,7 @@
         "dynamic/silverstripe-template-config": "^1.0@dev",
         "jonom/silverstripe-betternavigator": "^4.0@dev",
         "silverstripe/blog": "^3.0@dev",
-        "silverstripe/elemental-fileblock": "^1.0@dev",
+        "silverstripe/elemental-fileblock": "^2.0@dev",
         "silverstripe/recaptcha": "^3.0@dev",
         "silverstripe/recipe-cms": "^4.0@dev",
         "silverstripe/redirectedurls": "dev-master",
