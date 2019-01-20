@@ -21,7 +21,7 @@
         "axllent/silverstripe-version-truncator": "^2.0@dev",
         "dnadesign/silverstripe-elemental": "^4.0@dev",
         "dnadesign/silverstripe-elemental-list": "^1.1@dev",
-        "dnadesign/silverstripe-elemental-userforms": "^2.0@dev",
+        "dnadesign/silverstripe-elemental-userforms": "^3.0@dev",
         "dnadesign/silverstripe-elemental-virtual": "^1.0@dev",
         "dynamic/silverstripe-company-config": "^1.0@dev",
         "dynamic/core-tools": "^4.0@dev",
