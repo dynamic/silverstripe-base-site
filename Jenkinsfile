@@ -100,7 +100,7 @@ pipeline {
 	    junit 'build/logs/*.xml'
 	    recordIssues enabledForFailure: true, tool: checkStyle(pattern: '**/logs/checkstyle.xml')
 		recordIssues enabledForFailure: true, tool: cpd(pattern: '**/logs/pmd-cpd.xml')
-		recordIssues enabledForFailure: true, tool: pmd(pattern: '**/logs/pmd.xml')
+//		recordIssues enabledForFailure: true, tool: pmd(pattern: '**/logs/pmd.xml')
 	  }
   }
 }
