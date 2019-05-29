@@ -1,6 +1,22 @@
 # Change Log
 
-## [3.1.0](https://github.com/dynamic/silverstripe-base-site/tree/3.1.0) (2019-03-25)
+## [3.1.1](https://github.com/dynamic/silverstripe-base-site/tree/3.1.1) (2019-05-29)
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.0...3.1.1)
+
+**Implemented enhancements:**
+
+- COMPOSER update silverstripe/redirectedurls to ^2.0 [\#64](https://github.com/dynamic/silverstripe-base-site/issues/64)
+
+**Closed issues:**
+
+- COMPOSER set dev-master branch alias to 3.2.x-dev [\#66](https://github.com/dynamic/silverstripe-base-site/issues/66)
+
+**Merged pull requests:**
+
+- UPDATE composer requirements/alias [\#67](https://github.com/dynamic/silverstripe-base-site/pull/67) ([muskie9](https://github.com/muskie9))
+- UPDATE BlogPostDataExtensionTest to use $required\_extensions [\#65](https://github.com/dynamic/silverstripe-base-site/pull/65) ([muskie9](https://github.com/muskie9))
+
+## [3.1.0](https://github.com/dynamic/silverstripe-base-site/tree/3.1.0) (2019-03-26)
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.0.1...3.1.0)
 
 **Closed issues:**
