@@ -2,10 +2,11 @@
 
 namespace Dynamic\Base\Test;
 
+use DNADesign\Elemental\Extensions\ElementalPageExtension;
 use DNADesign\Elemental\Models\ElementContent;
+use Dynamic\Base\ORM\BlogPostDataExtension;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Manifest\ClassLoader;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 
@@ -14,15 +15,25 @@ class BlogPostDataExtensionTest extends SapphireTest
     /**
      * @var array
      */
-    protected static $fixture_file = array(
+    protected static $fixture_file = [
         '../fixtures.yml',
-    );
+    ];
 
     /**
      * @var array
      */
     protected static $extra_dataobjects = [
         TestBlogPost::class,
+    ];
+
+    /**
+     * @var array
+     */
+    protected static $required_extensions = [
+        TestBlogPost::class => [
+            BlogPostDataExtension::class,
+            ElementalPageExtension::class,
+        ],
     ];
 
     /**
@@ -60,9 +71,9 @@ class BlogPostDataExtensionTest extends SapphireTest
         $this->assertEquals('', $post->getContent());
 
         $element = $post->ElementalArea()
-            ->Elements()->filter(array(
-                'ClassName' => ElementContent::class
-            ))->first();
+            ->Elements()->filter([
+                'ClassName' => ElementContent::class,
+            ])->first();
         $element->HTML = $expected;
         $element->write();
 
