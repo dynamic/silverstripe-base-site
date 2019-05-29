@@ -42,7 +42,7 @@
         "silverstripe/elemental-fileblock": "^2.0",
         "silverstripe/recaptcha": "^3.0",
         "silverstripe/recipe-cms": "^4.0",
-        "silverstripe/redirectedurls": "dev-master",
+        "silverstripe/redirectedurls": "^2.0",
         "silverstripe/securityreport": "^2.0",
         "silverstripe/spamprotection": "^3.0",
         "silverstripe/userforms": "^5.0",
@@ -65,7 +65,7 @@
     "extra": {
         "installer-name": "base-site",
         "branch-alias": {
-            "dev-master": "3.1.x-dev"
+            "dev-master": "3.2.x-dev"
         }
     },
     "autoload": {
