@@ -7,13 +7,14 @@ use Dynamic\Base\ORM\BlogPostDataExtension;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Dev\TestOnly;
 
+/**
+ * Class TestBlogPost
+ * @package Dynamic\Base\Test
+ */
 class TestBlogPost extends BlogPost implements TestOnly
 {
     /**
-     * @var array
+     * @var string
      */
-    private static $extensions = [
-        BlogPostDataExtension::class,
-        ElementalPageExtension::class,
-    ];
+    private static $table_name = 'TestBlogPost';
 }
