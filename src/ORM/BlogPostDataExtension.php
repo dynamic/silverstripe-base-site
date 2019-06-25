@@ -10,6 +10,10 @@ use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 
+/**
+ * Class BlogPostDataExtension
+ * @package Dynamic\Base\ORM
+ */
 class BlogPostDataExtension extends DataExtension
 {
     /**
@@ -22,12 +26,12 @@ class BlogPostDataExtension extends DataExtension
             'CustomSummary',
         ));
 
-        $fields->insertAfter(TextField::create('SubTitle', 'Sub Title'), 'Title');
+        $fields->insertAfter('Title', TextField::create('SubTitle', 'Sub Title'));
 
         $featured = $fields->dataFieldByName('FeaturedImage')
             ->setFolderName('Uploads/Blog')
         ;
-        $fields->insertBefore($featured, 'Content');
+        $fields->insertBefore('Content', $featured);
     }
 
     /**
@@ -54,17 +58,21 @@ class BlogPostDataExtension extends DataExtension
     /**
      * Returns the content of the first content element block
      *
-     * @return HTMLText
+     * @return DBHTMLText
      */
-    public function getContent()
+    public function getFirstContent()
     {
-        $content = $this->owner->ElementalArea()
-            ->Elements()->filter(array(
-                'ClassName' => ElementContent::class
-            ))->first();
-        if ($content && $content->exists()) {
-            return $content->HTML;
+        if($this->owner->hasMethod('getElementalRelations') && $this->owner->getElementalRelations()){
+            $content = $this->owner->ElementalArea()
+                ->Elements()->filter(array(
+                    'ClassName' => ElementContent::class
+                ))->first();
+            if ($content && $content->exists()) {
+                return $content->HTML;
+            }
+            return DBHTMLText::create();
         }
-        return DBHTMLText::create();
+
+        return $this->owner->Content;
     }
 }
