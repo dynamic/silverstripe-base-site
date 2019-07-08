@@ -65,10 +65,13 @@ class BlogPostDataExtensionTest extends SapphireTest
         $expected = "Test";
         /** @var BlogPost $post */
         $post = $this->objFromFixture(TestBlogPost::class, 'one');
-        $this->assertEquals('', $post->getContent());
+        $this->assertEquals('', $post->getFirstContent());
 
-        $post->ElementalArea()->Elements()->add(ElementContent::create());
-        $this->assertEquals('', $post->getContent());
+        // todo update below test portion to be appropriate based on extension implementation
+        // currently the module does not apply any elemental extensions to blog, as we don't want it tightly coupled
+
+        /*$post->ElementalArea()->Elements()->add(ElementContent::create());
+        $this->assertEquals('', $post->getFirstContent());
 
         $element = $post->ElementalArea()
             ->Elements()->filter([
@@ -77,6 +80,7 @@ class BlogPostDataExtensionTest extends SapphireTest
         $element->HTML = $expected;
         $element->write();
 
-        $this->assertEquals($expected, $post->getContent());
+        $this->assertEquals($expected, $post->getFirstContent());
+        //*/
     }
 }
