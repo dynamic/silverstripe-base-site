@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.1.3](https://github.com/dynamic/silverstripe-base-site/tree/3.1.3) (2019-10-22)
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.2...3.1.3)
+
+**Merged pull requests:**
+
+- Blog posts now save their sub titles [\#77](https://github.com/dynamic/silverstripe-base-site/pull/77) ([mak001](https://github.com/mak001))
+
 ## [3.1.2](https://github.com/dynamic/silverstripe-base-site/tree/3.1.2) (2019-07-08)
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.1...3.1.2)
 
