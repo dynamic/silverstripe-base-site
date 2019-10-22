@@ -1,5 +1,23 @@
 # Change Log
 
+## [3.1.3](https://github.com/dynamic/silverstripe-base-site/tree/3.1.3) (2019-10-22)
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.2...3.1.3)
+
+**Merged pull requests:**
+
+- Blog posts now save their sub titles [\#77](https://github.com/dynamic/silverstripe-base-site/pull/77) ([mak001](https://github.com/mak001))
+
+## [3.1.2](https://github.com/dynamic/silverstripe-base-site/tree/3.1.2) (2019-07-08)
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.1...3.1.2)
+
+**Fixed bugs:**
+
+- BUG BlogPostDataExtension assumes ElementalArea exists on BlogPost [\#71](https://github.com/dynamic/silverstripe-base-site/issues/71)
+
+**Merged pull requests:**
+
+- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
+
 ## [3.1.1](https://github.com/dynamic/silverstripe-base-site/tree/3.1.1) (2019-05-29)
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.0...3.1.1)
 
