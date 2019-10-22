@@ -17,6 +17,13 @@ use SilverStripe\ORM\FieldType\DBHTMLText;
 class BlogPostDataExtension extends DataExtension
 {
     /**
+     * @var array
+     */
+    private static $db = [
+        'SubTitle' => 'Varchar',
+    ];
+
+    /**
      * @param FieldList $fields
      */
     public function updateCMSFields(FieldList $fields)
@@ -29,8 +36,7 @@ class BlogPostDataExtension extends DataExtension
         $fields->insertAfter('Title', TextField::create('SubTitle', 'Sub Title'));
 
         $featured = $fields->dataFieldByName('FeaturedImage')
-            ->setFolderName('Uploads/Blog')
-        ;
+            ->setFolderName('Uploads/Blog');
         $fields->insertBefore('Content', $featured);
     }
 
@@ -43,8 +49,7 @@ class BlogPostDataExtension extends DataExtension
             ->filter(array(
                 'ParentID' => $this->owner->ParentID,
             ))
-            ->exclude('ID', $this->owner->ID)
-        ;
+            ->exclude('ID', $this->owner->ID);
 
         if ($this->owner->Tags()->count() > 0) {
             $posts->filterAny(array(
@@ -62,7 +67,7 @@ class BlogPostDataExtension extends DataExtension
      */
     public function getFirstContent()
     {
-        if($this->owner->hasMethod('getElementalRelations') && $this->owner->getElementalRelations()){
+        if ($this->owner->hasMethod('getElementalRelations') && $this->owner->getElementalRelations()) {
             $content = $this->owner->ElementalArea()
                 ->Elements()->filter(array(
                     'ClassName' => ElementContent::class
