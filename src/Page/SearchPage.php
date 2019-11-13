@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\Page;
 
+use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
@@ -71,6 +72,12 @@ class SearchPage extends \Page implements PermissionProvider
      */
     public function canCreate($member = null, $context = [])
     {
+        $parent = isset($context['Parent']) ? $context['Parent'] : null;
+        $strictParentInstance = ($parent && $parent instanceof SiteTree);
+        if ($strictParentInstance && !in_array(static::class, $parent->allowedChildren())) {
+            return false;
+        }
+
         if (self::get()->first()) {
             return false;
         }
