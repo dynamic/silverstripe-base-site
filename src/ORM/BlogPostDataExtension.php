@@ -24,6 +24,13 @@ class BlogPostDataExtension extends DataExtension
     ];
 
     /**
+     * @var array
+     */
+    private static $casting = [
+        'FirstContent' => 'HTMLText',
+    ];
+
+    /**
      * @param FieldList $fields
      */
     public function updateCMSFields(FieldList $fields)
