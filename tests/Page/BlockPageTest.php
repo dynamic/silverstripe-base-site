@@ -2,12 +2,12 @@
 
 namespace Dynamic\Base\Test;
 
-use Dynamic\Base\Page\CampaignLandingPage;
+use Dynamic\Base\Page\BlockPage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Member;
 
-class CampaignLandingPageTest extends SapphireTest
+class BlockPageTest extends SapphireTest
 {
     /**
      * @var string
@@ -19,7 +19,7 @@ class CampaignLandingPageTest extends SapphireTest
      */
     public function testGetCMSFields()
     {
-        $object = $this->objFromFixture(CampaignLandingPage::class, 'spring');
+        $object = $this->objFromFixture(BlockPage::class, 'one');
         $fields = $object->getCMSFields();
         $this->assertInstanceOf(FieldList::class, $fields);
     }

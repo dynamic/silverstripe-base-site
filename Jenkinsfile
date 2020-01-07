@@ -16,22 +16,7 @@ pipeline {
       }
     }
 
-	/*
-    stage('Coverage') {
-      steps {
-        publishHTML (target: [
-		  allowMissing: false,
-		  alwaysLinkToLastBuild: false,
-		  keepAll: true,
-		  reportDir: 'build/coverage',
-		  reportFiles: 'index.html',
-		  reportName: "Coverage Report"
-	    ])
-      }
-    }
-    */
-
-    stage("Publish Clover") {
+	stage("Publish Clover") {
       steps {
         step([$class: 'CloverPublisher', cloverReportDir: 'build/logs', cloverReportFileName: 'clover.xml'])
       }
@@ -40,7 +25,7 @@ pipeline {
 
 	stage('Checkstyle Report') {
       steps {
-        sh 'vendor/bin/phpcs --report=checkstyle --report-file=build/logs/checkstyle.xml --standard=phpcs.xml.dist --extensions=php,inc --ignore=autoload.php --ignore=vendor/ src/ tests/ || exit 0'
+        sh 'vendor/bin/phpcs --report=checkstyle --report-file=build/logs/checkstyle.xml --standard=phpcs.xml.dist --extensions=php,inc --ignore=autoload.php --ignore=vendor/ src/ tests/'
 	  }
     }
 

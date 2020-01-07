@@ -9,22 +9,6 @@ SilverStripe\Security\Permission:
     Code: ADMIN
     Type: 1
     Group: =>SilverStripe\Security\Group.administrators
-  home:
-    Code: HomePage_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
-  campaign:
-    Code: CamLan_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
-  search:
-    Code: SearchPage_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
-  social:
-    Code: Social_CRUD
-    Type: 1
-    Group: =>SilverStripe\Security\Group.site-owners
 
 SilverStripe\Security\Member:
   admin:
@@ -33,12 +17,6 @@ SilverStripe\Security\Member:
     Email: "defaultadmin"
     Password: "dev"
     Groups: =>SilverStripe\Security\Group.administrators
-  site-owner:
-    FirstName: "Site"
-    Surname: "Owner"
-    Email: "owner"
-    Password: "owner"
-    Groups: =>SilverStripe\Security\Group.site-owners
   default:
     FirstName: "Default"
     Surname: "Member"
@@ -48,6 +26,10 @@ SilverStripe\Security\Member:
 Page:
   about:
     Title: "About Us"
+
+Dynamic\Base\Page\BlockPage:
+  one:
+    Title: "Block Page One"
 
 Dynamic\Base\Page\HomePage:
   default:
