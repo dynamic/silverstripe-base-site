@@ -27,6 +27,10 @@ Page:
   about:
     Title: "About Us"
 
+Dynamic\Base\Page\BlockPage:
+  one:
+    Title: "Block Page One"
+
 Dynamic\Base\Page\HomePage:
   default:
     Title: "Welcome To My Website"
