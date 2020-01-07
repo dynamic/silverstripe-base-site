@@ -2,7 +2,7 @@
 
 namespace Dynamic\Base\Test;
 
-use Dynamic\Foundation\Page\BlockPage;
+use Dynamic\Base\Page\BlockPage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Member;
