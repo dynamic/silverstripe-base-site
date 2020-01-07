@@ -63,9 +63,8 @@
         "process-timeout": 600
     },
     "extra": {
-        "installer-name": "base-site",
         "branch-alias": {
-            "dev-master": "3.2.x-dev"
+            "dev-master": "4.0.x-dev"
         }
     },
     "autoload": {

@@ -8,7 +8,7 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
-class HomePage extends \Page implements PermissionProvider
+class HomePage extends \Page
 {
     /**
      * @var string
@@ -58,48 +58,11 @@ class HomePage extends \Page implements PermissionProvider
     {
         $fields = parent::getCMSFields();
 
-        $fields->removeByName(
-            [
-                'ElementalArea',
-                'Sidebar',
-            ]
-        );
-
         if ($block = $fields->dataFieldByName('ElementalHomePage')) {
-            $block->setTitle('Content');
+            $block->setTitle('Content Blocks');
         }
 
         return $fields;
-    }
-
-    /**
-     * @param null|Member $member
-     *
-     * @return bool
-     */
-    public function canView($member = null, $context = [])
-    {
-        return parent::canView($member);
-    }
-
-    /**
-     * @param null|Member $member
-     *
-     * @return bool|int
-     */
-    public function canEdit($member = null, $context = [])
-    {
-        return Permission::check('HomePage_CRUD', 'any', $member);
-    }
-
-    /**
-     * @param null|Member $member
-     *
-     * @return bool|int
-     */
-    public function canDelete($member = null, $context = [])
-    {
-        return Permission::check('HomePage_CRUD', 'any', $member);
     }
 
     /**
@@ -110,34 +73,10 @@ class HomePage extends \Page implements PermissionProvider
     public function canCreate($member = null, $context = [])
     {
         if (!self::get()->first()) {
-            return Permission::check('HomePage_CRUD', 'any', $member);
+            return Permission::check('CMS_ACCESS_CMSMain', 'any', $member);
         }
 
         return false;
-    }
-
-    /**
-     * @return array
-     */
-    public function providePermissions()
-    {
-        return [
-            'HomePage_CRUD' => [
-                'name' => _t(
-                    'BASE_SITE.HOMEPAGE_CRUD',
-                    'Manage Home Page'
-                ),
-                'category' => _t(
-                    'Permissions.PERMISSIONS_BASE_SITE_PERMISSION',
-                    'Base Website Permissions'
-                ),
-                'help' => _t(
-                    'Homepage.CREATE_PERMISSION_HOMEPAGE_PERMISSION',
-                    'Ability to add, edit and delete home pages'
-                ),
-                'sort' => 400,
-            ],
-        ];
     }
 
     /**
