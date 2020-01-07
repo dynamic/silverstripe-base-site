@@ -10,8 +10,19 @@ use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 
+/**
+ * Class BlogPostDataExtension
+ * @package Dynamic\Base\ORM
+ */
 class BlogPostDataExtension extends DataExtension
 {
+    /**
+     * @var array
+     */
+    private static $db = [
+        'SubTitle' => 'Varchar',
+    ];
+
     /**
      * @param FieldList $fields
      */
@@ -22,12 +33,11 @@ class BlogPostDataExtension extends DataExtension
             'CustomSummary',
         ));
 
-        $fields->insertAfter(TextField::create('SubTitle', 'Sub Title'), 'Title');
+        $fields->insertAfter('Title', TextField::create('SubTitle', 'Sub Title'));
 
         $featured = $fields->dataFieldByName('FeaturedImage')
-            ->setFolderName('Uploads/Blog')
-        ;
-        $fields->insertBefore($featured, 'Content');
+            ->setFolderName('Uploads/Blog');
+        $fields->insertBefore('Content', $featured);
     }
 
     /**
@@ -39,8 +49,7 @@ class BlogPostDataExtension extends DataExtension
             ->filter(array(
                 'ParentID' => $this->owner->ParentID,
             ))
-            ->exclude('ID', $this->owner->ID)
-        ;
+            ->exclude('ID', $this->owner->ID);
 
         if ($this->owner->Tags()->count() > 0) {
             $posts->filterAny(array(
@@ -54,17 +63,21 @@ class BlogPostDataExtension extends DataExtension
     /**
      * Returns the content of the first content element block
      *
-     * @return HTMLText
+     * @return DBHTMLText
      */
-    public function getContent()
+    public function getFirstContent()
     {
-        $content = $this->owner->ElementalArea()
-            ->Elements()->filter(array(
-                'ClassName' => ElementContent::class
-            ))->first();
-        if ($content && $content->exists()) {
-            return $content->HTML;
+        if ($this->owner->hasMethod('getElementalRelations') && $this->owner->getElementalRelations()) {
+            $content = $this->owner->ElementalArea()
+                ->Elements()->filter(array(
+                    'ClassName' => ElementContent::class
+                ))->first();
+            if ($content && $content->exists()) {
+                return $content->HTML;
+            }
+            return DBHTMLText::create();
         }
-        return DBHTMLText::create();
+
+        return $this->owner->Content;
     }
 }
