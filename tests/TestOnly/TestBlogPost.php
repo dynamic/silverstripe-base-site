@@ -1,9 +1,9 @@
 <?php
 
-namespace Dynamic\Base\Test;
+namespace Dynamic\Base\Test\TestOnly;
 
 use DNADesign\Elemental\Extensions\ElementalPageExtension;
-use Dynamic\Base\ORM\BlogPostDataExtension;
+use Dynamic\Base\Extension\BlogPostDataExtension;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Dev\TestOnly;
 
