@@ -58,9 +58,14 @@ class HomePage extends \Page
     {
         $fields = parent::getCMSFields();
 
+        $fields->removeByName([
+            'ElementalArea',
+        ]);
+
         if ($block = $fields->dataFieldByName('ElementalHomePage')) {
             $block->setTitle('Content Blocks');
         }
+
 
         return $fields;
     }
