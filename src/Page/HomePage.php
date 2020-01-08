@@ -62,7 +62,10 @@ class HomePage extends \Page
             'ElementalArea',
         ]);
 
-        $fields->dataFieldByName('ElementalHomePage')->setTitle('Content Blocks');
+        if ($block = $fields->dataFieldByName('ElementalHomePage')) {
+            $block->setTitle('Content Blocks');
+        }
+
 
         return $fields;
     }
