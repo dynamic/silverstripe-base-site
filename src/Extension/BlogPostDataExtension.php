@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\Base\ORM;
+namespace Dynamic\Base\Extension;
 
 use DNADesign\Elemental\Models\ElementContent;
 use SilverStripe\Blog\Model\BlogPost;

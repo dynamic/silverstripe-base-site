@@ -1,10 +1,11 @@
 <?php
 
-namespace Dynamic\Base\Test;
+namespace Dynamic\Base\Test\Extension;
 
 use DNADesign\Elemental\Extensions\ElementalPageExtension;
 use DNADesign\Elemental\Models\ElementContent;
-use Dynamic\Base\ORM\BlogPostDataExtension;
+use Dynamic\Base\Extension\BlogPostDataExtension;
+use Dynamic\Base\Test\TestOnly\TestBlogPost;
 use SilverStripe\Blog\Model\BlogPost;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
