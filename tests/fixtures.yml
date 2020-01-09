@@ -23,6 +23,10 @@ SilverStripe\Security\Member:
     Email: "user"
     Password: "user"
 
+SilverStripe\SiteConfig\SiteConfig:
+  default:
+    Title: 'Site Name'
+
 Page:
   about:
     Title: "About Us"
