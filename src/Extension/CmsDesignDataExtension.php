@@ -12,7 +12,7 @@ use SilverStripe\ORM\DataExtension;
 use Vulcan\Seo\Builders\FacebookMetaGenerator;
 use Vulcan\Seo\Extensions\PageSeoExtension;
 
-class CmsDesignExtension extends DataExtension
+class CmsDesignDataExtension extends DataExtension
 {
     /**
      * @param FieldList $fields
