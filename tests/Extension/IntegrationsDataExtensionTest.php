@@ -34,5 +34,7 @@ class IntegrationsDataExtensionTest extends SapphireTest
         $fields = $object->getCMSFields();
         $this->assertInstanceOf(FieldList::class, $fields);
         $this->assertNotNull($fields->dataFieldByName('GACode'));
+        $this->assertNotNUll($fields->dataFieldByName('UseGTM'));
+        $this->assertNotNull($fields->dataFieldByName('HubSpotAccountID'));
     }
 }
