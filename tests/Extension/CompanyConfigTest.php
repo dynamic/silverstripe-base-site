@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\Test\Extension;
 
+use Dynamic\Base\Extension\CompanyDataExtension;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -14,6 +15,15 @@ class CompanyConfigTest extends SapphireTest
     protected static $fixture_file = array(
         '../fixtures.yml',
     );
+
+    /**
+     * @var array
+     */
+    protected static $required_extensions = [
+        SiteConfig::class => [
+            CompanyDataExtension::class,
+        ]
+    ];
 
     /**
      *
