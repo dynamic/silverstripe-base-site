@@ -14,6 +14,7 @@ class CompanyAddress extends DataObject
     private static $db = [
         'Title' => 'Varchar(255)',
         'SortOrder' => 'Int',
+        'IsPrimary' => 'Boolean',
     ];
 
     /**
@@ -28,6 +29,14 @@ class CompanyAddress extends DataObject
      */
     private static $table_name = 'BaseCompanyAddress';
 
+    private static $summary_fields = [
+        'Title',
+        'FullAddress',
+        'IsPrimary.Nice' => [
+            'title' => 'Main'
+        ],
+    ];
+
     /**
      * @return \SilverStripe\Forms\FieldList
      */
@@ -38,6 +47,11 @@ class CompanyAddress extends DataObject
                 'Root.Address',
                 $fields->dataFieldByName('Title')
             );
+
+            $primary = $fields->dataFieldByName('IsPrimary')
+                ->setTitle('Main Location')
+                ->setDescription("Mark this as the main location for this company");
+            $fields->insertAfter('Title', $primary);
         });
 
         $fields = parent::getCMSFields();

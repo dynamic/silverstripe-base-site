@@ -68,4 +68,16 @@ class CompanyDataExtension extends DataExtension
             $addressField,
         ));
     }
+
+    /**
+     * Finds the primary {@see SubsiteDomain} object for this subsite
+     *
+     * @return SubsiteDomain
+     */
+    public function getPrimaryLocation()
+    {
+        return CompanyAddress::get()
+            ->sort('"IsPrimary" DESC')
+            ->first();
+    }
 }
