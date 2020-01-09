@@ -9,6 +9,10 @@ SilverStripe\Security\Permission:
     Code: ADMIN
     Type: 1
     Group: =>SilverStripe\Security\Group.administrators
+  social:
+    Code: Social_CRUD
+    Type: 1
+    Group: =>SilverStripe\Security\Group.site-owners
 
 SilverStripe\Security\Member:
   admin:
@@ -17,6 +21,12 @@ SilverStripe\Security\Member:
     Email: "defaultadmin"
     Password: "dev"
     Groups: =>SilverStripe\Security\Group.administrators
+  site-owner:
+    FirstName: "Site"
+    Surname: "Owner"
+    Email: "owner"
+    Password: "owner"
+    Groups: =>SilverStripe\Security\Group.site-owners
   default:
     FirstName: "Default"
     Surname: "Member"
@@ -64,3 +74,25 @@ Dynamic\Base\Test\TestOnly\TestBlogPost:
   two:
     Title: "Blog Post Two"
     ParentID: =>SilverStripe\Blog\Model\Blog.default
+
+Dynamic\Base\Model\NavigationColumn:
+  one:
+    Title: "Column One"
+
+Dynamic\Base\Model\NavigationGroup:
+  one:
+    Title: "Group One"
+
+Dynamic\Base\Model\SocialLink:
+  facebook:
+    Title: "Facebook"
+    Link: "example.com"
+    SortOrder: 1
+  twitter:
+    Title: "Twitter"
+    Link: "example.com"
+    SortOrder: 3
+  linked:
+    Title: "LinkedIn"
+    Link: "example.com"
+    SortOrder: 2

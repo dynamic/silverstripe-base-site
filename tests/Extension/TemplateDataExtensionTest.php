@@ -32,6 +32,6 @@ class TemplateDataExtensionTest extends SapphireTest
         $object = Injector::inst()->create(SiteConfig::class);
         $fields = $object->getCMSFields();
         $this->assertInstanceOf(FieldList::class, $fields);
-        $this->assertNotNull($fields->dataFieldByName('LogoID'));
+        $this->assertNotNull($fields->dataFieldByName('Logo'));
     }
 }
