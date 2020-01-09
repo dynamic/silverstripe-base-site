@@ -24,6 +24,11 @@ class CompanyAddress extends DataObject
     ];
 
     /**
+     * @var string
+     */
+    private static $table_name = 'BaseCompanyAddress';
+
+    /**
      * @return \SilverStripe\Forms\FieldList
      */
     public function getCMSFields()
