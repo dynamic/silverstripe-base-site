@@ -24,7 +24,7 @@ class CompanyAddress extends DataObject
     ];
 
     /**
-     * @var string 
+     * @var string
      */
     private static $table_name = 'BaseCompanyAddress';
 
