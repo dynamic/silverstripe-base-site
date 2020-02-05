@@ -24,6 +24,13 @@ class BlogPostDataExtension extends DataExtension
     ];
 
     /**
+     * @var array
+     */
+    private static $casting = [
+        'FirstContent' => 'HTMLText',
+    ];
+
+    /**
      * @param FieldList $fields
      */
     public function updateCMSFields(FieldList $fields)
@@ -36,6 +43,8 @@ class BlogPostDataExtension extends DataExtension
         $fields->insertAfter('Title', TextField::create('SubTitle', 'Sub Title'));
 
         $featured = $fields->dataFieldByName('FeaturedImage')
+            ->setAllowedFileCategories('image')
+            ->setIsMultiUpload(false)
             ->setFolderName('Uploads/Blog');
         $fields->insertBefore('Content', $featured);
     }
@@ -69,9 +78,9 @@ class BlogPostDataExtension extends DataExtension
     {
         if ($this->owner->hasMethod('getElementalRelations') && $this->owner->getElementalRelations()) {
             $content = $this->owner->ElementalArea()
-                ->Elements()->filter(array(
+                ->Elements()->filter([
                     'ClassName' => ElementContent::class
-                ))->first();
+                ])->first();
             if ($content && $content->exists()) {
                 return $content->HTML;
             }
