@@ -132,22 +132,17 @@ class NavigationGroup extends DataObject
                         new GridFieldAddExistingSearchButton()
                     );
 
-                $promos = $this->NavigationLinks()->sort('SortOrder');
                 $linksField = GridField::create(
                     'NavigationLinks',
                     'Links',
-                    $promos,
+                    $this->NavigationLinks()->sort('SortOrder'),
                     $config
                 );
 
-                $fields->addFieldsToTab('Root.Main', array(
-                    HeaderField::create('NavLinkHD', 'Links', 2),
-                    LiteralField::create(
-                        'NavLinkDescrip',
-                        '<p>Add links to this group to display in your footer navigation.</p><p>&nbsp;</p>'
-                    ),
-                    $linksField,
-                ));
+                $fields->addFieldsToTab('Root.Main', [
+                    $linksField
+                        ->setDescription('Add links to this group to display in your footer navigation'),
+                ]);
             }
         });
         return parent::getCMSFields();

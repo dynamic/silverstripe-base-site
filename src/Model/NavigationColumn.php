@@ -103,18 +103,14 @@ class NavigationColumn extends DataObject
                     );
                 $footerLinks = GridField::create(
                     'NavigationGroups',
-                    'Groups',
+                    'Link Groups',
                     $this->NavigationGroups()->sort('SortOrder'),
                     $config
                 );
 
                 $fields->addFieldsToTab('Root.Main', array(
-                    HeaderField::create('NavGroupHD', 'Link Groups', 3),
-                    LiteralField::create(
-                        'GroupDescip',
-                        '<p>Add a group of links to the footer navigation area.</p><p>&nbsp;</p>'
-                    ),
-                    $footerLinks,
+                    $footerLinks
+                        ->setDescription('Add a group of links to a column in the footer navigation area'),
                 ));
             }
         });
