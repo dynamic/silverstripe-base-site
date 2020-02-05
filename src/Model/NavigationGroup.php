@@ -9,6 +9,7 @@ use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\GridField\GridFieldEditButton;
+use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\GridFieldArchiveAction;
@@ -131,22 +132,17 @@ class NavigationGroup extends DataObject
                         new GridFieldAddExistingSearchButton()
                     );
 
-                $promos = $this->NavigationLinks()->sort('SortOrder');
                 $linksField = GridField::create(
                     'NavigationLinks',
                     'Links',
-                    $promos,
+                    $this->NavigationLinks()->sort('SortOrder'),
                     $config
                 );
 
-                $fields->addFieldsToTab('Root.Main', array(
-                    LiteralField::create(
-                        'LinkDescrip',
-                        '<p>Add links to this group to display in your footer navigation</p>'
-                    ),
+                $fields->addFieldsToTab('Root.Main', [
                     $linksField
-                        ->setDescription('Add a link to this group'),
-                ));
+                        ->setDescription('Add links to this group to display in your footer navigation'),
+                ]);
             }
         });
         return parent::getCMSFields();

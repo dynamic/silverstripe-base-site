@@ -115,23 +115,17 @@ class TemplateDataExtension extends DataExtension
                     new GridFieldOrderableRows('SortOrder'),
                     new GridFieldAddExistingSearchButton()
                 );
-            $promos = $this->owner->UtilityLinks()->sort('SortOrder');
             $linksField = GridField::create(
                 'UtilityLinks',
-                'Links',
-                $promos,
+                'Utility Navigation',
+                $this->owner->UtilityLinks()->sort('SortOrder'),
                 $config
             );
 
-            $fields->addFieldsToTab('Root.Links.Utility', array(
-                HeaderField::create('UtilityHD', 'Utility Navigation', 3),
-                LiteralField::create(
-                    'UtilityDescrip',
-                    '<p>Add links to the utility navigation area of your template.</p>'
-                ),
+            $fields->addFieldsToTab('Root.Links.Utility', [
                 $linksField
-                    ->setDescription('Add links to the utility navigation area'),
-            ));
+                    ->setDescription('Add links to the utility navigation area of your template'),
+            ]);
 
             // footer navigation
             $config = GridFieldConfig_RecordEditor::create()->removeComponentsByType([
@@ -143,21 +137,16 @@ class TemplateDataExtension extends DataExtension
             );
             $footerLinks = GridField::create(
                 'NavigationColumns',
-                'Columns',
+                'Footer Navigation',
                 $this->owner->NavigationColumns()->sort('SortOrder'),
                 $config
             );
 
-            $fields->addFieldsToTab('Root.Links.Footer', array(
-                HeaderField::create('FooterHD', 'Footer Navigation', 3),
-                LiteralField::create(
-                    'FooterDescrip',
-                    '<p>Add columns to the footer area of your template. After you create a column,
-                        you\'ll be able to add groups of links to the footer navigation.</p>'
-                ),
+            $fields->addFieldsToTab('Root.Links.Footer', [
                 $footerLinks
-                    ->setDescription('Add a column to the layout of the footer of your theme'),
-            ));
+                    ->setDescription('Add columns to the footer area of your template. After you create a column,
+                        you\'ll be able to add groups of links to the footer navigation'),
+            ]);
         }
 
         // social links
@@ -166,16 +155,14 @@ class TemplateDataExtension extends DataExtension
 
         $socialLinks = GridField::create(
             'SocialLinks',
-            '',
-            $this->owner->SocialLinks(),
+            'Social Properties',
+            $this->owner->SocialLinks()->sort('SortOrder'),
             $config
         );
 
-        $fields->addFieldsToTab('Root.Links.Social', array(
-            HeaderField::create('SocialHD', 'Social Properties', 3),
-            LiteralField::create('SocialDescrip', '<p>Add links to your social media properties</p>'),
-            HeaderField::create('SociallinkHD', 'Links', 2),
-            $socialLinks,
-        ));
+        $fields->addFieldsToTab('Root.Links.Social', [
+            $socialLinks
+                ->setDescription('Add links to your social media properties'),
+        ]);
     }
 }
