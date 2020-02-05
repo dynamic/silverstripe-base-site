@@ -9,6 +9,7 @@ use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\GridField\GridFieldEditButton;
+use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\GridFieldArchiveAction;
@@ -140,12 +141,12 @@ class NavigationGroup extends DataObject
                 );
 
                 $fields->addFieldsToTab('Root.Main', array(
+                    HeaderField::create('NavLinkHD', 'Links', 2),
                     LiteralField::create(
-                        'LinkDescrip',
-                        '<p>Add links to this group to display in your footer navigation</p>'
+                        'NavLinkDescrip',
+                        '<p>Add links to this group to display in your footer navigation.</p><p>&nbsp;</p>'
                     ),
-                    $linksField
-                        ->setDescription('Add a link to this group'),
+                    $linksField,
                 ));
             }
         });

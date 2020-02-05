@@ -127,10 +127,9 @@ class TemplateDataExtension extends DataExtension
                 HeaderField::create('UtilityHD', 'Utility Navigation', 3),
                 LiteralField::create(
                     'UtilityDescrip',
-                    '<p>Add links to the utility navigation area of your template.</p>'
+                    '<p>Add links to the utility navigation area of your template.</p><p>&nbsp;</p>'
                 ),
-                $linksField
-                    ->setDescription('Add links to the utility navigation area'),
+                $linksField,
             ));
 
             // footer navigation
@@ -153,10 +152,9 @@ class TemplateDataExtension extends DataExtension
                 LiteralField::create(
                     'FooterDescrip',
                     '<p>Add columns to the footer area of your template. After you create a column,
-                        you\'ll be able to add groups of links to the footer navigation.</p>'
+                        you\'ll be able to add groups of links to the footer navigation.</p><p>&nbsp;</p>'
                 ),
-                $footerLinks
-                    ->setDescription('Add a column to the layout of the footer of your theme'),
+                $footerLinks,
             ));
         }
 
@@ -166,15 +164,14 @@ class TemplateDataExtension extends DataExtension
 
         $socialLinks = GridField::create(
             'SocialLinks',
-            '',
+            'Links',
             $this->owner->SocialLinks(),
             $config
         );
 
         $fields->addFieldsToTab('Root.Links.Social', array(
             HeaderField::create('SocialHD', 'Social Properties', 3),
-            LiteralField::create('SocialDescrip', '<p>Add links to your social media properties</p>'),
-            HeaderField::create('SociallinkHD', 'Links', 2),
+            LiteralField::create('SocialDescrip', '<p>Add links to your social media properties</p><p>&nbsp;</p>'),
             $socialLinks,
         ));
     }

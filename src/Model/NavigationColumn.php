@@ -7,6 +7,7 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -82,7 +83,7 @@ class NavigationColumn extends DataObject
     {
         $this->beforeUpdateCMSFields(function (FieldList $fields) {
             $fields->removeByName(array(
-                'GlobalConfigID',
+                'ConfigID',
                 'SortOrder',
                 'NavigationGroups',
             ));
@@ -102,18 +103,18 @@ class NavigationColumn extends DataObject
                     );
                 $footerLinks = GridField::create(
                     'NavigationGroups',
-                    'Link Groups',
+                    'Groups',
                     $this->NavigationGroups()->sort('SortOrder'),
                     $config
                 );
 
                 $fields->addFieldsToTab('Root.Main', array(
+                    HeaderField::create('NavGroupHD', 'Link Groups', 3),
                     LiteralField::create(
-                        'GroupDescrip',
-                        '<p>Create groups to populate with links to your footer navigation</p>'
+                        'GroupDescip',
+                        '<p>Add a group of links to the footer navigation area.</p><p>&nbsp;</p>'
                     ),
-                    $footerLinks
-                        ->setDescription('Add a group of links to the footer navigation area'),
+                    $footerLinks,
                 ));
             }
         });
