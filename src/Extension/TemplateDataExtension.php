@@ -31,49 +31,57 @@ class TemplateDataExtension extends DataExtension
     /**
      * @var array
      */
-    private static $db = array(
+    private static $db = [
         'TitleLogo' => "Enum(array('Logo', 'Title'))",
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $has_one = array(
+    private static $has_one = [
         'Logo' => Image::class,
         'LogoRetina' => Image::class,
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $has_many = array(
+    private static $owns = [
+        'Logo',
+        'LogoRetina',
+    ];
+
+    /**
+     * @var array
+     */
+    private static $has_many = [
         'NavigationColumns' => NavigationColumn::class,
         'SocialLinks' => SocialLink::class,
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $many_many = array(
+    private static $many_many = [
         'UtilityLinks' => SiteTree::class,
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $many_many_extraFields = array(
-        'UtilityLinks' => array(
+    private static $many_many_extraFields = [
+        'UtilityLinks' => [
             'SortOrder' => 'Int',
-        ),
-    );
+        ],
+    ];
 
 
     /**
      * @var array
      */
-    private static $defaults = array(
+    private static $defaults = [
         'TitleLogo' => 'Title',
-    );
+    ];
 
     /**
      * @param FieldList $fields
@@ -81,12 +89,12 @@ class TemplateDataExtension extends DataExtension
     public function updateCMSFields(FieldList $fields)
     {
         // options for logo or title display
-        $logoOptions = array(
+        $logoOptions = [
             'Logo' => 'Display Logo',
             'Title' => 'Display Site Title and Slogan',
-        );
+        ];
 
-        $fields->addFieldsToTab('Root.Main', array(
+        $fields->addFieldsToTab('Root.Main', [
             //HeaderField::create('BrandingHD', 'Branding', 3),
             //LiteralField::create('HeaderDescrip', '<p>Adjust the settings of your template header.</p>'),
             $titlelogo = OptionsetField::create('TitleLogo', 'Branding', $logoOptions),
@@ -95,7 +103,7 @@ class TemplateDataExtension extends DataExtension
             // normal logos
             $logo = UploadField::create('Logo', 'Logo'),
             $retinaLogo = UploadField::create('LogoRetina', 'Retina Logo'),
-        ));
+        ]);
 
         //$title->hideUnless($titlelogo->getName())->isEqualTo('Title');
         //$tagline->hideUnless($titlelogo->getName())->isEqualTo('Title');
