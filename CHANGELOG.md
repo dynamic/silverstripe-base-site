@@ -1,6 +1,32 @@
-# Change Log
+# Changelog
+
+## [4.0.0](https://github.com/dynamic/silverstripe-base-site/tree/4.0.0) (2020-03-23)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.4...4.0.0)
+
+**Closed issues:**
+
+- Bug on NavGroup [\#95](https://github.com/dynamic/silverstripe-base-site/issues/95)
+- bring over BlogPreviewCasting extension [\#94](https://github.com/dynamic/silverstripe-base-site/issues/94)
+- TemplateConfig - migrate from silverstripe-template-config [\#90](https://github.com/dynamic/silverstripe-base-site/issues/90)
+- IntegrationConfig - migrate from silverstripe-integration-config, apply to SiteConfig [\#88](https://github.com/dynamic/silverstripe-base-site/issues/88)
+- CompanyConfig - migrate from silverstripe-company-config [\#86](https://github.com/dynamic/silverstripe-base-site/issues/86)
+
+## [3.1.4](https://github.com/dynamic/silverstripe-base-site/tree/3.1.4) (2019-11-13)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.3...3.1.4)
+
+**Fixed bugs:**
+
+- BlogPost not getting content from first content block [\#76](https://github.com/dynamic/silverstripe-base-site/issues/76)
+
+**Merged pull requests:**
+
+- BUGFIX BlogPostDataExtension::getFirstContent\(\) not casting [\#79](https://github.com/dynamic/silverstripe-base-site/pull/79) ([muskie9](https://github.com/muskie9))
+- BUGFIX pages - adjust canCreate\(\) to respect allowed\_children [\#78](https://github.com/dynamic/silverstripe-base-site/pull/78) ([jsirish](https://github.com/jsirish))
 
 ## [3.1.3](https://github.com/dynamic/silverstripe-base-site/tree/3.1.3) (2019-10-22)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.2...3.1.3)
 
 **Merged pull requests:**
@@ -8,17 +34,15 @@
 - Blog posts now save their sub titles [\#77](https://github.com/dynamic/silverstripe-base-site/pull/77) ([mak001](https://github.com/mak001))
 
 ## [3.1.2](https://github.com/dynamic/silverstripe-base-site/tree/3.1.2) (2019-07-08)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.1...3.1.2)
 
 **Fixed bugs:**
 
 - BUG BlogPostDataExtension assumes ElementalArea exists on BlogPost [\#71](https://github.com/dynamic/silverstripe-base-site/issues/71)
 
-**Merged pull requests:**
-
-- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
-
 ## [3.1.1](https://github.com/dynamic/silverstripe-base-site/tree/3.1.1) (2019-05-29)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.0...3.1.1)
 
 **Implemented enhancements:**
@@ -35,6 +59,7 @@
 - UPDATE BlogPostDataExtensionTest to use $required\_extensions [\#65](https://github.com/dynamic/silverstripe-base-site/pull/65) ([muskie9](https://github.com/muskie9))
 
 ## [3.1.0](https://github.com/dynamic/silverstripe-base-site/tree/3.1.0) (2019-03-26)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.0.1...3.1.0)
 
 **Closed issues:**
@@ -46,9 +71,11 @@
 - UPDATE remove dev constraint on requirements [\#62](https://github.com/dynamic/silverstripe-base-site/pull/62) ([muskie9](https://github.com/muskie9))
 
 ## [3.0.1](https://github.com/dynamic/silverstripe-base-site/tree/3.0.1) (2019-01-20)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/2.0.0...3.0.1)
 
 ## [2.0.0](https://github.com/dynamic/silverstripe-base-site/tree/2.0.0) (2019-01-20)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.0.0...2.0.0)
 
 **Merged pull requests:**
@@ -56,17 +83,21 @@
 - remove branch alias [\#59](https://github.com/dynamic/silverstripe-base-site/pull/59) ([jsirish](https://github.com/jsirish))
 
 ## [3.0.0](https://github.com/dynamic/silverstripe-base-site/tree/3.0.0) (2019-01-20)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/2.0.0-beta4...3.0.0)
 
 **Merged pull requests:**
 
+- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
 - Refactor/elemental4 [\#60](https://github.com/dynamic/silverstripe-base-site/pull/60) ([jsirish](https://github.com/jsirish))
 - migrate to Jenkins CI [\#58](https://github.com/dynamic/silverstripe-base-site/pull/58) ([jsirish](https://github.com/jsirish))
 
 ## [2.0.0-beta4](https://github.com/dynamic/silverstripe-base-site/tree/2.0.0-beta4) (2018-11-14)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/2.0.0-beta3...2.0.0-beta4)
 
 ## [2.0.0-beta3](https://github.com/dynamic/silverstripe-base-site/tree/2.0.0-beta3) (2018-11-14)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/2.0.0-beta2...2.0.0-beta3)
 
 **Merged pull requests:**
@@ -74,6 +105,7 @@
 - ENHANCEMENT enable full text search by default [\#57](https://github.com/dynamic/silverstripe-base-site/pull/57) ([muskie9](https://github.com/muskie9))
 
 ## [2.0.0-beta2](https://github.com/dynamic/silverstripe-base-site/tree/2.0.0-beta2) (2018-09-27)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/2.0.0-beta1...2.0.0-beta2)
 
 **Merged pull requests:**
@@ -81,6 +113,7 @@
 - composer - remove vulcandigital/seo until less buggy [\#56](https://github.com/dynamic/silverstripe-base-site/pull/56) ([jsirish](https://github.com/jsirish))
 
 ## [2.0.0-beta1](https://github.com/dynamic/silverstripe-base-site/tree/2.0.0-beta1) (2018-09-14)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/1.0.0-beta1...2.0.0-beta1)
 
 **Merged pull requests:**
@@ -96,6 +129,7 @@
 - Update composer.json [\#47](https://github.com/dynamic/silverstripe-base-site/pull/47) ([jsirish](https://github.com/jsirish))
 
 ## [1.0.0-beta1](https://github.com/dynamic/silverstripe-base-site/tree/1.0.0-beta1) (2018-09-05)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/1.0.0-alpha2...1.0.0-beta1)
 
 **Fixed bugs:**
@@ -111,6 +145,7 @@
 - Removed delete button for elemental gridfields [\#45](https://github.com/dynamic/silverstripe-base-site/pull/45) ([mak001](https://github.com/mak001))
 
 ## [1.0.0-alpha2](https://github.com/dynamic/silverstripe-base-site/tree/1.0.0-alpha2) (2018-03-30)
+
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/1.0.0-alpha1...1.0.0-alpha2)
 
 **Merged pull requests:**
@@ -118,6 +153,9 @@
 - add name to scaled uploads yml [\#43](https://github.com/dynamic/silverstripe-base-site/pull/43) ([korthjp17](https://github.com/korthjp17))
 
 ## [1.0.0-alpha1](https://github.com/dynamic/silverstripe-base-site/tree/1.0.0-alpha1) (2018-03-27)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/6b4ade92c3fc1d5bb1f2f5e26479918bad744fbc...1.0.0-alpha1)
+
 **Implemented enhancements:**
 
 - update scaled uploads max width [\#28](https://github.com/dynamic/silverstripe-base-site/pull/28) ([korthjp17](https://github.com/korthjp17))
@@ -160,4 +198,4 @@
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
