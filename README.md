@@ -21,54 +21,63 @@ This is how you install silverstripe-base-site.
 Recommended configuration:
 
 ```
-SilverStripe\Admin\LeftAndMain:
-  application_name: 'Dynamic'
-  application_link: 'http://www.dynamicagency.com'
+Axllent\CMSTweaks\MetadataTab:
+  use_tab: true
+  tab_title: 'SEO'
+  tab_to_right: true
+  page_name_title: 'Page Title'
+  move_title_to_advanced: false
+
+SilverStripe\SiteConfig\SiteConfig:
+  extensions:
+    - Dynamic\Base\Extension\CompanyDataExtension
+    - Dynamic\Base\Extension\IntegrationsDataExtension
+    - Dynamic\Base\Extension\TemplateDataExtension
+    - Dynamic\SiteTools\Extension\ReviewContentDataExtension
 
 SilverStripe\CMS\Model\SiteTree:
   extensions:
-    - Dynamic\CoreTools\ORM\CMSDesign
+    - Dynamic\Base\Extension\CmsDesignDataExtension
+
+Page:
+  extensions:
+    - Vulcan\Seo\Extensions\PageHealthExtension
+    - Vulcan\Seo\Extensions\PageSeoExtension
+    - Dynamic\Base\Extension\SeoExtension
 
 Dynamic\Base\Page\HomePage:
   extensions:
-    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - Dynamic\SiteTools\Extension\HeaderImageExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
-    - Dynamic\CoreTools\ORM\ElementalSearch
 
 Dynamic\Base\Page\BlockPage:
   extensions:
-    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - Dynamic\SiteTools\Extension\HeaderImageExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
-    - Dynamic\CoreTools\ORM\ElementalSearch
 
 Dynamic\Base\Page\CampaignLandingPage:
   extensions:
-    - Dynamic\CoreTools\ORM\HeaderImageDataExtension
+    - Dynamic\SiteTools\Extension\HeaderImageExtension
     - DNADesign\Elemental\Extensions\ElementalPageExtension
-    - Dynamic\CoreTools\ORM\ElementalSearch
-
-SilverStripe\ORM\DataList:
-  extensions:
-  - Dynamic\CoreTools\ORM\CoreToolsDataListDataExtension
-
-SilverStripe\UserForms\Model\EditableFormField:
-  extensions:
-  - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
-
-SilverStripe\UserForms\Model\EditableCustomRule:
-  extensions:
-  - Dynamic\CoreTools\ORM\ContentAuthorPermissionManager
 
 SilverStripe\Blog\Model\BlogPost:
   extensions:
-  - DNADesign\Elemental\Extensions\ElementalPageExtension
-  - Dynamic\CoreTools\ORM\ElementalSearch
-  - Dynamic\CoreTools\ORM\PreviewExtension
-  - Dynamic\Base\ORM\BlogPostDataExtension
+    - DNADesign\Elemental\Extensions\ElementalPageExtension
+    - Dynamic\SiteTools\Extension\PreviewExtension
+    - Dynamic\Base\Extension\BlogPostDataExtension
 
-DNADesign\Elemental\ElementalEditor:
+Dynamic\Base\Model\CompanyAddress:
   extensions:
-  - Dynamic\Base\ORM\ElementalEditorExtension
+    - Dynamic\SilverStripeGeocoder\AddressDataExtension
+
+SilverStripe\UserForms\Model\EditableFormField:
+  extensions:
+    - Dynamic\SiteTools\Extension\DataobjectPermissionExtension
+
+SilverStripe\UserForms\Model\EditableCustomRule:
+  extensions:
+    - Dynamic\SiteTools\Extension\DataobjectPermissionExtension
+
 ```
 
 ## Documentation
