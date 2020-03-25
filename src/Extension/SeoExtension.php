@@ -133,7 +133,12 @@ class SeoExtension extends DataExtension
 
         // set Content to output of blocks for search
         if ($this->owner->hasMethod('getElementsForSearch')) {
-            $this->owner->SearchContent = $this->owner->getElementsForSearch();
+            $this->owner->SearchContent =
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
         } else {
             $this->owner->SearchContent = $this->owner->Content;
         }
