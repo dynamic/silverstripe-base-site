@@ -1,6 +1,14 @@
 # Changelog
 
-## [4.0.0](https://github.com/dynamic/silverstripe-base-site/tree/4.0.0) (2020-03-23)
+## [4.0.1](https://github.com/dynamic/silverstripe-base-site/tree/4.0.1) (2020-03-24)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.0...4.0.1)
+
+**Merged pull requests:**
+
+- FEATURE SeoExtension - SearchContent field [\#100](https://github.com/dynamic/silverstripe-base-site/pull/100) ([jsirish](https://github.com/jsirish))
+
+## [4.0.0](https://github.com/dynamic/silverstripe-base-site/tree/4.0.0) (2020-03-24)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.4...4.0.0)
 
@@ -11,6 +19,21 @@
 - TemplateConfig - migrate from silverstripe-template-config [\#90](https://github.com/dynamic/silverstripe-base-site/issues/90)
 - IntegrationConfig - migrate from silverstripe-integration-config, apply to SiteConfig [\#88](https://github.com/dynamic/silverstripe-base-site/issues/88)
 - CompanyConfig - migrate from silverstripe-company-config [\#86](https://github.com/dynamic/silverstripe-base-site/issues/86)
+
+**Merged pull requests:**
+
+- BUGFIX add $owns to TemplateDataExtension logos [\#99](https://github.com/dynamic/silverstripe-base-site/pull/99) ([muskie9](https://github.com/muskie9))
+- FEATURE CMS Design for SiteConfig Links tab [\#97](https://github.com/dynamic/silverstripe-base-site/pull/97) ([jsirish](https://github.com/jsirish))
+- BUGFIX BlogPostDataExtension - add casting for FirstContent\(\) [\#96](https://github.com/dynamic/silverstripe-base-site/pull/96) ([jsirish](https://github.com/jsirish))
+- FEATURE require silverstripe-site-tools [\#93](https://github.com/dynamic/silverstripe-base-site/pull/93) ([jsirish](https://github.com/jsirish))
+- FEATURE CompanyAddress - set is primary location [\#92](https://github.com/dynamic/silverstripe-base-site/pull/92) ([jsirish](https://github.com/jsirish))
+- FEATURE TemplateConfig migration [\#91](https://github.com/dynamic/silverstripe-base-site/pull/91) ([jsirish](https://github.com/jsirish))
+- FEATURE migrate Integrations DataExtension [\#89](https://github.com/dynamic/silverstripe-base-site/pull/89) ([jsirish](https://github.com/jsirish))
+- FEATURE CompanyConfig [\#87](https://github.com/dynamic/silverstripe-base-site/pull/87) ([jsirish](https://github.com/jsirish))
+- FEATURE CMS design related DataExtensions [\#84](https://github.com/dynamic/silverstripe-base-site/pull/84) ([jsirish](https://github.com/jsirish))
+- BUGFIX HomePage - remove ElementalArea field [\#83](https://github.com/dynamic/silverstripe-base-site/pull/83) ([jsirish](https://github.com/jsirish))
+- composer remove requirements in favor of recipe [\#82](https://github.com/dynamic/silverstripe-base-site/pull/82) ([jsirish](https://github.com/jsirish))
+- REFACTOR Page types - remove permission provider [\#81](https://github.com/dynamic/silverstripe-base-site/pull/81) ([jsirish](https://github.com/jsirish))
 
 ## [3.1.4](https://github.com/dynamic/silverstripe-base-site/tree/3.1.4) (2019-11-13)
 
@@ -40,6 +63,10 @@
 **Fixed bugs:**
 
 - BUG BlogPostDataExtension assumes ElementalArea exists on BlogPost [\#71](https://github.com/dynamic/silverstripe-base-site/issues/71)
+
+**Merged pull requests:**
+
+- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
 
 ## [3.1.1](https://github.com/dynamic/silverstripe-base-site/tree/3.1.1) (2019-05-29)
 
@@ -88,7 +115,6 @@
 
 **Merged pull requests:**
 
-- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
 - Refactor/elemental4 [\#60](https://github.com/dynamic/silverstripe-base-site/pull/60) ([jsirish](https://github.com/jsirish))
 - migrate to Jenkins CI [\#58](https://github.com/dynamic/silverstripe-base-site/pull/58) ([jsirish](https://github.com/jsirish))
 
