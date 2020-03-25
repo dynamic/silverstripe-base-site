@@ -9,6 +9,7 @@ use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\DataExtension;
+use SilverStripe\ORM\ValidationException;
 use Vulcan\Seo\Builders\FacebookMetaGenerator;
 use Vulcan\Seo\Extensions\PageHealthExtension;
 use Vulcan\Seo\Forms\GoogleSearchPreview;
@@ -124,44 +125,15 @@ class SeoExtension extends DataExtension
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
+     * @throws ValidationException
      */
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
 
-        // check if Page has ElementalArea
-        if (!$this->owner->ID) {
-            foreach ($this->owner->hasOne() as $name => $type) {
-                if ($name !== 'ElementalArea') {
-                    continue;
-                }
-
-                if (!is_subclass_of($type, ElementalArea::class)) {
-                    continue;
-                }
-
-                if (!$this->owner->ElementAreaID) {
-                    $area = ElementalArea::create();
-                    $area->write();
-
-                    $this->owner->ElementAreaID = $area->ID;
-                }
-                $content = ElementContent::create();
-                $content->Title = "Main Content";
-                $content->ParentID = $this->owner->ElementalArea()->ID;
-                $content->write();
-            }
-        }
-
         // set Content to output of blocks for search
         if ($this->owner->hasMethod('getElementsForSearch')) {
-            $this->owner->SearchContent =
-                ltrim(
-                    rtrim(
-                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
-                    )
-                );
+            $this->owner->SearchContent = $this->owner->getElementsForSearch();
         } else {
             $this->owner->SearchContent = $this->owner->Content;
         }
