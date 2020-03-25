@@ -14,8 +14,32 @@ use Vulcan\Seo\Extensions\PageHealthExtension;
 use Vulcan\Seo\Forms\GoogleSearchPreview;
 use Vulcan\Seo\Forms\HealthAnalysisField;
 
+/**
+ * Class SeoExtension
+ * @package Dynamic\Base\Extension
+ */
 class SeoExtension extends DataExtension
 {
+    /**
+     * @var array
+     */
+    private static $db = [
+        'SearchContent' => 'HTMLText',
+    ];
+
+    /**
+     * @var array
+     */
+    private static $indexes = [
+        'SearchFields' => [
+            'type' => 'fulltext',
+            'columns' => ['SearchContent'],
+        ],
+    ];
+
+    /**
+     * @param FieldList $fields
+     */
     public function updateCMSFields(FieldList $fields)
     {
         parent::updateCMSFields($fields);
@@ -87,5 +111,59 @@ class SeoExtension extends DataExtension
                     ->setTargetLength(200, 160, 320),
             ])
         ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function seoContentFields()
+    {
+        return [
+            'SearchContent',
+        ];
+    }
+
+    /**
+     * @throws \SilverStripe\ORM\ValidationException
+     */
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        // check if Page has ElementalArea
+        if (!$this->owner->ID) {
+            foreach ($this->owner->hasOne() as $name => $type) {
+                if ($name !== 'ElementalArea') {
+                    continue;
+                }
+
+                if (!is_subclass_of($type, ElementalArea::class)) {
+                    continue;
+                }
+
+                if (!$this->owner->ElementAreaID) {
+                    $area = ElementalArea::create();
+                    $area->write();
+
+                    $this->owner->ElementAreaID = $area->ID;
+                }
+                $content = ElementContent::create();
+                $content->Title = "Main Content";
+                $content->ParentID = $this->owner->ElementalArea()->ID;
+                $content->write();
+            }
+        }
+
+        // set Content to output of blocks for search
+        if ($this->owner->hasMethod('getElementsForSearch')) {
+            $this->owner->SearchContent =
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
+        } else {
+            $this->owner->SearchContent = $this->owner->Content;
+        }
     }
 }
