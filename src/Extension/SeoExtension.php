@@ -9,13 +9,38 @@ use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\DataExtension;
+use SilverStripe\ORM\ValidationException;
 use Vulcan\Seo\Builders\FacebookMetaGenerator;
 use Vulcan\Seo\Extensions\PageHealthExtension;
 use Vulcan\Seo\Forms\GoogleSearchPreview;
 use Vulcan\Seo\Forms\HealthAnalysisField;
 
+/**
+ * Class SeoExtension
+ * @package Dynamic\Base\Extension
+ */
 class SeoExtension extends DataExtension
 {
+    /**
+     * @var array
+     */
+    private static $db = [
+        'SearchContent' => 'HTMLText',
+    ];
+
+    /**
+     * @var array
+     */
+    private static $indexes = [
+        'SearchFields' => [
+            'type' => 'fulltext',
+            'columns' => ['SearchContent'],
+        ],
+    ];
+
+    /**
+     * @param FieldList $fields
+     */
     public function updateCMSFields(FieldList $fields)
     {
         parent::updateCMSFields($fields);
@@ -87,5 +112,35 @@ class SeoExtension extends DataExtension
                     ->setTargetLength(200, 160, 320),
             ])
         ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function seoContentFields()
+    {
+        return [
+            'SearchContent',
+        ];
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        // set Content to output of blocks for search
+        if ($this->owner->hasMethod('getElementsForSearch')) {
+            $this->owner->SearchContent =
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
+        } else {
+            $this->owner->SearchContent = $this->owner->Content;
+        }
     }
 }
