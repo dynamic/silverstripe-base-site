@@ -71,20 +71,6 @@ class HomePage extends \Page
     }
 
     /**
-     * @param null|Member $member
-     *
-     * @return bool|int
-     */
-    public function canCreate($member = null, $context = [])
-    {
-        if (!self::get()->first()) {
-            return Permission::check('CMS_ACCESS_CMSMain', 'any', $member);
-        }
-
-        return false;
-    }
-
-    /**
      * @throws \SilverStripe\ORM\ValidationException
      */
     public function onBeforeWrite()
