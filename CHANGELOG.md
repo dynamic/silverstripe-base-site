@@ -1,6 +1,16 @@
 # Changelog
 
-## [4.0.1](https://github.com/dynamic/silverstripe-base-site/tree/4.0.1) (2020-03-24)
+## [4.0.2](https://github.com/dynamic/silverstripe-base-site/tree/4.0.2) (2020-04-14)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.1...4.0.2)
+
+**Merged pull requests:**
+
+- README updates [\#104](https://github.com/dynamic/silverstripe-base-site/pull/104) ([jsirish](https://github.com/jsirish))
+- BUGFIX Shared draft content - looser version requirement [\#103](https://github.com/dynamic/silverstripe-base-site/pull/103) ([jsirish](https://github.com/jsirish))
+- BUGFIX remove canCreate\(\) method to fix CMS fields [\#102](https://github.com/dynamic/silverstripe-base-site/pull/102) ([jsirish](https://github.com/jsirish))
+
+## [4.0.1](https://github.com/dynamic/silverstripe-base-site/tree/4.0.1) (2020-03-25)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.0...4.0.1)
 
@@ -12,8 +22,13 @@
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.4...4.0.0)
 
+**Fixed bugs:**
+
+- BUG HomePage - canCreate\(\) check removes URLSegment and Navigation Label fields [\#101](https://github.com/dynamic/silverstripe-base-site/issues/101)
+
 **Closed issues:**
 
+- BUG SiteConfig no longer `$owns` template images \(logos\) [\#98](https://github.com/dynamic/silverstripe-base-site/issues/98)
 - Bug on NavGroup [\#95](https://github.com/dynamic/silverstripe-base-site/issues/95)
 - bring over BlogPreviewCasting extension [\#94](https://github.com/dynamic/silverstripe-base-site/issues/94)
 - TemplateConfig - migrate from silverstripe-template-config [\#90](https://github.com/dynamic/silverstripe-base-site/issues/90)
