@@ -35,7 +35,7 @@
     },
     "require-dev": {
         "lekoala/silverstripe-debugbar": "^2.0@dev",
-        "phpunit/PHPUnit": "^5.7",
+        "phpunit/phpunit": "^5.7",
         "squizlabs/php_codesniffer": "*"
     },
     "config": {
