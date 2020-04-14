@@ -50,13 +50,7 @@
             "Dynamic\\Base\\": "src/",
             "Dynamic\\Base\\Test\\": "tests/"
         }
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://repo.packagist.com/dynamic/"
-        }
-    ],
+    }
     "minimum-stability": "dev",
     "prefer-stable": true
 }
