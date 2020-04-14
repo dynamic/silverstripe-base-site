@@ -50,7 +50,7 @@
             "Dynamic\\Base\\": "src/",
             "Dynamic\\Base\\Test\\": "tests/"
         }
-    }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
