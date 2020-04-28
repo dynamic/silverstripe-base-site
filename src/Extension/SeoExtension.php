@@ -10,10 +10,10 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\ValidationException;
-use Vulcan\Seo\Builders\FacebookMetaGenerator;
-use Vulcan\Seo\Extensions\PageHealthExtension;
-use Vulcan\Seo\Forms\GoogleSearchPreview;
-use Vulcan\Seo\Forms\HealthAnalysisField;
+use QuinnInteractive\Seo\Builders\FacebookMetaGenerator;
+use QuinnInteractive\Seo\Extensions\PageHealthExtension;
+use QuinnInteractive\Seo\Forms\GoogleSearchPreview;
+use QuinnInteractive\Seo\Forms\HealthAnalysisField;
 
 /**
  * Class SeoExtension
