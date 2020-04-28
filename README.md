@@ -59,8 +59,8 @@ SilverStripe\CMS\Model\SiteTree:
 
 Page:
   extensions:
-    - Vulcan\Seo\Extensions\PageHealthExtension
-    - Vulcan\Seo\Extensions\PageSeoExtension
+    - QuinnInteractive\Seo\Extensions\PageHealthExtension
+    - QuinnInteractive\Seo\Extensions\PageSeoExtension
     - Dynamic\Base\Extension\SeoExtension
 
 Dynamic\Base\Page\HomePage:
@@ -96,7 +96,6 @@ SilverStripe\UserForms\Model\EditableFormField:
 SilverStripe\UserForms\Model\EditableCustomRule:
   extensions:
     - Dynamic\SiteTools\Extension\DataobjectPermissionExtension
-
 ```
 
 ## Maintainers
