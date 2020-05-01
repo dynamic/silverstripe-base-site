@@ -31,7 +31,9 @@ Base page types for SilverStripe websites
 
 ## Example usage
 
-Recommended configuration from [dynamic/recipe-silverstripe-base-site](https://github.com/dynamic/recipe-silverstripe-base-site):
+Also see [dynamic/recipe-silverstripe-base-site](https://github.com/dynamic/recipe-silverstripe-base-site):
+
+Recommended configuration:
 
 ```
 ---
@@ -39,13 +41,6 @@ name: base-site-config
 After:
   - '*'
 ---
-Axllent\CMSTweaks\MetadataTab:
-  use_tab: true
-  tab_title: 'SEO'
-  tab_to_right: true
-  page_name_title: 'Page Title'
-  move_title_to_advanced: false
-
 SilverStripe\SiteConfig\SiteConfig:
   extensions:
     - Dynamic\Base\Extension\CompanyDataExtension
@@ -56,12 +51,6 @@ SilverStripe\SiteConfig\SiteConfig:
 SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Dynamic\Base\Extension\CmsDesignDataExtension
-
-Page:
-  extensions:
-    - QuinnInteractive\Seo\Extensions\PageHealthExtension
-    - QuinnInteractive\Seo\Extensions\PageSeoExtension
-    - Dynamic\Base\Extension\SeoExtension
 
 Dynamic\Base\Page\HomePage:
   extensions:
