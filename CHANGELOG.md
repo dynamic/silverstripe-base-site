@@ -1,6 +1,15 @@
 # Changelog
 
-## [4.0.3](https://github.com/dynamic/silverstripe-base-site/tree/4.0.3) (2020-04-27)
+## [4.0.4](https://github.com/dynamic/silverstripe-base-site/tree/4.0.4) (2020-05-01)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.3...4.0.4)
+
+**Merged pull requests:**
+
+- BUGFIX README default config [\#107](https://github.com/dynamic/silverstripe-base-site/pull/107) ([jsirish](https://github.com/jsirish))
+- README SEO namespace update [\#106](https://github.com/dynamic/silverstripe-base-site/pull/106) ([jsirish](https://github.com/jsirish))
+
+## [4.0.3](https://github.com/dynamic/silverstripe-base-site/tree/4.0.3) (2020-04-28)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.2...4.0.3)
 
@@ -57,7 +66,6 @@
 - BUGFIX HomePage - remove ElementalArea field [\#83](https://github.com/dynamic/silverstripe-base-site/pull/83) ([jsirish](https://github.com/jsirish))
 - composer remove requirements in favor of recipe [\#82](https://github.com/dynamic/silverstripe-base-site/pull/82) ([jsirish](https://github.com/jsirish))
 - REFACTOR Page types - remove permission provider [\#81](https://github.com/dynamic/silverstripe-base-site/pull/81) ([jsirish](https://github.com/jsirish))
-- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
 
 ## [3.1.4](https://github.com/dynamic/silverstripe-base-site/tree/3.1.4) (2019-11-13)
 
@@ -87,6 +95,10 @@
 **Fixed bugs:**
 
 - BUG BlogPostDataExtension assumes ElementalArea exists on BlogPost [\#71](https://github.com/dynamic/silverstripe-base-site/issues/71)
+
+**Merged pull requests:**
+
+- BUGFIX check if element relations exist [\#72](https://github.com/dynamic/silverstripe-base-site/pull/72) ([muskie9](https://github.com/muskie9))
 
 ## [3.1.1](https://github.com/dynamic/silverstripe-base-site/tree/3.1.1) (2019-05-29)
 
