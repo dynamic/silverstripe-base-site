@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.0.5](https://github.com/dynamic/silverstripe-base-site/tree/4.0.5) (2020-08-25)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.4...4.0.5)
+
+**Fixed bugs:**
+
+- README - move ElementalSearch to SiteTree, vs. specific page types [\#70](https://github.com/dynamic/silverstripe-base-site/issues/70)
+- HomePage - navigation label and URLSegment missing from SEO tab [\#68](https://github.com/dynamic/silverstripe-base-site/issues/68)
+
+**Closed issues:**
+
+- BUG referencing legacy namespaces for SEO requirement [\#108](https://github.com/dynamic/silverstripe-base-site/issues/108)
+- update config for Axllent\CMSTweaks [\#75](https://github.com/dynamic/silverstripe-base-site/issues/75)
+- allow divs to be included in WYSIWYG editor [\#73](https://github.com/dynamic/silverstripe-base-site/issues/73)
+- NEW additional modules as suggestion and Docs update [\#69](https://github.com/dynamic/silverstripe-base-site/issues/69)
+
+**Merged pull requests:**
+
+- REFACTOR SeoExtension - use existing SEO fields [\#110](https://github.com/dynamic/silverstripe-base-site/pull/110) ([jsirish](https://github.com/jsirish))
+
 ## [4.0.4](https://github.com/dynamic/silverstripe-base-site/tree/4.0.4) (2020-05-01)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.3...4.0.4)
