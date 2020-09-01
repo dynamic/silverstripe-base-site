@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.5](https://github.com/dynamic/silverstripe-base-site/tree/3.1.5) (2020-09-01)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.5...3.1.5)
+
+**Merged pull requests:**
+
+- REFACTOR allow UserForm page type [\#112](https://github.com/dynamic/silverstripe-base-site/pull/112) ([jsirish](https://github.com/jsirish))
+- UPDATE allowed core-tools version constraints [\#109](https://github.com/dynamic/silverstripe-base-site/pull/109) ([muskie9](https://github.com/muskie9))
+
 ## [3.1.4](https://github.com/dynamic/silverstripe-base-site/tree/3.1.4) (2019-11-13)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.3...3.1.4)
