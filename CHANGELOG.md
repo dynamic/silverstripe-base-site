@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.0.6](https://github.com/dynamic/silverstripe-base-site/tree/4.0.6) (2020-09-01)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.5...4.0.6)
+
+**Merged pull requests:**
+
+- REFACTOR allow UserForm page type #112 (jsirish)
+- TESTS update Travis config [\#111](https://github.com/dynamic/silverstripe-base-site/pull/111) ([jsirish](https://github.com/jsirish))
+
+## [3.1.5](https://github.com/dynamic/silverstripe-base-site/tree/3.1.5) (2020-09-01)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.5...3.1.5)
+
+**Merged pull requests:**
+
+- REFACTOR allow UserForm page type [\#112](https://github.com/dynamic/silverstripe-base-site/pull/112) ([jsirish](https://github.com/jsirish))
+- UPDATE allowed core-tools version constraints [\#109](https://github.com/dynamic/silverstripe-base-site/pull/109) ([muskie9](https://github.com/muskie9))
+
 ## [4.0.5](https://github.com/dynamic/silverstripe-base-site/tree/4.0.5) (2020-08-25)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.4...4.0.5)
@@ -46,6 +64,7 @@
 - README updates [\#104](https://github.com/dynamic/silverstripe-base-site/pull/104) ([jsirish](https://github.com/jsirish))
 - BUGFIX Shared draft content - looser version requirement [\#103](https://github.com/dynamic/silverstripe-base-site/pull/103) ([jsirish](https://github.com/jsirish))
 - BUGFIX remove canCreate\(\) method to fix CMS fields [\#102](https://github.com/dynamic/silverstripe-base-site/pull/102) ([jsirish](https://github.com/jsirish))
+- FEATURE CompanyAddress - set is primary location [\#92](https://github.com/dynamic/silverstripe-base-site/pull/92) ([jsirish](https://github.com/jsirish))
 
 ## [4.0.1](https://github.com/dynamic/silverstripe-base-site/tree/4.0.1) (2020-03-25)
 
@@ -78,7 +97,6 @@
 - FEATURE CMS Design for SiteConfig Links tab [\#97](https://github.com/dynamic/silverstripe-base-site/pull/97) ([jsirish](https://github.com/jsirish))
 - BUGFIX BlogPostDataExtension - add casting for FirstContent\(\) [\#96](https://github.com/dynamic/silverstripe-base-site/pull/96) ([jsirish](https://github.com/jsirish))
 - FEATURE require silverstripe-site-tools [\#93](https://github.com/dynamic/silverstripe-base-site/pull/93) ([jsirish](https://github.com/jsirish))
-- FEATURE CompanyAddress - set is primary location [\#92](https://github.com/dynamic/silverstripe-base-site/pull/92) ([jsirish](https://github.com/jsirish))
 - FEATURE TemplateConfig migration [\#91](https://github.com/dynamic/silverstripe-base-site/pull/91) ([jsirish](https://github.com/jsirish))
 - FEATURE migrate Integrations DataExtension [\#89](https://github.com/dynamic/silverstripe-base-site/pull/89) ([jsirish](https://github.com/jsirish))
 - FEATURE CompanyConfig [\#87](https://github.com/dynamic/silverstripe-base-site/pull/87) ([jsirish](https://github.com/jsirish))
