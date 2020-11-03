@@ -54,14 +54,15 @@ class SeoExtension extends DataExtension
         }
 
         if (class_exists(PageHealthExtension::class)) {
-            $pagehealth = $fields->fieldByName('Root.Main.SEOHealthAnalysis');
-            $pagehealth_fields = $pagehealth->FieldList();
-            $fields->removeFieldFromTab('Root.Main', 'SEOHealthAnalysis');
+            if ($pagehealth = $fields->fieldByName('Root.Main.SEOHealthAnalysis')) {
+                $pagehealth_fields = $pagehealth->FieldList();
+                $fields->removeFieldFromTab('Root.Main', 'SEOHealthAnalysis');
 
-            $fields->addFieldsToTab(
-                'Root.' . $tab_title,
-                $pagehealth
-            );
+                $fields->addFieldsToTab(
+                    'Root.' . $tab_title,
+                    $pagehealth
+                );
+            }
         }
 
         if (class_exists(PageSeoExtension::class)) {
