@@ -17,6 +17,9 @@ matrix:
       env: DB=MYSQL RECIPE_VERSION=4.7.x-dev PHPUNIT_TEST=1
     - php: 7.4
       env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1
+  allow_failures:
+    - php: 7.4
+      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1
 
 before_script:
   - phpenv rehash
