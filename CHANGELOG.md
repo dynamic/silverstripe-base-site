@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.0.8](https://github.com/dynamic/silverstripe-base-site/tree/4.0.8) (2021-06-03)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.7...4.0.8)
+
+**Merged pull requests:**
+
+- CI update workflow [\#117](https://github.com/dynamic/silverstripe-base-site/pull/117) ([jsirish](https://github.com/jsirish))
+- FEATURE SeoExtension - generate MetaDescription [\#116](https://github.com/dynamic/silverstripe-base-site/pull/116) ([jsirish](https://github.com/jsirish))
+
 ## [4.0.7](https://github.com/dynamic/silverstripe-base-site/tree/4.0.7) (2020-11-03)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.6...4.0.7)
