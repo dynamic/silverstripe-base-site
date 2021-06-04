@@ -3,16 +3,12 @@
 namespace Dynamic\Base\Extension;
 
 use Axllent\CMSTweaks\MetadataTab;
+use DNADesign\Elemental\Models\ElementalArea;
+use DNADesign\Elemental\Models\ElementContent;
 use QuinnInteractive\Seo\Extensions\PageSeoExtension;
-use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\TextareaField;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\ValidationException;
 use QuinnInteractive\Seo\Builders\FacebookMetaGenerator;
 use QuinnInteractive\Seo\Extensions\PageHealthExtension;
 use QuinnInteractive\Seo\Forms\GoogleSearchPreview;
@@ -95,7 +91,28 @@ class SeoExtension extends DataExtension
     }
 
     /**
-     * @throws ValidationException
+     * @return null
+     */
+    protected function generateMetaDescription()
+    {
+        if ($this->owner->Content) {
+            return $this->owner->dbObject('Content')->LimitCharacters(180);
+        }
+
+        if ($this->owner->hasMethod('ElementalArea')) {
+            /** @var ElementalArea $area */
+            if ($area = $this->owner->ElementalArea()) {
+                if ($content = $area->Elements()->filter('ClassName', ElementContent::class)->first()) {
+                    return $content->dbObject('HTML')->LimitCharacters(180);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     *
      */
     public function onBeforeWrite()
     {
@@ -111,6 +128,11 @@ class SeoExtension extends DataExtension
                 );
         } else {
             $this->owner->SearchContent = $this->owner->Content;
+        }
+
+        // generate MetaDescription
+        if (!$this->owner->MetaDescription) {
+            $this->owner->MetaDescription = $this->generateMetaDescription();
         }
     }
 }
