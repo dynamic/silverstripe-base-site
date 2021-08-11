@@ -20,6 +20,7 @@
         "dynamic/silverstripe-geocoder": "^1.1",
         "dynamic/silverstripe-site-tools": "^1.0",
         "jonom/silverstripe-betternavigator": "^4.0",
+        "jonom/silverstripe-text-target-length": "^2.0",
         "silverstripe/blog": "^3.0",
         "silverstripe/recipe-cms": "^4.3",
         "silverstripe/sharedraftcontent": "^2.0",
