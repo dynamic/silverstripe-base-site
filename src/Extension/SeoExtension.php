@@ -13,6 +13,7 @@ use QuinnInteractive\Seo\Builders\FacebookMetaGenerator;
 use QuinnInteractive\Seo\Extensions\PageHealthExtension;
 use QuinnInteractive\Seo\Forms\GoogleSearchPreview;
 use QuinnInteractive\Seo\Forms\HealthAnalysisField;
+use SilverStripe\ORM\FieldType\DBField;
 
 /**
  * Class SeoExtension
@@ -78,6 +79,14 @@ class SeoExtension extends DataExtension
                 $twitter
             );
         }
+
+        if ($page_title = $fields->dataFieldByName('Title')) {
+            $page_title->setTargetLength(45, 25, 60);
+        }
+
+        if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
+            $meta_description->setTargetLength(130, 70, 155);
+        }
     }
 
     /**
@@ -91,21 +100,36 @@ class SeoExtension extends DataExtension
     }
 
     /**
+     * @return string|void
+     */
+    protected function generateElementPreview()
+    {
+        if ($this->owner->hasMethod('getElementsForSearch')) {
+            return
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
+        }
+    }
+
+    /**
      * @return null
      */
     protected function generateMetaDescription()
     {
-        if ($this->owner->Content) {
-            return $this->owner->dbObject('Content')->LimitCharacters(180);
-        }
-
         if ($this->owner->hasMethod('ElementalArea')) {
             /** @var ElementalArea $area */
             if ($area = $this->owner->ElementalArea()) {
                 if ($content = $area->Elements()->filter('ClassName', ElementContent::class)->first()) {
-                    return $content->dbObject('HTML')->LimitCharacters(180);
+                    return $content->dbObject('HTML')->LimitCharacters(150);
                 }
             }
+        }
+
+        if ($this->owner->Content) {
+            return $this->owner->dbObject('Content')->LimitCharacters(150);
         }
 
         return null;
@@ -120,12 +144,7 @@ class SeoExtension extends DataExtension
 
         // set SearchContent to output of blocks for search
         if ($this->owner->hasMethod('getElementsForSearch')) {
-            $this->owner->SearchContent =
-                ltrim(
-                    rtrim(
-                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
-                    )
-                );
+            $this->owner->SearchContent = $this->generateElementPreview();
         } else {
             $this->owner->SearchContent = $this->owner->Content;
         }
