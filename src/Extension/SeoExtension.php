@@ -21,6 +21,8 @@ use SilverStripe\ORM\FieldType\DBField;
  */
 class SeoExtension extends DataExtension
 {
+    const META_CHAR_COUNT_MAX = 155;
+
     /**
      * @var array
      */
@@ -85,7 +87,25 @@ class SeoExtension extends DataExtension
         }
 
         if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
-            $meta_description->setTargetLength(130, 70, 155);
+            $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
+        }
+    }
+
+    public function MetaComponents(&$tags)
+    {
+        $metaLimit = $this->owner->config()->get('meta_description_character_limit')
+            ?: static::META_CHAR_COUNT_MAX;
+
+        /**
+         * https://stackoverflow.com/a/35653771
+         */
+        if (preg_match_all('/[^ \.]/', $this->owner->MetaDescription) > $metaLimit) {
+            $tags['description'] = [
+                'attributes' => [
+                    'name' => 'description',
+                    'content' => $this->owner->dbObject('MetaDescription')->LimitCharacters($metaLimit),
+                ],
+            ];
         }
     }
 
@@ -116,6 +136,8 @@ class SeoExtension extends DataExtension
 
     /**
      * @return null
+     *
+     * @deprecated deprecated since version 4.0.9
      */
     protected function generateMetaDescription()
     {
@@ -147,11 +169,6 @@ class SeoExtension extends DataExtension
             $this->owner->SearchContent = $this->generateElementPreview();
         } else {
             $this->owner->SearchContent = $this->owner->Content;
-        }
-
-        // generate MetaDescription
-        if (!$this->owner->MetaDescription) {
-            $this->owner->MetaDescription = $this->generateMetaDescription();
         }
     }
 }
