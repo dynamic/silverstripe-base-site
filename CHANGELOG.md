@@ -1,6 +1,19 @@
 # Changelog
 
-## [4.0.8](https://github.com/dynamic/silverstripe-base-site/tree/4.0.8) (2021-06-03)
+## [4.0.9](https://github.com/dynamic/silverstripe-base-site/tree/4.0.9) (2021-09-10)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.8...4.0.9)
+
+**Closed issues:**
+
+- REFACTOR manipulate MetaDescription when rendering vs on write [\#119](https://github.com/dynamic/silverstripe-base-site/issues/119)
+
+**Merged pull requests:**
+
+- REFACTOR limit field value when rendering meta vs on save [\#120](https://github.com/dynamic/silverstripe-base-site/pull/120) ([muskie9](https://github.com/muskie9))
+- FEATURE SeoExtension - text target length on MetaDescription, Title [\#118](https://github.com/dynamic/silverstripe-base-site/pull/118) ([jsirish](https://github.com/jsirish))
+
+## [4.0.8](https://github.com/dynamic/silverstripe-base-site/tree/4.0.8) (2021-06-04)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.7...4.0.8)
 
