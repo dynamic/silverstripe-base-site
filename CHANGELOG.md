@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.10](https://github.com/dynamic/silverstripe-base-site/tree/4.0.10) (2021-09-11)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.9...4.0.10)
+
+**Closed issues:**
+
+- SEO canonical declaration for blog/blogpost category/tag/pagination [\#121](https://github.com/dynamic/silverstripe-base-site/issues/121)
+
+**Merged pull requests:**
+
+- UPDATE set canonical in cases where there is category/tag/pagination [\#122](https://github.com/dynamic/silverstripe-base-site/pull/122) ([muskie9](https://github.com/muskie9))
+
 ## [4.0.9](https://github.com/dynamic/silverstripe-base-site/tree/4.0.9) (2021-09-10)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.8...4.0.9)
