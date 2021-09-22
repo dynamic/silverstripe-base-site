@@ -84,6 +84,11 @@ SilverStripe\UserForms\Model\EditableFormField:
 SilverStripe\UserForms\Model\EditableCustomRule:
   extensions:
     - Dynamic\SiteTools\Extension\DataobjectPermissionExtension
+
+PageController:
+  restrict_results_to_pages: true
+  extensions:
+    - Dynamic\Base\Extension\SearchExtension
 ```
 
 ## Maintainers
