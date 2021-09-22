@@ -66,3 +66,5 @@ PageController:
 ## Site Search
 
 As an alternative to the FullText search feature built into Silverstripe, base site supports utilizing [`silverstripers/elemental-search`](https://github.com/SilverStripers/elemental-seach) module. By applying `Dynamic\Base\Extension\SearchExtension` to your `PageController` (covers all pages on the site, apply to more specific controller for page type specific actions) to implement the proper form and result methods.
+
+Out of the box, elemental-search does not restrict results to Page (or it's sublcasses). There is a config option you can apply to the same class you have also implemented `Dynamic\Base\Extension\SearchExtension`. Set `restrict_results_to_pages` to `true` in your config. This will ensure the result is a sublcass of `SiteTree`.
