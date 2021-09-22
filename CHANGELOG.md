@@ -1,12 +1,58 @@
 # Changelog
 
+## [4.0.10](https://github.com/dynamic/silverstripe-base-site/tree/4.0.10) (2021-09-11)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.9...4.0.10)
+
+**Closed issues:**
+
+- SEO canonical declaration for blog/blogpost category/tag/pagination [\#121](https://github.com/dynamic/silverstripe-base-site/issues/121)
+
+**Merged pull requests:**
+
+- UPDATE set canonical in cases where there is category/tag/pagination [\#122](https://github.com/dynamic/silverstripe-base-site/pull/122) ([muskie9](https://github.com/muskie9))
+
+## [4.0.9](https://github.com/dynamic/silverstripe-base-site/tree/4.0.9) (2021-09-10)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.8...4.0.9)
+
+**Closed issues:**
+
+- REFACTOR manipulate MetaDescription when rendering vs on write [\#119](https://github.com/dynamic/silverstripe-base-site/issues/119)
+
+**Merged pull requests:**
+
+- REFACTOR limit field value when rendering meta vs on save [\#120](https://github.com/dynamic/silverstripe-base-site/pull/120) ([muskie9](https://github.com/muskie9))
+- FEATURE SeoExtension - text target length on MetaDescription, Title [\#118](https://github.com/dynamic/silverstripe-base-site/pull/118) ([jsirish](https://github.com/jsirish))
+
+## [4.0.8](https://github.com/dynamic/silverstripe-base-site/tree/4.0.8) (2021-06-04)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.7...4.0.8)
+
+**Merged pull requests:**
+
+- CI update workflow [\#117](https://github.com/dynamic/silverstripe-base-site/pull/117) ([jsirish](https://github.com/jsirish))
+- FEATURE SeoExtension - generate MetaDescription [\#116](https://github.com/dynamic/silverstripe-base-site/pull/116) ([jsirish](https://github.com/jsirish))
+
+## [4.0.7](https://github.com/dynamic/silverstripe-base-site/tree/4.0.7) (2020-11-03)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.6...4.0.7)
+
+**Fixed bugs:**
+
+- BUG SEOExtension Call to a member function FieldList\(\) on null [\#114](https://github.com/dynamic/silverstripe-base-site/issues/114)
+
+**Merged pull requests:**
+
+- BUGFIX check for valid field before calling FieldList [\#115](https://github.com/dynamic/silverstripe-base-site/pull/115) ([muskie9](https://github.com/muskie9))
+- CI GitHub workflow initial [\#113](https://github.com/dynamic/silverstripe-base-site/pull/113) ([jsirish](https://github.com/jsirish))
+
 ## [4.0.6](https://github.com/dynamic/silverstripe-base-site/tree/4.0.6) (2020-09-01)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/3.1.5...4.0.6)
 
 **Merged pull requests:**
 
-- REFACTOR allow UserForm page type #112 (jsirish)
 - TESTS update Travis config [\#111](https://github.com/dynamic/silverstripe-base-site/pull/111) ([jsirish](https://github.com/jsirish))
 
 ## [3.1.5](https://github.com/dynamic/silverstripe-base-site/tree/3.1.5) (2020-09-01)
@@ -64,7 +110,6 @@
 - README updates [\#104](https://github.com/dynamic/silverstripe-base-site/pull/104) ([jsirish](https://github.com/jsirish))
 - BUGFIX Shared draft content - looser version requirement [\#103](https://github.com/dynamic/silverstripe-base-site/pull/103) ([jsirish](https://github.com/jsirish))
 - BUGFIX remove canCreate\(\) method to fix CMS fields [\#102](https://github.com/dynamic/silverstripe-base-site/pull/102) ([jsirish](https://github.com/jsirish))
-- FEATURE CompanyAddress - set is primary location [\#92](https://github.com/dynamic/silverstripe-base-site/pull/92) ([jsirish](https://github.com/jsirish))
 
 ## [4.0.1](https://github.com/dynamic/silverstripe-base-site/tree/4.0.1) (2020-03-25)
 
@@ -97,6 +142,7 @@
 - FEATURE CMS Design for SiteConfig Links tab [\#97](https://github.com/dynamic/silverstripe-base-site/pull/97) ([jsirish](https://github.com/jsirish))
 - BUGFIX BlogPostDataExtension - add casting for FirstContent\(\) [\#96](https://github.com/dynamic/silverstripe-base-site/pull/96) ([jsirish](https://github.com/jsirish))
 - FEATURE require silverstripe-site-tools [\#93](https://github.com/dynamic/silverstripe-base-site/pull/93) ([jsirish](https://github.com/jsirish))
+- FEATURE CompanyAddress - set is primary location [\#92](https://github.com/dynamic/silverstripe-base-site/pull/92) ([jsirish](https://github.com/jsirish))
 - FEATURE TemplateConfig migration [\#91](https://github.com/dynamic/silverstripe-base-site/pull/91) ([jsirish](https://github.com/jsirish))
 - FEATURE migrate Integrations DataExtension [\#89](https://github.com/dynamic/silverstripe-base-site/pull/89) ([jsirish](https://github.com/jsirish))
 - FEATURE CompanyConfig [\#87](https://github.com/dynamic/silverstripe-base-site/pull/87) ([jsirish](https://github.com/jsirish))

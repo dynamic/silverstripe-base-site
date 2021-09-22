@@ -3,20 +3,17 @@
 namespace Dynamic\Base\Extension;
 
 use Axllent\CMSTweaks\MetadataTab;
+use DNADesign\Elemental\Models\ElementalArea;
+use DNADesign\Elemental\Models\ElementContent;
 use QuinnInteractive\Seo\Extensions\PageSeoExtension;
-use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\TextareaField;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\ValidationException;
 use QuinnInteractive\Seo\Builders\FacebookMetaGenerator;
 use QuinnInteractive\Seo\Extensions\PageHealthExtension;
 use QuinnInteractive\Seo\Forms\GoogleSearchPreview;
 use QuinnInteractive\Seo\Forms\HealthAnalysisField;
+use SilverStripe\ORM\FieldType\DBField;
 
 /**
  * Class SeoExtension
@@ -24,6 +21,8 @@ use QuinnInteractive\Seo\Forms\HealthAnalysisField;
  */
 class SeoExtension extends DataExtension
 {
+    const META_CHAR_COUNT_MAX = 155;
+
     /**
      * @var array
      */
@@ -54,14 +53,15 @@ class SeoExtension extends DataExtension
         }
 
         if (class_exists(PageHealthExtension::class)) {
-            $pagehealth = $fields->fieldByName('Root.Main.SEOHealthAnalysis');
-            $pagehealth_fields = $pagehealth->FieldList();
-            $fields->removeFieldFromTab('Root.Main', 'SEOHealthAnalysis');
+            if ($pagehealth = $fields->fieldByName('Root.Main.SEOHealthAnalysis')) {
+                $pagehealth_fields = $pagehealth->FieldList();
+                $fields->removeFieldFromTab('Root.Main', 'SEOHealthAnalysis');
 
-            $fields->addFieldsToTab(
-                'Root.' . $tab_title,
-                $pagehealth
-            );
+                $fields->addFieldsToTab(
+                    'Root.' . $tab_title,
+                    $pagehealth
+                );
+            }
         }
 
         if (class_exists(PageSeoExtension::class)) {
@@ -81,6 +81,32 @@ class SeoExtension extends DataExtension
                 $twitter
             );
         }
+
+        if ($page_title = $fields->dataFieldByName('Title')) {
+            $page_title->setTargetLength(45, 25, 60);
+        }
+
+        if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
+            $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
+        }
+    }
+
+    public function MetaComponents(&$tags)
+    {
+        $metaLimit = $this->owner->config()->get('meta_description_character_limit')
+            ?: static::META_CHAR_COUNT_MAX;
+
+        /**
+         * https://stackoverflow.com/a/35653771
+         */
+        if (preg_match_all('/[^ \.]/', $this->owner->MetaDescription) > $metaLimit) {
+            $tags['description'] = [
+                'attributes' => [
+                    'name' => 'description',
+                    'content' => $this->owner->dbObject('MetaDescription')->LimitCharacters($metaLimit),
+                ],
+            ];
+        }
     }
 
     /**
@@ -94,7 +120,45 @@ class SeoExtension extends DataExtension
     }
 
     /**
-     * @throws ValidationException
+     * @return string|void
+     */
+    protected function generateElementPreview()
+    {
+        if ($this->owner->hasMethod('getElementsForSearch')) {
+            return
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
+        }
+    }
+
+    /**
+     * @return null
+     *
+     * @deprecated deprecated since version 4.0.9
+     */
+    protected function generateMetaDescription()
+    {
+        if ($this->owner->hasMethod('ElementalArea')) {
+            /** @var ElementalArea $area */
+            if ($area = $this->owner->ElementalArea()) {
+                if ($content = $area->Elements()->filter('ClassName', ElementContent::class)->first()) {
+                    return $content->dbObject('HTML')->LimitCharacters(150);
+                }
+            }
+        }
+
+        if ($this->owner->Content) {
+            return $this->owner->dbObject('Content')->LimitCharacters(150);
+        }
+
+        return null;
+    }
+
+    /**
+     *
      */
     public function onBeforeWrite()
     {
@@ -102,12 +166,7 @@ class SeoExtension extends DataExtension
 
         // set SearchContent to output of blocks for search
         if ($this->owner->hasMethod('getElementsForSearch')) {
-            $this->owner->SearchContent =
-                ltrim(
-                    rtrim(
-                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
-                    )
-                );
+            $this->owner->SearchContent = $this->generateElementPreview();
         } else {
             $this->owner->SearchContent = $this->owner->Content;
         }
