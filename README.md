@@ -30,7 +30,7 @@ Base page types for SilverStripe websites
 
 ## Example usage
 
-See [docs](docs/index.md#recommended-configuration) for sample usage.
+See [docs](docs/en/index.md#recommended-configuration) for sample usage.
 
 ## Maintainers
  *  [Dynamic](http://www.dynamicagency.com) (<dev@dynamicagency.com>)
