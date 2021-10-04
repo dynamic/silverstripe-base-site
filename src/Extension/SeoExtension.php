@@ -6,6 +6,7 @@ use Axllent\CMSTweaks\MetadataTab;
 use DNADesign\Elemental\Models\ElementalArea;
 use DNADesign\Elemental\Models\ElementContent;
 use QuinnInteractive\Seo\Extensions\PageSeoExtension;
+use SilverStripe\CMS\Model\VirtualPage;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataExtension;
@@ -82,12 +83,14 @@ class SeoExtension extends DataExtension
             );
         }
 
-        if ($page_title = $fields->dataFieldByName('Title')) {
-            $page_title->setTargetLength(45, 25, 60);
-        }
+        if (!$this->owner instanceof VirtualPage) {
+            if ($page_title = $fields->dataFieldByName('Title')) {
+                $page_title->setTargetLength(45, 25, 60);
+            }
 
-        if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
-            $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
+            if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
+                $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
+            }
         }
     }
 
