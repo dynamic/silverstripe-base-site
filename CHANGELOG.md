@@ -1,6 +1,18 @@
 # Changelog
 
-## [4.0.10](https://github.com/dynamic/silverstripe-base-site/tree/4.0.10) (2021-09-11)
+## [4.0.11](https://github.com/dynamic/silverstripe-base-site/tree/4.0.11) (2021-10-04)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.10...4.0.11)
+
+**Closed issues:**
+
+- BUG calling -\>setTargetLength\(\) on Virtual Page fields causes error [\#127](https://github.com/dynamic/silverstripe-base-site/issues/127)
+
+**Merged pull requests:**
+
+- BUGFIX only apply target length if not virtual page [\#128](https://github.com/dynamic/silverstripe-base-site/pull/128) ([muskie9](https://github.com/muskie9))
+
+## [4.0.10](https://github.com/dynamic/silverstripe-base-site/tree/4.0.10) (2021-09-12)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.9...4.0.10)
 
