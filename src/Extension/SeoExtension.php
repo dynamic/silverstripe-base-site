@@ -87,7 +87,9 @@ class SeoExtension extends DataExtension
             if ($page_title = $fields->dataFieldByName('Title')) {
                 $page_title->setTargetLength(45, 25, 60);
             }
+        }
 
+        if (!$this->owner instanceof VirtualPage || in_array('MetaDescription', $this->owner->config()->get('non_virtual_fields'))) {
             if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
                 $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
             }
