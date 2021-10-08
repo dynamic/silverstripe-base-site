@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.12](https://github.com/dynamic/silverstripe-base-site/tree/4.0.12) (2021-10-07)
+
+[Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.11...4.0.12)
+
+**Fixed bugs:**
+
+- BUG Virtual Page fields can be "non-virtual" by config but won't pass current checks for field manipulation limits [\#132](https://github.com/dynamic/silverstripe-base-site/issues/132)
+
+**Merged pull requests:**
+
+- UPDATE allow MetaDescription field via config [\#131](https://github.com/dynamic/silverstripe-base-site/pull/131) ([muskie9](https://github.com/muskie9))
+
 ## [4.0.11](https://github.com/dynamic/silverstripe-base-site/tree/4.0.11) (2021-10-04)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.10...4.0.11)
