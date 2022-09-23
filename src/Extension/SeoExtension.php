@@ -102,7 +102,7 @@ class SeoExtension extends DataExtension
         /**
          * https://stackoverflow.com/a/35653771
          */
-        if (preg_match_all('/[^ \.]/', $this->owner->MetaDescription) > $metaLimit) {
+        if ($this->owner->MetaDescription && preg_match_all('/[^ \.]/', $this->owner->MetaDescription) > $metaLimit) {
             $tags['description'] = [
                 'attributes' => [
                     'name' => 'description',
