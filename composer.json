@@ -33,7 +33,13 @@
         "silverstripe/recipe-testing": "^2.0"
     },
     "config": {
-        "process-timeout": 600
+        "process-timeout": 600,
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true,
+            "silverstripe/recipe-plugin": true
+        }
+
     },
     "extra": {
         "branch-alias": {
