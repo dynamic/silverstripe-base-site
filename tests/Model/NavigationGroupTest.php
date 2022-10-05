@@ -42,7 +42,7 @@ class NavigationGroupTest extends SapphireTest
     {
         $object = $this->objFromFixture(NavigationGroup::class, 'one');
         $object->Title = '';
-        $this->setExpectedException(ValidationException::class);
+        $this->expectException(ValidationException::class);
         $object->write();
     }
 

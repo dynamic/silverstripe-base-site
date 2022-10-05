@@ -44,7 +44,7 @@ class NavigationColumnTest extends SapphireTest
     {
         $object = $this->objFromFixture(NavigationColumn::class, 'one');
         $object->Title = '';
-        $this->setExpectedException(ValidationException::class);
+        $this->expectException(ValidationException::class);
         $object->write();
     }
 
