@@ -8,6 +8,13 @@ use SilverStripe\Forms\FieldList;
 class CmsDesignExtensionTest extends SapphireTest
 {
     /**
+     * @var array
+     */
+    protected static $fixture_file = array(
+        '../fixtures.yml',
+    );
+
+    /**
      *
      */
     public function testUpdateCMSFields()
