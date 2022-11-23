@@ -19,7 +19,7 @@
         "axllent/silverstripe-scaled-uploads": "^2.1",
         "dnadesign/silverstripe-elemental": "^4.0",
         "dynamic/silverstripe-geocoder": "^2.0",
-        "dynamic/silverstripe-site-tools": "^1.0",
+        "dynamic/silverstripe-site-tools": "^2.0",
         "jonom/silverstripe-betternavigator": "^5.0",
         "jonom/silverstripe-text-target-length": "^2.0",
         "silverstripe/recipe-cms": "^4.3",
