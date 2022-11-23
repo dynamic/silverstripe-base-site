@@ -1,8 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/silverstripe/cms/tests/bootstrap.php" colors="true">
-    <testsuite name="silverstripe-base-site">
-        <directory>tests</directory>
-    </testsuite>
-
+    <testsuites>
+        <testsuite name="base-site">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">src/</directory>
