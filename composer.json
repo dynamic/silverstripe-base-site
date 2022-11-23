@@ -32,6 +32,9 @@
     "require-dev": {
         "silverstripe/recipe-testing": "^2.0"
     },
+    "suggest": {
+        "brettt89/silverstripe-garbage-collector": "Allows for garbage collection via config, additional garbage collectors can be created and configured"
+    },
     "config": {
         "process-timeout": 600,
         "allow-plugins": {
