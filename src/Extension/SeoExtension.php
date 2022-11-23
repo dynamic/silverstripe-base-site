@@ -2,19 +2,12 @@
 
 namespace Dynamic\Base\Extension;
 
-use Axllent\CMSTweaks\MetadataTab;
 use DNADesign\Elemental\Models\ElementalArea;
 use DNADesign\Elemental\Models\ElementContent;
-use QuinnInteractive\Seo\Extensions\PageSeoExtension;
+use Innoweb\SocialMeta\Extensions\SiteTreeExtension;
 use SilverStripe\CMS\Model\VirtualPage;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataExtension;
-use QuinnInteractive\Seo\Builders\FacebookMetaGenerator;
-use QuinnInteractive\Seo\Extensions\PageHealthExtension;
-use QuinnInteractive\Seo\Forms\GoogleSearchPreview;
-use QuinnInteractive\Seo\Forms\HealthAnalysisField;
-use SilverStripe\ORM\FieldType\DBField;
 
 /**
  * Class SeoExtension
@@ -46,41 +39,10 @@ class SeoExtension extends DataExtension
      */
     public function updateCMSFields(FieldList $fields)
     {
-        if (class_exists(MetadataTab::class)) {
-            $config = Config::inst();
-            $tab_title = $config->get(MetadataTab::class, 'tab_title');
-        } else {
-            $tab_title = 'SEO';
-        }
-
-        if (class_exists(PageHealthExtension::class)) {
-            if ($pagehealth = $fields->fieldByName('Root.Main.SEOHealthAnalysis')) {
-                $pagehealth_fields = $pagehealth->FieldList();
-                $fields->removeFieldFromTab('Root.Main', 'SEOHealthAnalysis');
-
-                $fields->addFieldsToTab(
-                    'Root.' . $tab_title,
-                    $pagehealth
-                );
+        if (class_exists(SiteTreeExtension::class)) {
+            if ($meta_title = $fields->dataFieldByName('MetaTitle')) {
+                $meta_title->setTargetLength(45, 25, 60);
             }
-        }
-
-        if (class_exists(PageSeoExtension::class)) {
-            $facebook = $fields->fieldByName('Root.Main.FacebookSeoComposite');
-            $fields->removeFieldFromTab('Root.Main', 'FacebookSeoComposite');
-
-            $fields->addFieldsToTab(
-                'Root.' . $tab_title,
-                $facebook
-            );
-
-            $twitter = $fields->fieldByName('Root.Main.TwitterSeoComposite');
-            $fields->removeFieldFromTab('Root.Main', 'TwitterSeoComposite');
-
-            $fields->addFieldsToTab(
-                'Root.' . $tab_title,
-                $twitter
-            );
         }
 
         if (!$this->owner instanceof VirtualPage) {
