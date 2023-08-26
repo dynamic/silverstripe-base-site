@@ -12,6 +12,11 @@ use SilverStripe\ORM\DataExtension;
 use Vulcan\Seo\Builders\FacebookMetaGenerator;
 use Vulcan\Seo\Extensions\PageSeoExtension;
 
+/**
+ * Class \Dynamic\Base\Extension\CmsDesignDataExtension
+ *
+ * @property SiteTree|CmsDesignDataExtension $owner
+ */
 class CmsDesignDataExtension extends DataExtension
 {
     /**

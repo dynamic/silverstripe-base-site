@@ -26,6 +26,19 @@ use SilverStripe\Versioned\GridFieldArchiveAction;
 use Symbiote\GridFieldExtensions\GridFieldAddExistingSearchButton;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
+/**
+ * Class \Dynamic\Base\Extension\TemplateDataExtension
+ *
+ * @property SiteConfig|TemplateDataExtension $owner
+ * @property string $TitleLogo
+ * @property int $LogoID
+ * @property int $LogoRetinaID
+ * @method Image Logo()
+ * @method Image LogoRetina()
+ * @method DataList|NavigationColumn[] NavigationColumns()
+ * @method DataList|SocialLink[] SocialLinks()
+ * @method ManyManyList|SiteTree[] UtilityLinks()
+ */
 class TemplateDataExtension extends DataExtension
 {
     /**

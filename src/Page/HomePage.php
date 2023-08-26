@@ -8,6 +8,18 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
+/**
+ * Class \Dynamic\Base\Page\HomePage
+ *
+ * @property int $ElementalAreaID
+ * @property int $HeaderImageID
+ * @property int $ElementalHomePageID
+ * @method ElementalArea ElementalArea()
+ * @method HeaderImage HeaderImage()
+ * @method ElementalArea ElementalHomePage()
+ * @mixin HeaderImageExtension
+ * @mixin ElementalPageExtension
+ */
 class HomePage extends \Page
 {
     /**

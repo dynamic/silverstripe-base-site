@@ -20,11 +20,9 @@ use SilverStripe\Forms\TextareaField;
 /**
  * Class CompanyConfig.
  *
+ * @property SiteConfig|CompanyDataExtension $owner
  * @property string $CompanyName
- * @property string $Phone
- * @property string $Email
- * @property bool $ShowDirections
- * @property string $Hours
+ * @method DataList|CompanyAddress[] Addresses()
  */
 class CompanyDataExtension extends DataExtension
 {

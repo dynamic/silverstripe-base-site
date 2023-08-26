@@ -2,6 +2,16 @@
 
 namespace Dynamic\Base\Page;
 
+/**
+ * Class \Dynamic\Base\Page\BlockPage
+ *
+ * @property int $ElementalAreaID
+ * @property int $HeaderImageID
+ * @method ElementalArea ElementalArea()
+ * @method HeaderImage HeaderImage()
+ * @mixin HeaderImageExtension
+ * @mixin ElementalPageExtension
+ */
 class BlockPage extends \Page
 {
     /**

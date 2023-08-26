@@ -8,7 +8,9 @@ use SilverStripe\ORM\FieldType\DBField;
 use SilverStripers\ElementalSearch\CMS\Search\SearchForm;
 
 /**
+ * Class \Dynamic\Base\Extension\SearchExtension
  *
+ * @property SearchExtension $owner
  */
 class SearchExtension extends Extension
 {

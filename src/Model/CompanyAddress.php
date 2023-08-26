@@ -6,6 +6,30 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\SiteConfig\SiteConfig;
 
+/**
+ * Class \Dynamic\Base\Model\CompanyAddress
+ *
+ * @property string $Phone
+ * @property string $Phone2
+ * @property string $Fax
+ * @property string $Email
+ * @property string $Address
+ * @property string $Address2
+ * @property string $City
+ * @property string $State
+ * @property string $PostalCode
+ * @property string $Country
+ * @property bool $LatLngOverride
+ * @property float $Lat
+ * @property float $Lng
+ * @property string $Title
+ * @property int $SortOrder
+ * @property bool $IsPrimary
+ * @property int $SiteConfigID
+ * @method SiteConfig SiteConfig()
+ * @mixin AddressDataExtension
+ * @mixin ContactDataExtension
+ */
 class CompanyAddress extends DataObject
 {
     /**
