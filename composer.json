@@ -30,7 +30,7 @@
         "wilr/silverstripe-googlesitemaps": "^2.1"
     },
     "require-dev": {
-        "silverstripe/recipe-testing": "^2.0"
+        "silverstripe/recipe-testing": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
