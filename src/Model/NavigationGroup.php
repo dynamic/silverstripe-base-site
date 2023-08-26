@@ -21,9 +21,9 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  *
  * @property string $Title
  * @property int $SortOrder
- *
  * @property int $NavigationColumnID
  * @method NavigationColumn NavigationColumn()
+ * @method ManyManyList|SiteTree[] NavigationLinks()
  */
 class NavigationGroup extends DataObject
 {

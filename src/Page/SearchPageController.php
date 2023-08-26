@@ -2,6 +2,13 @@
 
 namespace Dynamic\Base\Page;
 
+/**
+ * Class \Dynamic\Base\Page\SearchPageController
+ *
+ * @property SearchPage $dataRecord
+ * @method SearchPage data()
+ * @mixin SearchPage
+ */
 class SearchPageController extends \PageController
 {
     /**

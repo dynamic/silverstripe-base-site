@@ -11,7 +11,9 @@ use SilverStripe\ORM\DataExtension;
 
 /**
  * Class SeoExtension
- * @package Dynamic\Base\Extension
+ *
+ * @property SiteTree|SeoExtension $owner
+ * @property string $SearchContent
  */
 class SeoExtension extends DataExtension
 {

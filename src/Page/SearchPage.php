@@ -5,6 +5,10 @@ namespace Dynamic\Base\Page;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
+/**
+ * Class \Dynamic\Base\Page\SearchPage
+ *
+ */
 class SearchPage extends \Page
 {
     /**

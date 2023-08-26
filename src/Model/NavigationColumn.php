@@ -18,8 +18,8 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  *
  * @property string $Title
  * @property int $SortOrder
- *
- * @method \SilverStripe\ORM\HasManyList NavigationGroups()
+ * @property int $ConfigID
+ * @method DataList|NavigationGroup[] NavigationGroups()
  */
 class NavigationColumn extends DataObject
 {

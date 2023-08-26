@@ -11,6 +11,18 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataExtension;
 use UncleCheese\DisplayLogic\Forms\Wrapper;
 
+/**
+ * Class \Dynamic\Base\Extension\IntegrationsDataExtension
+ *
+ * @property SiteConfig|IntegrationsDataExtension $owner
+ * @property bool $UseGA
+ * @property string $GACode
+ * @property bool $UseGTM
+ * @property string $GTMHeadCode
+ * @property string $GTMBodyCode
+ * @property bool $UseHubSpot
+ * @property string $HubSpotAccountID
+ */
 class IntegrationsDataExtension extends DataExtension
 {
     /**

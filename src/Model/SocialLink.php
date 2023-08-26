@@ -11,12 +11,12 @@ use SilverStripe\SiteConfig\SiteConfig;
 
 /**
  * Class SocialLink
- * @package Dynamic\TemplateConfig\Model
  *
  * @property string $Title
  * @property string $Link
  * @property int $SortOrder
  * @property string $Site
+ * @property int $ConfigID
  */
 class SocialLink extends DataObject implements PermissionProvider
 {
