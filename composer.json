@@ -26,7 +26,6 @@
         "silverstripe/sharedraftcontent": "^2.0",
         "tractorcow/silverstripe-robots": "^4.0",
         "tractorcow/silverstripe-sitemap2": "^4.0",
-        "unclecheese/display-logic": "^2.0",
         "wilr/silverstripe-googlesitemaps": "^2.1"
     },
     "require-dev": {
