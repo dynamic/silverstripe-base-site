@@ -1,5 +1,10 @@
 # Changelog
 
+## [6.0.0](https://github.com/dynamic/silverstripe-base-site/tree/6.0.0) (2023-08-26)
+* REFACTOR Allow Silverstripe 5 by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/141
+
+**Full Changelog**: https://github.com/dynamic/silverstripe-base-site/compare/5.0.0...6.0.0
+
 ## [5.0.0](https://github.com/dynamic/silverstripe-base-site/tree/5.0.0) (2023-08-26)
 * CI cleanup old workflows by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/136
 * REFACTOR move modules with page types to recipe base site by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/137
