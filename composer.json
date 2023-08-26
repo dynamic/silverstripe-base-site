@@ -20,7 +20,7 @@
         "dnadesign/silverstripe-elemental": "^5",
         "dynamic/silverstripe-geocoder": "^3",
         "dynamic/silverstripe-site-tools": "^3",
-        "jonom/silverstripe-betternavigator": "^5",
+        "jonom/silverstripe-betternavigator": "^6",
         "jonom/silverstripe-text-target-length": "^2",
         "silverstripe/recipe-cms": "^5",
         "silverstripe/sharedraftcontent": "^3",
