@@ -15,22 +15,20 @@
     ],
     "require": {
         "php": "^7.1 || ^8",
-        "axllent/silverstripe-email-obfuscator": "^2.0",
+        "axllent/silverstripe-email-obfuscator": "^2",
         "axllent/silverstripe-scaled-uploads": "^2.1",
-        "dnadesign/silverstripe-elemental": "^4.0",
-        "dynamic/silverstripe-geocoder": "^2.0",
-        "dynamic/silverstripe-site-tools": "^2.0",
-        "jonom/silverstripe-betternavigator": "^5.0",
-        "jonom/silverstripe-text-target-length": "^2.0",
-        "silverstripe/recipe-cms": "^4.3",
-        "silverstripe/sharedraftcontent": "^2.0",
-        "tractorcow/silverstripe-robots": "^4.0",
-        "tractorcow/silverstripe-sitemap2": "^4.0",
-        "unclecheese/display-logic": "^2.0",
-        "wilr/silverstripe-googlesitemaps": "^2.1"
+        "dnadesign/silverstripe-elemental": "^5",
+        "dynamic/silverstripe-geocoder": "^3",
+        "dynamic/silverstripe-site-tools": "^3",
+        "jonom/silverstripe-betternavigator": "^6",
+        "jonom/silverstripe-text-target-length": "^2",
+        "silverstripe/recipe-cms": "^5",
+        "silverstripe/sharedraftcontent": "^3",
+        "tractorcow/silverstripe-robots": "^4",
+        "wilr/silverstripe-googlesitemaps": "^3"
     },
     "require-dev": {
-        "silverstripe/recipe-testing": "^2.0"
+        "silverstripe/recipe-testing": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
