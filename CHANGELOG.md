@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/dynamic/silverstripe-base-site/tree/4.1.0) (2022-10-05)
+* ENHANCEMENT SearchExtension by @muskie9 in https://github.com/dynamic/silverstripe-base-site/pull/124
+* DEPRECATION fix null passed to preg_match_all() in SeoExtension::MetaComponents() by @muskie9 in https://github.com/dynamic/silverstripe-base-site/pull/134
+* BUGFIX NavigationColumnTest, NavigationGroupTest by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/135
+
+**Full Changelog**: https://github.com/dynamic/silverstripe-base-site/compare/4.0.12...4.1.0
+
 ## [4.0.12](https://github.com/dynamic/silverstripe-base-site/tree/4.0.12) (2021-10-07)
 
 [Full Changelog](https://github.com/dynamic/silverstripe-base-site/compare/4.0.11...4.0.12)
