@@ -3,34 +3,31 @@
 Base page types for SilverStripe websites
 
 [![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml)
-[![Build Status](https://travis-ci.com/dynamic/silverstripe-base-site.svg?token=hFT1sXd4nNmguE972zHN&branch=master)](https://travis-ci.com/dynamic/silverstripe-base-site)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/dynamic/silverstripe-base-site/badges/quality-score.png?b=master&s=6602bc588bf7da4a15e9ae4e061c92781c87caf5)](https://scrutinizer-ci.com/g/dynamic/silverstripe-base-site/?branch=master)
-[![codecov](https://codecov.io/gh/dynamic/silverstripe-base-site/branch/master/graph/badge.svg?token=8qD1GBbxzV)](https://codecov.io/gh/dynamic/silverstripe-base-site)
+[![codecov](https://codecov.io/gh/dynamic/silverstripe-base-site/branch/master/graph/badge.svg)](https://codecov.io/gh/dynamic/silverstripe-base-site)
+
+[![Latest Stable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/stable)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Total Downloads](https://poser.pugx.org/dynamic/silverstripe-base-site/downloads)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Latest Unstable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/unstable)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![License](https://poser.pugx.org/dynamic/silverstripe-base-site/license)](https://packagist.org/packages/dynamic/silverstripe-base-site)
 
 ## Requirements
 
-* SilverStripe ^4.3
+* SilverStripe ^5
 * axllent/silverstripe-email-obfuscator ^2.0
 * axllent/silverstripe-scaled-uploads ^2.1
-* dnadesign/silverstripe-elemental ^4.0
-* dynamic/silverstripe-geocoder ^1.1
-* dynamic/silverstripe-site-tools ^1.0
-* jonom/silverstripe-betternavigator ^4.0
-* silverstripe/blog ^3.0
-* silverstripe/recipe-cms ^4.3
-* silverstripe/sharedraftcontent ^2.0
-* silverstripe/userforms ^5.0
-* tractorcow/silverstripe-sitemap2 ^4.0
-* unclecheese/display-logic ^2.0
+* dnadesign/silverstripe-elemental ^5.0
+* dynamic/silverstripe-geocoder ^3
+* dynamic/silverstripe-site-tools ^3
+* jonom/silverstripe-betternavigator ^6
+* jonom/silverstripe-text-target-length ^2
+* silverstripe/recipe-cms ^5
+* silverstripe/sharedraftcontent ^3
+* tractorcow/silverstripe-robots ^4
 * wilr/silverstripe-googlesitemaps ^2.1
 
 ## Installation
 
-`coposer require dynamic/silverstripe-base-site`
-
-## Example usage
-
-See [docs](docs/en/index.md#recommended-configuration) for sample usage.
+`composer require dynamic/silverstripe-base-site`
 
 ## Maintainers
  *  [Dynamic](http://www.dynamicagency.com) (<dev@dynamicagency.com>)
