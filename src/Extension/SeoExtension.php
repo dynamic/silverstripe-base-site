@@ -47,7 +47,7 @@ class SeoExtension extends DataExtension
             }
         }
 
-       if (!$this->owner instanceof VirtualPage ||
+        if (!$this->owner instanceof VirtualPage ||
             in_array('MetaDescription', $this->owner->config()->get('non_virtual_fields'))) {
             if ($meta_description = $fields->dataFieldByName('MetaDescription')) {
                 $meta_description->setTargetLength(130, 70, static::META_CHAR_COUNT_MAX);
