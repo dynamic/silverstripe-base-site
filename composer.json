@@ -18,7 +18,6 @@
         "axllent/silverstripe-email-obfuscator": "^2",
         "axllent/silverstripe-scaled-uploads": "^2.1",
         "dnadesign/silverstripe-elemental": "^5",
-        "dynamic/silverstripe-geocoder": "^3",
         "dynamic/silverstripe-site-tools": "^3",
         "jonom/silverstripe-betternavigator": "^6",
         "jonom/silverstripe-text-target-length": "^2",
