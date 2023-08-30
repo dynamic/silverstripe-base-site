@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.1](https://github.com/dynamic/silverstripe-base-site/tree/6.0.1) (2023-08-30)
+* Updated docblocks by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/142
+* REFACTOR remove CMSDesignExtension by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/143
+* REFACTOR remove CompanyDataExtension by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/144
+* REFACTOR remove IntegrationsDataExtension by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/145
+* REFACTOR remove SearchExtension by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/146
+* REFACTOR remove geocoder requirement by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/147
+* Refactor/meta fields by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/148
+
+
+**Full Changelog**: https://github.com/dynamic/silverstripe-base-site/compare/6.0.0...6.0.1
+
 ## [6.0.0](https://github.com/dynamic/silverstripe-base-site/tree/6.0.0) (2023-08-26)
 * REFACTOR Allow Silverstripe 5 by @jsirish in https://github.com/dynamic/silverstripe-base-site/pull/141
 
