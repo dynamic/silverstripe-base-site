@@ -14,7 +14,7 @@ use UncleCheese\DisplayLogic\Forms\Wrapper;
 /**
  * Class \Dynamic\Base\Extension\IntegrationsDataExtension
  *
- * @property SiteConfig|IntegrationsDataExtension $owner
+ * @property IntegrationsDataExtension $owner
  * @property bool $UseGA
  * @property string $GACode
  * @property bool $UseGTM
