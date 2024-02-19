@@ -11,14 +11,18 @@ use SilverStripe\Security\PermissionProvider;
 /**
  * Class \Dynamic\Base\Page\HomePage
  *
+ * @property string $Controls
+ * @property string $Indicators
+ * @property string $Transitions
+ * @property string $Autoplay
+ * @property int $Interval
  * @property int $ElementalAreaID
- * @property int $HeaderImageID
  * @property int $ElementalHomePageID
  * @method ElementalArea ElementalArea()
- * @method HeaderImage HeaderImage()
  * @method ElementalArea ElementalHomePage()
- * @mixin HeaderImageExtension
+ * @method ManyManyList|Slide[] Slides()
  * @mixin ElementalPageExtension
+ * @mixin CarouselPageExtension
  */
 class HomePage extends \Page
 {

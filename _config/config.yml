@@ -1,3 +1,6 @@
 ---
 Name: silverstripebasesiteconfig
 ---
+SilverStripe\CMS\Model\SiteTree:
+  extensions:
+    - Dynamic\Base\Cache\SiteTreeDataExtension
