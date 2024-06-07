@@ -5,12 +5,16 @@ namespace Dynamic\Base\Page;
 /**
  * Class \Dynamic\Base\Page\CampaignLandingPage
  *
+ * @property string $Controls
+ * @property string $Indicators
+ * @property string $Transitions
+ * @property string $Autoplay
+ * @property int $Interval
  * @property int $ElementalAreaID
- * @property int $HeaderImageID
  * @method ElementalArea ElementalArea()
- * @method HeaderImage HeaderImage()
- * @mixin HeaderImageExtension
+ * @method ManyManyList|Slide[] Slides()
  * @mixin ElementalPageExtension
+ * @mixin CarouselPageExtension
  */
 class CampaignLandingPage extends \Page
 {
