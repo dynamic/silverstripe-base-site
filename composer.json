@@ -22,6 +22,7 @@
         "dynamic/silverstripe-site-tools": "^3",
         "jonom/silverstripe-betternavigator": "^6",
         "jonom/silverstripe-text-target-length": "^2",
+        "silverstripe/linkfield": "^4.0",
         "silverstripe/recipe-cms": "^5",
         "silverstripe/sharedraftcontent": "^3",
         "tractorcow/silverstripe-robots": "^4",
