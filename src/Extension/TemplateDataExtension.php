@@ -5,25 +5,17 @@ namespace Dynamic\Base\Extension;
 use Dynamic\Base\Model\NavigationColumn;
 use Dynamic\Base\Model\SocialLink;
 use SilverStripe\AssetAdmin\Forms\UploadField;
-use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
-use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
-use SilverStripe\Forms\GridField\GridFieldEditButton;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\OptionsetField;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\ToggleCompositeField;
+use SilverStripe\LinkField\Form\MultiLinkField;
+use SilverStripe\LinkField\Models\Link;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\Versioned\GridFieldArchiveAction;
-use Symbiote\GridFieldExtensions\GridFieldAddExistingSearchButton;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -44,14 +36,14 @@ class TemplateDataExtension extends DataExtension
     /**
      * @var array
      */
-    private static $db = [
+    private static array $db = [
         'TitleLogo' => "Enum(array('Logo', 'Title'))",
     ];
 
     /**
      * @var array
      */
-    private static $has_one = [
+    private static array $has_one = [
         'Logo' => Image::class,
         'LogoRetina' => Image::class,
     ];
@@ -59,47 +51,34 @@ class TemplateDataExtension extends DataExtension
     /**
      * @var array
      */
-    private static $owns = [
+    private static array $has_many = [
+        'NavigationColumns' => NavigationColumn::class,
+        'SocialLinks' => SocialLink::class . '.Owner',
+        'UtilityLinks' => Link::class . '.Owner',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $owns = [
         'Logo',
         'LogoRetina',
+        'UtilityLinks',
+        'Sociallinks',
     ];
 
     /**
      * @var array
      */
-    private static $has_many = [
-        'NavigationColumns' => NavigationColumn::class,
-        'SocialLinks' => SocialLink::class,
-    ];
-
-    /**
-     * @var array
-     */
-    private static $many_many = [
-        'UtilityLinks' => SiteTree::class,
-    ];
-
-    /**
-     * @var array
-     */
-    private static $many_many_extraFields = [
-        'UtilityLinks' => [
-            'SortOrder' => 'Int',
-        ],
-    ];
-
-
-    /**
-     * @var array
-     */
-    private static $defaults = [
+    private static array $defaults = [
         'TitleLogo' => 'Title',
     ];
 
     /**
      * @param FieldList $fields
+     * @return void
      */
-    public function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields): void
     {
         // options for logo or title display
         $logoOptions = [
@@ -108,43 +87,18 @@ class TemplateDataExtension extends DataExtension
         ];
 
         $fields->addFieldsToTab('Root.Main', [
-            //HeaderField::create('BrandingHD', 'Branding', 3),
-            //LiteralField::create('HeaderDescrip', '<p>Adjust the settings of your template header.</p>'),
             $titlelogo = OptionsetField::create('TitleLogo', 'Branding', $logoOptions),
-            //$title = TextField::create("Title", _t(SiteConfig::class . '.SITETITLE', "Site title")),
-            //$tagline = TextField::create("Tagline", _t(SiteConfig::class . '.SITETAGLINE', "Site Tagline/Slogan")),
-            // normal logos
             $logo = UploadField::create('Logo', 'Logo'),
             $retinaLogo = UploadField::create('LogoRetina', 'Retina Logo'),
         ]);
 
-        //$title->hideUnless($titlelogo->getName())->isEqualTo('Title');
-        //$tagline->hideUnless($titlelogo->getName())->isEqualTo('Title');
-
         $logo->hideUnless($titlelogo->getName())->isEqualTo('Logo');
         $retinaLogo->hideUnless($titlelogo->getName())->isEqualTo('Logo');
 
-        if ($this->owner->ID) {
-            // utility navigation
-            $config = GridFieldConfig_RelationEditor::create()
-                ->removeComponentsByType([
-                    GridFieldAddNewButton::class,
-                    GridFieldAddExistingAutocompleter::class,
-                    GridFieldEditButton::class,
-                    GridFieldArchiveAction::class,
-                ])->addComponents(
-                    new GridFieldOrderableRows('SortOrder'),
-                    new GridFieldAddExistingSearchButton()
-                );
-            $linksField = GridField::create(
-                'UtilityLinks',
-                'Utility Navigation',
-                $this->owner->UtilityLinks()->sort('SortOrder'),
-                $config
-            );
-
+        if ($this->getOwner()->ID) {
             $fields->addFieldsToTab('Root.Links.Utility', [
-                $linksField
+                MultiLinkField::create('UtilityLinks')
+                    ->setTitle('Utility Links')
                     ->setDescription('Add links to the utility navigation area of your template'),
             ]);
 
@@ -159,7 +113,7 @@ class TemplateDataExtension extends DataExtension
             $footerLinks = GridField::create(
                 'NavigationColumns',
                 'Footer Navigation',
-                $this->owner->NavigationColumns()->sort('SortOrder'),
+                $this->getOwner()->NavigationColumns()->sort('SortOrder'),
                 $config
             );
 
@@ -170,20 +124,12 @@ class TemplateDataExtension extends DataExtension
             ]);
         }
 
-        // social links
-        $config = GridFieldConfig_RecordEditor::create();
-        $config->addComponent(new GridFieldOrderableRows('SortOrder'));
-
-        $socialLinks = GridField::create(
-            'SocialLinks',
-            'Social Properties',
-            $this->owner->SocialLinks()->sort('SortOrder'),
-            $config
-        );
-
         $fields->addFieldsToTab('Root.Links.Social', [
-            $socialLinks
-                ->setDescription('Add links to your social media properties'),
+            MultiLinkField::create('SocialLinks')
+                ->setDescription('Add links to your social media properties')
+                ->setAllowedTypes([
+                    SocialLink::class,
+                ]),
         ]);
     }
 }
