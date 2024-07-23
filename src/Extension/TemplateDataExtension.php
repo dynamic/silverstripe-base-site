@@ -11,7 +11,6 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\OptionsetField;
 use SilverStripe\LinkField\Form\MultiLinkField;
@@ -37,14 +36,14 @@ class TemplateDataExtension extends DataExtension
     /**
      * @var array
      */
-    private static $db = [
+    private static array $db = [
         'TitleLogo' => "Enum(array('Logo', 'Title'))",
     ];
 
     /**
      * @var array
      */
-    private static $has_one = [
+    private static array $has_one = [
         'Logo' => Image::class,
         'LogoRetina' => Image::class,
     ];
@@ -52,32 +51,34 @@ class TemplateDataExtension extends DataExtension
     /**
      * @var array
      */
-    private static $owns = [
+    private static array $has_many = [
+        'NavigationColumns' => NavigationColumn::class,
+        'SocialLinks' => SocialLink::class . '.Owner',
+        'UtilityLinks' => Link::class . '.Owner',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $owns = [
         'Logo',
         'LogoRetina',
         'UtilityLinks',
+        'Sociallinks',
     ];
 
     /**
      * @var array
      */
-    private static $has_many = [
-        'NavigationColumns' => NavigationColumn::class,
-        'SocialLinks' => SocialLink::class,
-        'UtilityLinks' => Link::class,
-    ];
-
-    /**
-     * @var array
-     */
-    private static $defaults = [
+    private static array $defaults = [
         'TitleLogo' => 'Title',
     ];
 
     /**
      * @param FieldList $fields
+     * @return void
      */
-    public function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields): void
     {
         // options for logo or title display
         $logoOptions = [
@@ -123,20 +124,12 @@ class TemplateDataExtension extends DataExtension
             ]);
         }
 
-        // social links
-        $config = GridFieldConfig_RecordEditor::create();
-        $config->addComponent(new GridFieldOrderableRows('SortOrder'));
-
-        $socialLinks = GridField::create(
-            'SocialLinks',
-            'Social Properties',
-            $this->getOwner()->SocialLinks()->sort('SortOrder'),
-            $config
-        );
-
         $fields->addFieldsToTab('Root.Links.Social', [
-            $socialLinks
-                ->setDescription('Add links to your social media properties'),
+            MultiLinkField::create('SocialLinks')
+                ->setDescription('Add links to your social media properties')
+                ->setAllowedTypes([
+                    SocialLink::class,
+                ]),
         ]);
     }
 }

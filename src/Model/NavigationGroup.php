@@ -2,15 +2,14 @@
 
 namespace Dynamic\Base\Model;
 
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\GridField\GridFieldEditButton;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\LiteralField;
+use SilverStripe\LinkField\Form\MultiLinkField;
+use SilverStripe\LinkField\Models\Link;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\GridFieldArchiveAction;
 use Symbiote\GridFieldExtensions\GridFieldAddExistingSearchButton;
@@ -40,33 +39,31 @@ class NavigationGroup extends DataObject
     /**
      * @var array
      */
-    private static $db = array(
+    private static $db = [
         'Title' => 'Varchar(255)',
         'SortOrder' => 'Int',
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $has_one = array(
+    private static $has_one = [
         'NavigationColumn' => NavigationColumn::class,
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $many_many = array(
-        'NavigationLinks' => SiteTree::class,
-    );
+    private static $has_many = [
+        'NavigationLinks' => Link::class . '.Owner',
+    ];
 
     /**
-     * @var array
+     * @var array|string[]
      */
-    private static $many_many_extraFields = array(
-        'NavigationLinks' => array(
-            'SortOrder' => 'Int',
-        ),
-    );
+    private static array $owns = [
+        'NavigationLinks',
+    ];
 
     /**
      * @var string
@@ -94,13 +91,10 @@ class NavigationGroup extends DataObject
     public function LinkList()
     {
         if ($this->NavigationLinks()) {
-            $i = 0;
-            foreach ($this->NavigationLinks()->sort('SortOrder') as $link) {
-                ++$i;
-            }
+            return $this->NavigationLinks()->count();
         }
 
-        return $i;
+        return 0;
     }
 
     /**
@@ -111,36 +105,19 @@ class NavigationGroup extends DataObject
         $this->beforeUpdateCMSFields(function (FieldList $fields) {
 
 
-            $fields->removeByName(array(
+            $fields->removeByName([
                 'SortOrder',
                 'NavigationColumnID',
                 'NavigationLinks',
-            ));
+            ]);
 
             $fields->dataFieldByName('Title')
                 ->setDescription('For internal reference only');
 
             if ($this->ID) {
-                $config = GridFieldConfig_RelationEditor::create()
-                    ->removeComponentsByType([
-                        GridFieldAddNewButton::class,
-                        GridFieldAddExistingAutocompleter::class,
-                        GridFieldEditButton::class,
-                        GridFieldArchiveAction::class,
-                    ])->addComponents(
-                        new GridFieldOrderableRows('SortOrder'),
-                        new GridFieldAddExistingSearchButton()
-                    );
-
-                $linksField = GridField::create(
-                    'NavigationLinks',
-                    'Links',
-                    $this->NavigationLinks()->sort('SortOrder'),
-                    $config
-                );
-
                 $fields->addFieldsToTab('Root.Main', [
-                    $linksField
+                    MultiLinkField::create('NavigationLinks')
+                        ->setTitle('Links')
                         ->setDescription('Add links to this group to display in your footer navigation'),
                 ]);
             }

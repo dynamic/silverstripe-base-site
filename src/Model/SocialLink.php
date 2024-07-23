@@ -2,23 +2,20 @@
 
 namespace Dynamic\Base\Model;
 
+use SilverStripe\Forms\CompositeValidator;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataObject;
+use SilverStripe\Forms\RequiredFields;
+use SilverStripe\LinkField\Models\ExternalLink;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
-use SilverStripe\SiteConfig\SiteConfig;
 
 /**
  * Class SocialLink
  *
- * @property string $Title
- * @property string $Link
- * @property int $SortOrder
- * @property string $Site
- * @property int $ConfigID
+ * @property string $SocialChannel
  */
-class SocialLink extends DataObject implements PermissionProvider
+class SocialLink extends ExternalLink implements PermissionProvider
 {
     /**
      * @var string
@@ -36,56 +33,106 @@ class SocialLink extends DataObject implements PermissionProvider
     private static $table_name = 'SocialLink';
 
     /**
-     * @var array
+     * @var int
      */
-    private static $summary_fields = array(
-        'Title' => 'Title',
-        'Site' => 'Site',
-    );
+    private static int $priority = 1;
 
     /**
      * @var string
      */
-    private static $default_sort = 'SortOrder DESC';
+    private static string $icon = 'font-icon-torsos-all';
 
     /**
      * @var array
      */
-    private static $db = array(
-        'Title' => 'Varchar(150)',
-        'Link' => 'Varchar(255)',
-        'SortOrder' => 'Int',
-        'Site' => 'Enum("facebook, youtube, twitter, linkedin, google, pinterest, instagram")',
-    );
+    private static array $db = [
+        'SocialChannel' => 'Varchar',
+    ];
 
     /**
-     * @var array
+     * @var array|string[]
      */
-    private static $has_one = array(
-        'Config' => SiteConfig::class,
-    );
+    private static array $summary_fields = [
+        'SocialChannelName' => 'Social Channel',
+    ];
+
+    /**
+     * @var array|string[]
+     */
+    private static array $defaults = [
+        'OpenInNew = true',
+    ];
 
     /**
      * @return \SilverStripe\Forms\FieldList
      */
-    public function getCMSFields()
+    public function getCMSFields(): FieldList
     {
         $this->beforeUpdateCMSFields(function (FieldList $fields) {
-            $fields->removeByName(array(
-                'GlobalConfigID',
-                'SortOrder',
-            ));
+            $fields->removeByName([
+                'SocialChannel',
+            ]);
 
             $fields->addFieldToTab(
                 'Root.Main',
                 DropdownField::create(
-                    'Site',
-                    'Site',
-                    $this->dbObject('Site')->enumValues()
-                )->setEmptyString('')
+                    'SocialChannel',
+                    'Social Channel',
+                    $this->getSocialChannels()
+                )
             );
         });
+
         return parent::getCMSFields();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getSocialChannels(): array
+    {
+        $channels = [
+            'facebook' => 'Facebook',
+            'x' => 'X',
+            'linkedin' => 'LinkedIn',
+            'youtube' => 'YouTube',
+            'instagram' => 'Instagram',
+        ];
+
+        $this->extend('updateSocialChannels', $channels);
+
+        return $channels;
+    }
+
+    /**
+     * @return CompositeValidator
+     */
+    public function getCMSCompositeValidator(): CompositeValidator
+    {
+        $validator = parent::getCMSCompositeValidator();
+        $validator->addValidator(RequiredFields::create(['SocialChannel', 'ExternalUrl']));
+        return $validator;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getSocialChannelName(): ?string
+    {
+        if (in_array($this->SocialChannel, $this->getSocialChannels())) {
+            return $this->SocialChannel;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getMenuTitle(): string
+    {
+        return _t(__CLASS__ . '.LINKLABEL', 'Link to Social Channel');
     }
 
     /**
@@ -133,8 +180,8 @@ class SocialLink extends DataObject implements PermissionProvider
      */
     public function providePermissions()
     {
-        return array(
+        return [
             'Social_CRUD' => 'Create, Update and Delete a Social Link',
-        );
+        ];
     }
 }
