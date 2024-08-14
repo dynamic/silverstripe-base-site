@@ -24,6 +24,7 @@
         "silverstripe/linkfield": "^4.0",
         "silverstripe/recipe-cms": "^5",
         "silverstripe/sharedraftcontent": "^3",
+        "silverstripe-terraformers/keys-for-cache": "^2.0",
         "tractorcow/silverstripe-robots": "^4",
         "wilr/silverstripe-googlesitemaps": "^3"
     },
