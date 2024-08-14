@@ -16,11 +16,9 @@ Base page types for SilverStripe websites
 * axllent/silverstripe-email-obfuscator ^2.0
 * axllent/silverstripe-scaled-uploads ^2.1
 * dnadesign/silverstripe-elemental ^5.0
-* dynamic/silverstripe-geocoder ^3
-* dynamic/silverstripe-site-tools ^3
+* dynamic/silverstripe-site-tools ^4
 * jonom/silverstripe-betternavigator ^6
 * jonom/silverstripe-text-target-length ^2
-* silverstripe/recipe-cms ^5
 * silverstripe/sharedraftcontent ^3
 * tractorcow/silverstripe-robots ^4
 * wilr/silverstripe-googlesitemaps ^2.1
