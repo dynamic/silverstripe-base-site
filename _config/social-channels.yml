@@ -1,0 +1,54 @@
+---
+Name: social-channels-config
+---
+
+# Social Channel Configuration for SocialLink class
+Dynamic\Base\Model\SocialLink:
+  social_channels:
+    # Core Social Media Platforms
+    'facebook': 'Facebook'
+    'instagram': 'Instagram'
+    'x': 'X (Twitter)'
+    'linkedin': 'LinkedIn'
+
+    # Video & Entertainment Platforms
+    'youtube': 'YouTube'
+    'tiktok': 'TikTok'
+    'pinterest': 'Pinterest'
+    'snapchat': 'Snapchat'
+
+    # Communication & Community
+    'discord': 'Discord'
+    'whatsapp': 'WhatsApp'
+    'telegram': 'Telegram'
+    'slack': 'Slack'
+
+    # Professional & Developer
+    'github': 'GitHub'
+
+    # Newer/Alternative Platforms
+    'threads': 'Threads'
+    'mastodon': 'Mastodon'
+    'reddit': 'Reddit'
+
+  # Bootstrap Icons mapping for social channels
+  social_icons:
+    'facebook': 'bi-facebook'
+    'instagram': 'bi-instagram'
+    'x': 'bi-twitter-x'
+    'linkedin': 'bi-linkedin'
+    'youtube': 'bi-youtube'
+    'tiktok': 'bi-tiktok'
+    'pinterest': 'bi-pinterest'
+    'snapchat': 'bi-snapchat'
+    'discord': 'bi-discord'
+    'whatsapp': 'bi-whatsapp'
+    'telegram': 'bi-telegram'
+    'slack': 'bi-slack'
+    'github': 'bi-github'
+    'threads': 'bi-threads'
+    'mastodon': 'bi-mastodon'
+    'reddit': 'bi-reddit'
+
+  # Default fallback icon
+  default_icon: 'bi-link-45deg'
