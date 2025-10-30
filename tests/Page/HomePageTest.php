@@ -5,7 +5,6 @@ namespace Dynamic\Base\Test;
 use Dynamic\Base\Page\HomePage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Security\Member;
 
 class HomePageTest extends SapphireTest
 {
