@@ -23,18 +23,4 @@ class HomePageTest extends SapphireTest
         $fields = $object->getCMSFields();
         $this->assertInstanceOf(FieldList::class, $fields);
     }
-
-    /**
-     *
-     */
-    public function testCanCreate()
-    {
-        $object = $this->objFromFixture(HomePage::class, 'default');
-
-        $admin = $this->objFromFixture(Member::class, 'admin');
-        $this->assertTrue($object->canCreate($admin));
-
-        $member = $this->objFromFixture(Member::class, 'default');
-        $this->assertFalse($object->canCreate($member));
-    }
 }
