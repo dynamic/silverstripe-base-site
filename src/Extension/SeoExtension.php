@@ -7,7 +7,7 @@ use DNADesign\Elemental\Models\ElementContent;
 use Innoweb\SocialMeta\Extensions\SiteTreeExtension;
 use SilverStripe\CMS\Model\VirtualPage;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
 /**
  * Class SeoExtension
@@ -15,7 +15,7 @@ use SilverStripe\ORM\DataExtension;
  * @property SiteTree|SeoExtension $owner
  * @property string $SearchContent
  */
-class SeoExtension extends DataExtension
+class SeoExtension extends Extension
 {
     const META_CHAR_COUNT_MAX = 155;
 

@@ -2,10 +2,10 @@
 
 namespace Dynamic\Base\Model;
 
-use SilverStripe\Forms\CompositeValidator;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\CompositeValidator;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\LinkField\Models\ExternalLink;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -145,7 +145,7 @@ class SocialLink extends ExternalLink implements PermissionProvider
     public function getCMSCompositeValidator(): CompositeValidator
     {
         $validator = parent::getCMSCompositeValidator();
-        $validator->addValidator(RequiredFields::create(['SocialChannel', 'ExternalUrl']));
+        $validator->addValidator(RequiredFieldsValidator::create(['SocialChannel', 'ExternalUrl']));
         return $validator;
     }
 
