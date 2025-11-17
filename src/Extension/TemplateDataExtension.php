@@ -15,7 +15,7 @@ use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\OptionsetField;
 use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -31,7 +31,7 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @method DataList|SocialLink[] SocialLinks()
  * @method ManyManyList|SiteTree[] UtilityLinks()
  */
-class TemplateDataExtension extends DataExtension
+class TemplateDataExtension extends Extension
 {
     /**
      * @var array

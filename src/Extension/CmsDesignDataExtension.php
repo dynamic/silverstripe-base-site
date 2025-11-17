@@ -3,14 +3,14 @@
 namespace Dynamic\Base\Extension;
 
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
 /**
  * Class \Dynamic\Base\Extension\CmsDesignDataExtension
  *
  * @property SiteTree|CmsDesignDataExtension $owner
  */
-class CmsDesignDataExtension extends DataExtension
+class CmsDesignDataExtension extends Extension
 {
     /**
      * @param FieldList $fields
