@@ -14,21 +14,21 @@
         }
     ],
     "require": {
-        "php": "^7.1 || ^8",
+        "php": "^8.3 || ^8.4",
         "axllent/silverstripe-email-obfuscator": "^2",
         "axllent/silverstripe-scaled-uploads": "^2.1",
-        "dnadesign/silverstripe-elemental": "^5",
-        "dynamic/silverstripe-site-tools": "^4",
-        "jonom/silverstripe-betternavigator": "^6",
+        "dnadesign/silverstripe-elemental": "^6",
+        "dynamic/silverstripe-site-tools": "^5",
+        "jonom/silverstripe-betternavigator": "^7",
         "jonom/silverstripe-text-target-length": "^2",
-        "silverstripe/linkfield": "^4.0",
-        "silverstripe/recipe-cms": "^5",
-        "silverstripe/sharedraftcontent": "^3",
-        "tractorcow/silverstripe-robots": "^4",
-        "wilr/silverstripe-googlesitemaps": "^3"
+        "silverstripe/linkfield": "^5.0",
+        "silverstripe/recipe-cms": "^6",
+        "silverstripe/sharedraftcontent": "^4",
+        "tractorcow/silverstripe-robots": "^5",
+        "wilr/silverstripe-googlesitemaps": "^4"
     },
     "require-dev": {
-        "silverstripe/recipe-testing": "^3.0"
+        "silverstripe/recipe-testing": "^4.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -45,5 +45,10 @@
             "silverstripe/vendor-plugin": true
         },
         "process-timeout": 600
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-8.0/ss6-upgrade": "8.0.x-dev"
+        }
     }
 }
