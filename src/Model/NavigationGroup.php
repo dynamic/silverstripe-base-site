@@ -2,6 +2,7 @@
 
 namespace Dynamic\Base\Model;
 
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -126,9 +127,9 @@ class NavigationGroup extends DataObject
     }
 
     /**
-     * @return \SilverStripe\ORM\ValidationResult
+     * @return ValidationResult
      */
-    public function validate()
+    public function validate(): ValidationResult
     {
         $result = parent::validate();
 
