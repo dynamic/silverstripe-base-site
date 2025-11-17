@@ -5,8 +5,8 @@ namespace Dynamic\Base\Tests\Model;
 use Dynamic\Base\Model\NavigationColumn;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
 
 /**
