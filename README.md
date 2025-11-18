@@ -2,37 +2,29 @@
 
 Base page types for SilverStripe websites
 
-[![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml) [![GitHub Sponsors](https://img.shields.io/github/sponsors/dynamic)](https://github.com/sponsors/dynamic)
+[![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/dynamic?label=Sponsors&logo=GitHub%20Sponsors&style=flat&color=ea4aaa)](https://github.com/sponsors/dynamic)
 
-[![Latest Stable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/stable)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![Total Downloads](https://poser.pugx.org/dynamic/silverstripe-base-site/downloads)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![Latest Unstable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/unstable)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![License](https://poser.pugx.org/dynamic/silverstripe-base-site/license)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Latest Stable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/stable)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Total Downloads](https://poser.pugx.org/dynamic/silverstripe-base-site/downloads)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![License](https://poser.pugx.org/dynamic/silverstripe-base-site/license)](https://packagist.org/packages/dynamic/silverstripe-base-site)
 
 ## Requirements
 
-* SilverStripe ^6
+* SilverStripe ^5
 * axllent/silverstripe-email-obfuscator ^2.0
 * axllent/silverstripe-scaled-uploads ^2.1
-* dnadesign/silverstripe-elemental ^6.0
-* dynamic/silverstripe-site-tools ^5
-* jonom/silverstripe-betternavigator ^7
+* dnadesign/silverstripe-elemental ^5.0
+* dynamic/silverstripe-site-tools ^4
+* jonom/silverstripe-betternavigator ^6
 * jonom/silverstripe-text-target-length ^2
-* silverstripe/linkfield ^5
-* silverstripe/sharedraftcontent ^4
-* tractorcow/silverstripe-robots ^5
-* wilr/silverstripe-googlesitemaps ^4
+* silverstripe/sharedraftcontent ^3
+* tractorcow/silverstripe-robots ^4
+* wilr/silverstripe-googlesitemaps ^2.1
 
 ## Installation
 
 `composer require dynamic/silverstripe-base-site`
-
-## Upgrading from version 7
-
-SilverStripe Base Site 8.0 is compatible with SilverStripe 6. Key changes:
-
-- Updated to SilverStripe CMS 6
-- Requires PHP 8.1 or higher
-- Updated all major dependencies to their SS6-compatible versions
-- Namespace changes: `DataExtension` moved from `SilverStripe\ORM` to `SilverStripe\Core\Extension`
-- Validation classes moved to `SilverStripe\Forms\Validation` and `SilverStripe\Core\Validation` namespaces
 
 ## Maintainers
  *  [Dynamic](http://www.dynamicagency.com) (<dev@dynamicagency.com>)
