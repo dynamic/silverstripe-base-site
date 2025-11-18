@@ -1,40 +1,54 @@
 # Silverstripe Base Site
 
-Base page types for SilverStripe websites
+Base page types and extensions for SilverStripe websites
 
-[![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml) [![GitHub Sponsors](https://img.shields.io/github/sponsors/dynamic)](https://github.com/sponsors/dynamic)
+[![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/dynamic?label=Sponsors&logo=GitHub%20Sponsors&style=flat&color=ea4aaa)](https://github.com/sponsors/dynamic)
 
-[![Latest Stable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/stable)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![Total Downloads](https://poser.pugx.org/dynamic/silverstripe-base-site/downloads)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![Latest Unstable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/unstable)](https://packagist.org/packages/dynamic/silverstripe-base-site) [![License](https://poser.pugx.org/dynamic/silverstripe-base-site/license)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Latest Stable Version](https://poser.pugx.org/dynamic/silverstripe-base-site/v/stable)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![Total Downloads](https://poser.pugx.org/dynamic/silverstripe-base-site/downloads)](https://packagist.org/packages/dynamic/silverstripe-base-site)
+[![License](https://poser.pugx.org/dynamic/silverstripe-base-site/license)](https://packagist.org/packages/dynamic/silverstripe-base-site)
 
 ## Requirements
 
-* SilverStripe ^6
-* axllent/silverstripe-email-obfuscator ^2.0
-* axllent/silverstripe-scaled-uploads ^2.1
-* dnadesign/silverstripe-elemental ^6.0
-* dynamic/silverstripe-site-tools ^5
-* jonom/silverstripe-betternavigator ^7
-* jonom/silverstripe-text-target-length ^2
-* silverstripe/linkfield ^5
-* silverstripe/sharedraftcontent ^4
-* tractorcow/silverstripe-robots ^5
-* wilr/silverstripe-googlesitemaps ^4
+* PHP: ^8.1
+* SilverStripe: ^6
+* axllent/silverstripe-email-obfuscator: ^3
+* axllent/silverstripe-scaled-uploads: ^3
+* dnadesign/silverstripe-elemental: ^6
+* dynamic/silverstripe-site-tools: ^5
+* jonom/silverstripe-betternavigator: ^7
+* jonom/silverstripe-text-target-length: ^3
+* silverstripe/linkfield: ^5
+* silverstripe/sharedraftcontent: ^4
+* tractorcow/silverstripe-robots: ^5
+* wilr/silverstripe-googlesitemaps: ^3
 
 ## Installation
 
 `composer require dynamic/silverstripe-base-site`
 
+## Features
+
+- **Multiple Page Types**: HomePage, BlockPage, CampaignLandingPage, SearchPage
+- **Header Image Support**: Add hero images to pages
+- **Elemental Integration**: Full page builder support with drag-and-drop elements
+- **Shared Drafts**: Collaborate with shared draft content management
+- **SEO Tools**: Google Sitemaps and robots.txt configuration
+- **Accessibility Features**: Built-in accessibility enhancements
+- **Better Navigation**: Enhanced CMS navigation via jonom/betternavigator
+- **Email Obfuscation**: Protected email links from spam bots
+- **Image Optimization**: Automatic scaled uploads for performance
+
 ## Upgrading from version 7
 
-SilverStripe Base Site 8.0 is compatible with SilverStripe 6. Key changes:
+Base Site v8 is compatible with SilverStripe 6. Key changes:
 
-- Updated to SilverStripe CMS 6
+- Updated all dependencies to SilverStripe 6 compatible versions
 - Requires PHP 8.1 or higher
-- Updated all major dependencies to their SS6-compatible versions
-- Namespace changes: `DataExtension` moved from `SilverStripe\ORM` to `SilverStripe\Core\Extension`
-- Validation classes moved to `SilverStripe\Forms\Validation` and `SilverStripe\Core\Validation` namespaces
+- Updated LinkField integration from v3 to v5
 
-## Maintainers
+See the [SilverStripe 6 Upgrade Guide](https://docs.silverstripe.org/en/6/) for more details.
  *  [Dynamic](http://www.dynamicagency.com) (<dev@dynamicagency.com>)
 
 ## Bugtracker
