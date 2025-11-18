@@ -1,6 +1,6 @@
 # Silverstripe Base Site
 
-Base page types for SilverStripe websites
+Base page types and extensions for SilverStripe websites
 
 [![CI](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamic/silverstripe-base-site/actions/workflows/ci.yml)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/dynamic?label=Sponsors&logo=GitHub%20Sponsors&style=flat&color=ea4aaa)](https://github.com/sponsors/dynamic)
@@ -11,22 +11,44 @@ Base page types for SilverStripe websites
 
 ## Requirements
 
-* SilverStripe ^5
-* axllent/silverstripe-email-obfuscator ^2.0
-* axllent/silverstripe-scaled-uploads ^2.1
-* dnadesign/silverstripe-elemental ^5.0
-* dynamic/silverstripe-site-tools ^4
-* jonom/silverstripe-betternavigator ^6
-* jonom/silverstripe-text-target-length ^2
-* silverstripe/sharedraftcontent ^3
-* tractorcow/silverstripe-robots ^4
-* wilr/silverstripe-googlesitemaps ^2.1
+* PHP: ^8.1
+* SilverStripe: ^6
+* axllent/silverstripe-email-obfuscator: ^3
+* axllent/silverstripe-scaled-uploads: ^3
+* dnadesign/silverstripe-elemental: ^6
+* dynamic/silverstripe-site-tools: ^5
+* jonom/silverstripe-betternavigator: ^7
+* jonom/silverstripe-text-target-length: ^3
+* silverstripe/linkfield: ^5
+* silverstripe/sharedraftcontent: ^4
+* tractorcow/silverstripe-robots: ^5
+* wilr/silverstripe-googlesitemaps: ^3
 
 ## Installation
 
 `composer require dynamic/silverstripe-base-site`
 
-## Maintainers
+## Features
+
+- **Multiple Page Types**: HomePage, BlockPage, CampaignLandingPage, SearchPage
+- **Header Image Support**: Add hero images to pages
+- **Elemental Integration**: Full page builder support with drag-and-drop elements
+- **Shared Drafts**: Collaborate with shared draft content management
+- **SEO Tools**: Google Sitemaps and robots.txt configuration
+- **Accessibility Features**: Built-in accessibility enhancements
+- **Better Navigation**: Enhanced CMS navigation via jonom/betternavigator
+- **Email Obfuscation**: Protected email links from spam bots
+- **Image Optimization**: Automatic scaled uploads for performance
+
+## Upgrading from version 7
+
+Base Site v8 is compatible with SilverStripe 6. Key changes:
+
+- Updated all dependencies to SilverStripe 6 compatible versions
+- Requires PHP 8.1 or higher
+- Updated LinkField integration from v3 to v5
+
+See the [SilverStripe 6 Upgrade Guide](https://docs.silverstripe.org/en/6/) for more details.
  *  [Dynamic](http://www.dynamicagency.com) (<dev@dynamicagency.com>)
 
 ## Bugtracker
