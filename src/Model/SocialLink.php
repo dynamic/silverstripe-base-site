@@ -91,17 +91,52 @@ class SocialLink extends ExternalLink implements PermissionProvider
      */
     public function getSocialChannels(): array
     {
-        $channels = [
+        // Get configured social channels, with fallback to defaults
+        $channels = $this->config()->get('social_channels') ?: [
             'facebook' => 'Facebook',
-            'x' => 'X',
+            'instagram' => 'Instagram',
+            'x' => 'X (Twitter)',
             'linkedin' => 'LinkedIn',
             'youtube' => 'YouTube',
-            'instagram' => 'Instagram',
+            'tiktok' => 'TikTok',
+            'pinterest' => 'Pinterest',
+            'snapchat' => 'Snapchat',
+            'discord' => 'Discord',
+            'whatsapp' => 'WhatsApp',
+            'telegram' => 'Telegram',
+            'slack' => 'Slack',
+            'github' => 'GitHub',
+            'threads' => 'Threads',
+            'mastodon' => 'Mastodon',
+            'reddit' => 'Reddit',
         ];
 
         $this->extend('updateSocialChannels', $channels);
 
         return $channels;
+    }
+
+    /**
+     * Get the Bootstrap icon class for this social channel
+     *
+     * @return string
+     */
+    public function getIconClass(): string
+    {
+        $icons = $this->config()->get('social_icons') ?: [];
+        $defaultIcon = $this->config()->get('default_icon') ?: 'bi-link-45deg';
+
+        return $icons[$this->SocialChannel] ?? $defaultIcon;
+    }
+
+    /**
+     * Get all configured social icon mappings
+     *
+     * @return array
+     */
+    public function getSocialIcons(): array
+    {
+        return $this->config()->get('social_icons') ?: [];
     }
 
     /**
