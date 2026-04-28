@@ -3,9 +3,10 @@
 namespace Dynamic\Base\Test\Extension;
 
 use Dynamic\Base\Extension\TemplateDataExtension;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TabSet;
 use SilverStripe\SiteConfig\SiteConfig;
 
 class TemplateDataExtensionTest extends SapphireTest
@@ -25,13 +26,21 @@ class TemplateDataExtensionTest extends SapphireTest
     ];
 
     /**
-     *
+     * Tests that TemplateDataExtension::updateCMSFields adds branding fields.
      */
-    public function testGetCMSFields()
+    public function testUpdateCMSFieldsAddsBrandingFields()
     {
-        $object = Injector::inst()->create(SiteConfig::class);
-        $fields = $object->getCMSFields();
-        $this->assertInstanceOf(FieldList::class, $fields);
+        // Test updateCMSFields directly to avoid interference from
+        // other extensions (e.g. essentials-tools) that may remove fields
+        $object = SiteConfig::create();
+        $fields = FieldList::create(TabSet::create('Root', Tab::create('Main')));
+        $extension = $object->getExtensionInstance(TemplateDataExtension::class);
+        $this->assertNotNull($extension);
+        $extension->setOwner($object);
+        $extension->updateCMSFields($fields);
+
+        $this->assertNotNull($fields->dataFieldByName('TitleLogo'));
         $this->assertNotNull($fields->dataFieldByName('Logo'));
+        $this->assertNotNull($fields->dataFieldByName('LogoRetina'));
     }
 }
