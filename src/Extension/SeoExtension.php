@@ -124,9 +124,8 @@ class SeoExtension extends Extension
     /**
      *
      */
-    public function onBeforeWrite()
+    public function onBeforeWrite(): void
     {
-        parent::onBeforeWrite();
 
         // set SearchContent to output of blocks for search
         if ($this->owner->hasMethod('getElementsForSearch')) {
