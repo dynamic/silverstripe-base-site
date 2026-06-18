@@ -40,16 +40,6 @@ Base page types and extensions for SilverStripe websites
 - **Email Obfuscation**: Protected email links from spam bots
 - **Image Optimization**: Automatic scaled uploads for performance
 
-## Upgrading from version 7
-
-Base Site v8 is compatible with SilverStripe 6. Key changes:
-
-- Updated all dependencies to SilverStripe 6 compatible versions
-- Requires PHP 8.3 or higher
-- Updated LinkField integration from v3 to v5
-
-See the [SilverStripe 6 Upgrade Guide](https://docs.silverstripe.org/en/6/) for more details.
-
 ## Maintainers
 
  *  [Dynamic](https://www.dynamicagency.com) (<dev@dynamicagency.com>)
