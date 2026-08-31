@@ -96,6 +96,31 @@ class SocialLinkTest extends SapphireTest
     }
 
     /**
+     * Tests getSocialChannelName().
+     */
+    public function testGetSocialChannelName()
+    {
+        $object = SocialLink::create();
+
+        // A freshly-created, unsaved record has a null SocialChannel until one is
+        // chosen -- the CMS GridField's summary column calls this getter for every
+        // row, including ones in this state, so it must not warn/deprecate on null.
+        $this->assertNull($object->getSocialChannelName());
+
+        $object->SocialChannel = 'facebook';
+        $this->assertSame('Facebook', $object->getSocialChannelName());
+
+        $object->SocialChannel = 'myspace';
+        $this->assertNull($object->getSocialChannelName());
+
+        $object->SocialChannel = '';
+        $this->assertNull($object->getSocialChannelName());
+
+        $object->SocialChannel = null;
+        $this->assertNull($object->getSocialChannelName());
+    }
+
+    /**
      * Tests ProvidePermissions().
      */
     public function testProvidePermissions()
