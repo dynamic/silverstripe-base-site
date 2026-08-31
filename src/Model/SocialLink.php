@@ -154,7 +154,7 @@ class SocialLink extends ExternalLink implements PermissionProvider
      */
     public function getSocialChannelName(): ?string
     {
-        return $this->getSocialChannels()[$this->SocialChannel] ?? null;
+        return $this->getSocialChannels()[(string) $this->SocialChannel] ?? null;
     }
 
 
