@@ -14,14 +14,13 @@ After:
 ---
 SilverStripe\SiteConfig\SiteConfig:
   extensions:
-    - Dynamic\Base\Extension\CompanyDataExtension
-    - Dynamic\Base\Extension\IntegrationsDataExtension
     - Dynamic\Base\Extension\TemplateDataExtension
     - Dynamic\SiteTools\Extension\ReviewContentDataExtension
 
 SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Dynamic\Base\Extension\CmsDesignDataExtension
+    - Dynamic\Base\Extension\SeoExtension
 
 Dynamic\Base\Page\HomePage:
   extensions:
@@ -42,12 +41,7 @@ SilverStripe\Blog\Model\BlogPost:
   extensions:
     - DNADesign\Elemental\Extensions\ElementalPageExtension
     - Dynamic\SiteTools\Extension\PreviewExtension
-    - Dynamic\Base\Extension\BlogPostDataExtension
-
-Dynamic\Base\Model\CompanyAddress:
-  extensions:
-    - Dynamic\SilverStripeGeocoder\AddressDataExtension
-    - Dynamic\SiteTools\Extension\ContactDataExtension
+    - Dynamic\SiteTools\Extension\BlogPostDataExtension
 
 SilverStripe\UserForms\Model\EditableFormField:
   extensions:
@@ -56,15 +50,8 @@ SilverStripe\UserForms\Model\EditableFormField:
 SilverStripe\UserForms\Model\EditableCustomRule:
   extensions:
     - Dynamic\SiteTools\Extension\DataobjectPermissionExtension
-
-PageController:
-  restrict_results_to_pages: true
-  extensions:
-    - Dynamic\Base\Extension\SearchExtension
 ```
 
 ## Site Search
 
-As an alternative to the FullText search feature built into Silverstripe, base site supports utilizing [`silverstripers/elemental-search`](https://github.com/SilverStripers/elemental-seach) module. By applying `Dynamic\Base\Extension\SearchExtension` to your `PageController` (covers all pages on the site, apply to more specific controller for page type specific actions) to implement the proper form and result methods.
-
-Out of the box, elemental-search does not restrict results to Page (or it's sublcasses). There is a config option you can apply to the same class you have also implemented `Dynamic\Base\Extension\SearchExtension`. Set `restrict_results_to_pages` to `true` in your config. This will ensure the result is a sublcass of `SiteTree`.
+Base site ships `Dynamic\Base\Page\SearchPage`, a page type that renders search results using SilverStripe core's built-in `SearchForm()`. Create a `SearchPage` in the CMS to add a search results page to your site.
