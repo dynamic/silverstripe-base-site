@@ -107,8 +107,8 @@ class TemplateDataExtension extends Extension
                 GridFieldAddExistingAutocompleter::class,
                 GridFieldDeleteAction::class,
             ])->addComponents(
-                new GridFieldOrderableRows('SortOrder'),
-                new GridFieldDeleteAction(false)
+                GridFieldOrderableRows::create('SortOrder'),
+                GridFieldDeleteAction::create(false)
             );
             $footerLinks = GridField::create(
                 'NavigationColumns',

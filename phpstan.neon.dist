@@ -1,0 +1,14 @@
+parameters:
+  level: 1
+  treatPhpDocTypesAsCertain: false
+  paths:
+    - src
+  ignoreErrors:
+    -
+      # SearchForm() comes from SilverStripe\CMS\Search\ContentControllerSearchExtension,
+      # applied to PageController only by a downstream project's own _config, not by
+      # this module — so it's genuinely absent from PHPStan's view of the class here.
+      message: '#^Call to an undefined static method PageController::SearchForm\(\)\.$#'
+      identifier: staticMethod.notFound
+      count: 1
+      path: src/Page/SearchPageController.php
