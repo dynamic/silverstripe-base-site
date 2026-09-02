@@ -99,8 +99,8 @@ class NavigationColumn extends DataObject
                         GridFieldAddExistingAutocompleter::class,
                         GridFieldDeleteAction::class,
                     ])->addComponents(
-                        new GridFieldOrderableRows('SortOrder'),
-                        new GridFieldDeleteAction(false)
+                        GridFieldOrderableRows::create('SortOrder'),
+                        GridFieldDeleteAction::create(false)
                     );
                 $footerLinks = GridField::create(
                     'NavigationGroups',
@@ -124,8 +124,9 @@ class NavigationColumn extends DataObject
      */
     public function GroupList()
     {
+        $i = 0;
+
         if ($this->NavigationGroups()) {
-            $i = 0;
             foreach ($this->NavigationGroups()->sort('SortOrder') as $link) {
                 ++$i;
             }
