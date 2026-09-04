@@ -4,9 +4,11 @@ namespace Dynamic\Base\Extension;
 
 use Dynamic\Base\Model\NavigationColumn;
 use Dynamic\Base\Model\SocialLink;
+use Psr\Log\LoggerInterface;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -16,6 +18,7 @@ use SilverStripe\Forms\OptionsetField;
 use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -166,6 +169,16 @@ class TemplateDataExtension extends Extension
             return;
         }
 
-        $link->publishRecursive();
+        try {
+            $link->publishRecursive();
+        } catch (ValidationException $e) {
+            Injector::inst()->get(LoggerInterface::class)->error(sprintf(
+                'Failed to publish %s #%d owned by SiteConfig #%d: %s',
+                get_class($link),
+                $link->ID,
+                $this->getOwner()->ID,
+                $e->getMessage()
+            ));
+        }
     }
 }

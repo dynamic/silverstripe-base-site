@@ -139,6 +139,54 @@ class TemplateDataExtensionTest extends SapphireTest
     }
 
     /**
+     * When one of several links has been modified and the others haven't, only the
+     * modified one should be republished on a SiteConfig save.
+     */
+    public function testOnlyModifiedLinksAreRepublishedWhenSiblingsAreUnmodified(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $unmodifiedLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $unmodifiedLink->write();
+
+        $modifiedLink = SocialLink::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $modifiedLink->write();
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        // Both links are now published and unmodified; change only one before the next save.
+        $modifiedLink->ExternalUrl = 'https://instagram.example/updated';
+        $modifiedLink->write();
+
+        $changeSetCountBefore = ChangeSet::get()->count();
+
+        $siteConfig->Title = 'Updated Site Name Again';
+        $siteConfig->write();
+
+        $changeSetCountAfter = ChangeSet::get()->count();
+
+        // Exactly one new ChangeSet - for the modified link. The unmodified sibling must
+        // not be republished alongside it.
+        $this->assertSame($changeSetCountBefore + 1, $changeSetCountAfter);
+
+        $liveModifiedLink = Versioned::get_by_stage(SocialLink::class, Versioned::LIVE)->byID($modifiedLink->ID);
+        $this->assertSame('https://instagram.example/updated', $liveModifiedLink->ExternalUrl);
+    }
+
+    /**
      * SiteConfig with no Social/Utility links attached should write without error.
      */
     public function testWritingSiteConfigWithNoLinksDoesNotError(): void
@@ -151,6 +199,14 @@ class TemplateDataExtensionTest extends SapphireTest
 
     /**
      * A child lacking the Versioned extension must be skipped without an exception.
+     *
+     * Note: a PHPUnit mock's dynamically-generated class name fails SilverStripe's
+     * ClassName enum validation on write(), so this can't use a persisted, genuinely
+     * modified-on-draft mock to isolate the hasExtension() guard from the separate
+     * isModifiedOnDraft() guard below it - both independently skip a never-persisted
+     * record. This confirms the aggregate behaviour ("an unversioned child is safely
+     * skipped, no exception"), not that hasExtension() specifically is what causes it;
+     * see the PR's Verification gaps.
      */
     public function testPublishLinkSkipsChildrenWithoutVersionedExtension(): void
     {
