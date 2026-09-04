@@ -70,6 +70,49 @@ class TemplateDataExtensionTest extends SapphireTest
     }
 
     /**
+     * DataObject::preWrite() invokes the exact same onAfterSkippedWrite() hook on two
+     * distinct branches: the genuine no-field-changes case (only reached after
+     * onBeforeWrite() has already run, once validateWrite() has passed), and the
+     * validate-and-reject case (invoked immediately before re-throwing the
+     * ValidationException, with onBeforeWrite() never having run at all for this write).
+     * Only the first should publish - publishing on the second would go live from a save
+     * the editor was just told failed, and would replace the real validation error with a
+     * publish one. This exercises that discrimination directly against the extension
+     * (rather than forcing a real SiteConfig validation failure through the full
+     * DataObject::write() stack) so it's a focused, reliable test of the
+     * $ownerPassedValidation flag itself.
+     */
+    public function testOnAfterSkippedWriteOnlyPublishesWhenValidationPassedFirst(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $extension = new TemplateDataExtension();
+        $extension->setOwner($siteConfig);
+
+        // Simulates preWrite()'s validation-rejection call site: onAfterSkippedWrite()
+        // fires without onBeforeWrite() ever having run first.
+        $extension->onAfterSkippedWrite();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        // Simulates the genuine no-changes call site: onBeforeWrite() runs, then
+        // onAfterSkippedWrite() - this one must publish.
+        $extension->onBeforeWrite();
+        $extension->onAfterSkippedWrite();
+
+        $this->assertTrue($socialLink->isPublished());
+    }
+
+    /**
      *
      */
     public function testGetCMSFields()
@@ -134,6 +177,9 @@ class TemplateDataExtensionTest extends SapphireTest
         $logoRetina = Image::create();
         $logoRetina->Name = 'logo-retina.png';
         $logoRetina->write();
+
+        $this->assertFalse($logo->isPublished());
+        $this->assertFalse($logoRetina->isPublished());
 
         $siteConfig->LogoID = $logo->ID;
         $siteConfig->LogoRetinaID = $logoRetina->ID;

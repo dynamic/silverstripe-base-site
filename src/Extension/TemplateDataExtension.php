@@ -138,6 +138,27 @@ class TemplateDataExtension extends Extension
     }
 
     /**
+     * Tracks whether this specific write passed DataObject::validateWrite() - see
+     * onAfterSkippedWrite() for why. Extension instances are per-owner-instance (see
+     * Extensible::getExtensionInstances()), so this can't leak between records or requests.
+     *
+     * @var bool
+     */
+    private bool $ownerPassedValidation = false;
+
+    /**
+     * DataObject::preWrite() only reaches onBeforeWrite() after validateWrite() has
+     * already passed, which is what makes this flag a reliable signal for
+     * onAfterSkippedWrite() below.
+     *
+     * @return void
+     */
+    public function onBeforeWrite(): void
+    {
+        $this->ownerPassedValidation = true;
+    }
+
+    /**
      * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
      * cascades a publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks
      * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
@@ -148,24 +169,37 @@ class TemplateDataExtension extends Extension
      */
     public function onAfterWrite(): void
     {
+        $this->ownerPassedValidation = false;
         $this->publishOwnedRecords();
     }
 
     /**
-     * DataObject::write() (DataObject.php) only calls onAfterWrite() when a field on the
-     * record itself actually changed value; otherwise it takes this onAfterSkippedWrite()
-     * branch instead. That's exactly what a real "add a social link, click Save" CMS edit
+     * DataObject::write() only calls onAfterWrite() when a field on the record itself
+     * actually changed value; otherwise it takes this onAfterSkippedWrite() branch
+     * instead. That's exactly what a real "add a social link, click Save" CMS edit
      * produces: MultiLinkField/GridField save the SocialLink/UtilityLink/Logo record
      * directly, so a SiteConfig save that only touches an owned record changes no
      * SiteConfig-owned column and would otherwise be silently skipped - reproducing this
-     * PR's original bug on the most common editing path. Both hooks funnel through the
-     * same publish logic so it doesn't matter which branch a given save takes.
+     * PR's original bug on the most common editing path.
+     *
+     * DataObject::preWrite() *also* fires this same hook - via the identical
+     * invokeWithExtensions('onAfterSkippedWrite') call - when validateWrite() rejects the
+     * write, immediately before re-throwing that ValidationException; nothing was
+     * persisted in that case, so publishing here would go live from a save the editor was
+     * just told failed, and would replace the real validation error with a publish one.
+     * $ownerPassedValidation (set by onBeforeWrite(), which preWrite() only reaches once
+     * validateWrite() has already passed) is what tells these two call sites apart.
      *
      * @return void
      * @throws ValidationException
      */
     public function onAfterSkippedWrite(): void
     {
+        if (!$this->ownerPassedValidation) {
+            return;
+        }
+
+        $this->ownerPassedValidation = false;
         $this->publishOwnedRecords();
     }
 

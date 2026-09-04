@@ -112,6 +112,10 @@ Dynamic\Base\Model\SocialLink:
 4. Enter URL
 5. Icon automatically assigned based on platform
 
+Saving Site Settings publishes every draft SocialLink/UtilityLink (and the site Logo/
+LogoRetina) to Live automatically - including from a `SiteConfig::write()` called outside
+the CMS, e.g. a BuildTask or deploy script. There's no separate manual publish step.
+
 ### In Templates
 ```html
 <% loop $SocialLinks %>
