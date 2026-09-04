@@ -127,6 +127,7 @@ Dynamic\Base\Model\SocialLink:
 - `getSocialChannels()` - Returns configured social platforms
 - `getIconClass()` - Returns Bootstrap icon class for current channel
 - `getSocialIcons()` - Returns all icon mappings
+- `getSocialChannelName()` - Returns the display label for the selected channel, or `null` if unmapped
 
 ## Customization
 
