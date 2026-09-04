@@ -15,6 +15,14 @@ use SilverStripe\Core\Validation\ValidationResult;
 class TemplateDataExtensionTestValidationGateOwnerStub
 {
     /**
+     * Mirrors DataObject::$ObsoleteClassName, which onAfterSkippedWrite() also reads -
+     * always null here, since neither gate test is exercising that specific branch.
+     *
+     * @var string|null
+     */
+    public ?string $ObsoleteClassName = null;
+
+    /**
      * @var bool
      */
     private bool $isValid;

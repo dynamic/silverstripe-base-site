@@ -29,6 +29,7 @@ class TemplateDataExtensionTest extends SapphireTest
     protected static $required_extensions = [
         SiteConfig::class => [
             TemplateDataExtension::class,
+            TemplateDataExtensionTestFailingValidationExtension::class,
         ]
     ];
 
@@ -103,6 +104,39 @@ class TemplateDataExtensionTest extends SapphireTest
         $extension->onAfterSkippedWrite();
 
         $this->assertTrue($owner->findOwnedWasCalled);
+    }
+
+    /**
+     * The end-to-end counterpart to the two owner-double tests above: a real SiteConfig
+     * write rejected by validate() must not publish a draft owned record, exercising
+     * DataObject::preWrite()'s actual validation-rejection call to onAfterSkippedWrite()
+     * rather than a stand-in for it.
+     */
+    public function testOnAfterSkippedWriteDoesNotPublishOnARealRejectedWrite(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        TemplateDataExtensionTestFailingValidationExtension::$shouldFail = true;
+
+        try {
+            $siteConfig->write();
+            $this->fail('Expected the forced validation failure to throw.');
+        } catch (ValidationException $e) {
+            // expected
+        } finally {
+            TemplateDataExtensionTestFailingValidationExtension::$shouldFail = false;
+        }
+
+        $this->assertFalse($socialLink->isPublished());
     }
 
     /**
@@ -308,12 +342,11 @@ class TemplateDataExtensionTest extends SapphireTest
      * A child lacking the Versioned extension must be skipped without an exception.
      *
      * Uses a plain, non-Versioned $extra_dataobjects stub rather than a mock: the stub
-     * declares no isModifiedOnDraft()/publishRecursive() methods at all (both are
-     * Versioned-only), so if the hasExtension(Versioned::class) guard didn't return early,
-     * the very next call in publishOwnedRecord() would fatal with "Call to undefined
-     * method" instead of returning cleanly. Reaching the assertion below is itself the
-     * proof the guard fired, isolated from the isModifiedOnDraft() guard beneath it (which
-     * would fatal the same way on this stub if reached).
+     * declares no isModifiedOnDraft() (Versioned-only - unlike publishRecursive(), which
+     * RecursivePublishable adds to every DataObject regardless of Versioned), so if the
+     * hasExtension(Versioned::class) guard didn't return early, the very next call in
+     * publishOwnedRecord() would fatal with "Call to undefined method" instead of
+     * returning cleanly and logging nothing.
      */
     public function testPublishOwnedRecordSkipsChildWithoutVersionedExtension(): void
     {

@@ -6,8 +6,10 @@ use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
 
 /**
- * Deliberately not Versioned and declares neither isModifiedOnDraft() nor
- * publishRecursive() - see
+ * Deliberately not Versioned. RecursivePublishable (which provides publishRecursive()) is
+ * applied to every DataObject regardless of Versioned (see versionedownership.yml), so
+ * this stub does declare that method - it's isModifiedOnDraft() specifically, a
+ * Versioned-only method, that it lacks. See
  * TemplateDataExtensionTest::testPublishOwnedRecordSkipsChildWithoutVersionedExtension().
  */
 class TemplateDataExtensionTestUnversionedOwnedStub extends DataObject implements TestOnly

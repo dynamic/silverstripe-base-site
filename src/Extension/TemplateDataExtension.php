@@ -155,8 +155,7 @@ class TemplateDataExtension extends Extension
      * instead. That's exactly what a real "add a social link, click Save" CMS edit
      * produces: MultiLinkField/GridField save the SocialLink/UtilityLink/Logo record
      * directly, so a SiteConfig save that only touches an owned record changes no
-     * SiteConfig-owned column and would otherwise be silently skipped - reproducing this
-     * PR's original bug on the most common editing path.
+     * SiteConfig-owned column and would otherwise be silently skipped.
      *
      * DataObject::preWrite() *also* fires this same hook - via the identical
      * invokeWithExtensions('onAfterSkippedWrite') call - when validateWrite() rejects the
@@ -166,15 +165,26 @@ class TemplateDataExtension extends Extension
      * these two call sites apart: Extension instances are Injector singletons (shared
      * across every SiteConfig for the life of the process - see setOwner()/clearOwner()'s
      * ownerStack, which only makes sense for a shared instance re-owned per hook call), so
-     * any state written here would leak between unrelated records and requests. Asking the
-     * owner to validate itself again is a few extra field checks per save, but it's
-     * correct regardless of what happened on some other write earlier in the process.
+     * any state written here would leak between unrelated records and requests.
+     *
+     * Re-checking validate()/ObsoleteClassName is a heuristic for "did preWrite() reject
+     * this", not the exact same check validateWrite() itself makes (it can't be - nothing
+     * this extension can observe distinguishes a rejected write from a genuine
+     * no-changes one beyond re-deriving what validateWrite() would have concluded). It
+     * mirrors validateWrite()'s two rejection paths in order: ObsoleteClassName is checked
+     * first (an object of a class that no longer exists), then validate() (field/business
+     * rules, including via updateValidate()). It does not account for
+     * write($skipValidation: true) - a call which accepts an object validate() would
+     * reject - which would then be misread as a rejected write and its owned records left
+     * unpublished, even though the write actually succeeded.
      *
      * @return void
      */
     public function onAfterSkippedWrite(): void
     {
-        if (!$this->getOwner()->validate()->isValid()) {
+        $owner = $this->getOwner();
+
+        if ($owner->ObsoleteClassName || !$owner->validate()->isValid()) {
             return;
         }
 
@@ -236,12 +246,14 @@ class TemplateDataExtension extends Extension
         } catch (\Exception $e) {
             // publishRecursive() -> ChangeSet::publish() can throw ValidationException,
             // BadMethodCallException, LogicException, or UnexpectedDataException depending
-            // on what's wrong with this specific record - all \Exception, not \Error, so a
-            // genuine programming error (TypeError etc.) still propagates instead of being
-            // caught here. \Exception (not \Throwable) is the deliberate boundary: a
-            // genuine \Error on one owned object still propagates out of the loop in
-            // publishOwnedRecords() and stops every subsequent owned object in that save
-            // from being attempted, unlike the per-object isolation \Exception gets.
+            // on what's wrong with this specific record - all \Exception, not \Error.
+            // Catching \Exception (not \Throwable) means a genuine \Error (TypeError etc.)
+            // still propagates out of this method instead of being swallowed as if it were
+            // a routine, data-level publish failure - it isn't ours to catch and log as
+            // one. That does mean an \Error on one owned object aborts the rest of the
+            // loop in publishOwnedRecords(), unlike the per-object isolation \Exception
+            // gets here; that's an accepted consequence of not misclassifying it, not a
+            // deliberately chosen isolation strategy.
             //
             // Logged rather than re-thrown, including for ValidationException - see
             // publishOwnedRecords() for why re-throwing from here is unsafe. Note
