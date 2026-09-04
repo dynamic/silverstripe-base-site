@@ -16,6 +16,7 @@ use SilverStripe\Forms\OptionsetField;
 use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
+use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -64,7 +65,7 @@ class TemplateDataExtension extends Extension
         'Logo',
         'LogoRetina',
         'UtilityLinks',
-        'Sociallinks',
+        'SocialLinks',
     ];
 
     /**
@@ -131,5 +132,40 @@ class TemplateDataExtension extends Extension
                     SocialLink::class,
                 ]),
         ]);
+    }
+
+    /**
+     * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
+     * cascades a publish to its child Link records. Publish them explicitly whenever the
+     * owner is saved so CMS edits go live without a separate manual publish step.
+     *
+     * @return void
+     */
+    public function onAfterWrite(): void
+    {
+        foreach ($this->getOwner()->SocialLinks() as $link) {
+            $this->publishLink($link);
+        }
+
+        foreach ($this->getOwner()->UtilityLinks() as $link) {
+            $this->publishLink($link);
+        }
+    }
+
+    /**
+     * @param Link $link
+     * @return void
+     */
+    private function publishLink(Link $link): void
+    {
+        if (!$link->hasExtension(Versioned::class)) {
+            return;
+        }
+
+        if (!$link->isModifiedOnDraft()) {
+            return;
+        }
+
+        $link->publishRecursive();
     }
 }
