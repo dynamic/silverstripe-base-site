@@ -17,6 +17,7 @@ use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
@@ -150,24 +151,45 @@ class TemplateDataExtension extends Extension
      * draft-only owned record wouldn't be returned by findOwned() at all and would be
      * silently skipped.
      *
+     * Every owned record is attempted independently of its siblings (see
+     * publishOwnedRecord()), so one record's publish failure doesn't stop the rest of this
+     * loop from running. Once every record has been attempted, a ValidationException from
+     * any of them (there can be more than one; only the first is surfaced) is re-thrown so
+     * LeftAndMain::handleRequest() renders it to the editor - the whole reason this hook
+     * exists is that links previously stayed silently in draft with no error shown.
+     *
      * @return void
+     * @throws ValidationException
      */
     public function onAfterWrite(): void
     {
         Versioned::withVersionedMode(function (): void {
             Versioned::set_stage(Versioned::DRAFT);
 
+            $publishFailure = null;
+
             foreach ($this->getOwner()->findOwned(false) as $owned) {
-                $this->publishOwned($owned);
+                try {
+                    $this->publishOwnedRecord($owned);
+                } catch (ValidationException $e) {
+                    $publishFailure ??= $e;
+                }
+            }
+
+            if ($publishFailure !== null) {
+                throw $publishFailure;
             }
         });
     }
 
     /**
+     * Publishes a single record owned (via $owns) by the extension's owner.
+     *
      * @param DataObject $object
      * @return void
+     * @throws ValidationException
      */
-    private function publishOwned(DataObject $object): void
+    protected function publishOwnedRecord(DataObject $object): void
     {
         if (!$object->hasExtension(Versioned::class)) {
             return;
@@ -184,15 +206,29 @@ class TemplateDataExtension extends Extension
             // BadMethodCallException, LogicException, or UnexpectedDataException depending
             // on what's wrong with this specific record - all \Exception, not \Error, so a
             // genuine programming error (TypeError etc.) still propagates instead of being
-            // silently logged as a routine publish failure. One bad record's data shouldn't
-            // break every future SiteConfig save, so isolate that case and log it instead.
+            // caught here. \Exception (not \Throwable) is the deliberate boundary: a
+            // genuine \Error on one owned object still propagates out of onAfterWrite()'s
+            // loop and stops every subsequent owned object in that save from being
+            // attempted, unlike the per-object isolation \Exception gets.
             Injector::inst()->get(LoggerInterface::class)->error(sprintf(
                 'Failed to publish %s #%d owned by SiteConfig #%d: %s',
                 get_class($object),
                 $object->ID,
                 $this->getOwner()->ID,
                 $e->getMessage()
-            ));
+            ), ['exception' => $e]);
+
+            // A ValidationException means the record's own content is invalid, which is
+            // worth surfacing to the editor (see onAfterWrite()); a
+            // BadMethodCallException/LogicException/UnexpectedDataException from a
+            // programming-level ChangeSet problem stays log-only, since there's nothing an
+            // editor could act on for those. Note isModifiedOnDraft() staying true after a
+            // permanent validation failure means this record will keep being attempted (and
+            // re-surfaced to the editor) on every future SiteConfig save until its
+            // underlying validation problem is fixed.
+            if ($e instanceof ValidationException) {
+                throw $e;
+            }
         }
     }
 }

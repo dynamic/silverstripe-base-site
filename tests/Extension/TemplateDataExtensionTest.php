@@ -4,9 +4,11 @@ namespace Dynamic\Base\Test\Extension;
 
 use Dynamic\Base\Extension\TemplateDataExtension;
 use Dynamic\Base\Model\SocialLink;
+use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\LinkField\Models\ExternalLink;
@@ -28,6 +30,14 @@ class TemplateDataExtensionTest extends SapphireTest
         SiteConfig::class => [
             TemplateDataExtension::class,
         ]
+    ];
+
+    /**
+     * @var array
+     */
+    protected static $extra_dataobjects = [
+        TemplateDataExtensionTestUnversionedOwnedStub::class,
+        TemplateDataExtensionTestThrowingSocialLink::class,
     ];
 
     /**
@@ -128,6 +138,7 @@ class TemplateDataExtensionTest extends SapphireTest
         $siteConfig->write();
 
         $liveLink = Versioned::get_by_stage(SocialLink::class, Versioned::LIVE)->byID($socialLink->ID);
+        $this->assertNotNull($liveLink, 'Expected a live version of the SocialLink to exist.');
         $this->assertSame('https://facebook.example/updated', $liveLink->ExternalUrl);
     }
 
@@ -209,6 +220,7 @@ class TemplateDataExtensionTest extends SapphireTest
         $this->assertSame($changeSetCountBefore + 1, $changeSetCountAfter);
 
         $liveModifiedLink = Versioned::get_by_stage(SocialLink::class, Versioned::LIVE)->byID($modifiedLink->ID);
+        $this->assertNotNull($liveModifiedLink, 'Expected a live version of the modified SocialLink to exist.');
         $this->assertSame('https://instagram.example/updated', $liveModifiedLink->ExternalUrl);
     }
 
@@ -226,27 +238,165 @@ class TemplateDataExtensionTest extends SapphireTest
     /**
      * A child lacking the Versioned extension must be skipped without an exception.
      *
-     * Note: a PHPUnit mock's dynamically-generated class name fails SilverStripe's
-     * ClassName enum validation on write(), so this can't use a persisted, genuinely
-     * modified-on-draft mock to isolate the hasExtension() guard from the separate
-     * isModifiedOnDraft() guard below it - both independently skip a never-persisted
-     * record. This confirms the aggregate behaviour ("an unversioned child is safely
-     * skipped, no exception"), not that hasExtension() specifically is what causes it;
-     * see the PR's Verification gaps.
+     * Uses a plain, non-Versioned $extra_dataobjects stub rather than a mock: the stub
+     * declares no isModifiedOnDraft()/publishRecursive() methods at all (both are
+     * Versioned-only), so if the hasExtension(Versioned::class) guard didn't return early,
+     * the very next call in publishOwnedRecord() would fatal with "Call to undefined
+     * method" instead of returning cleanly. Reaching the assertion below is itself the
+     * proof the guard fired, isolated from the isModifiedOnDraft() guard beneath it (which
+     * would fatal the same way on this stub if reached).
      */
-    public function testPublishLinkSkipsChildrenWithoutVersionedExtension(): void
+    public function testPublishOwnedRecordSkipsChildWithoutVersionedExtension(): void
     {
         $extension = new TemplateDataExtension();
 
-        $link = $this->getMockBuilder(SocialLink::class)
-            ->onlyMethods(['hasExtension'])
-            ->getMock();
-        $link->method('hasExtension')->willReturn(false);
+        $stub = TemplateDataExtensionTestUnversionedOwnedStub::create();
+        $stub->write();
 
-        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwned');
-        $method->setAccessible(true);
+        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
+        $method->invoke($extension, $stub);
+
+        $this->assertTrue($stub->exists());
+    }
+
+    /**
+     * A non-ValidationException raised by publishRecursive() must be logged (with the
+     * exception itself as log context, not just its message) and swallowed rather than
+     * propagated - one bad record shouldn't be able to abort the whole SiteConfig save.
+     */
+    public function testPublishOwnedRecordLogsAndSwallowsNonValidationFailures(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $extension = new TemplateDataExtension();
+        $extension->setOwner($siteConfig);
+
+        $link = TemplateDataExtensionTestThrowingSocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'FailureMode' => 'generic',
+        ]);
+        $link->write();
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
         $method->invoke($extension, $link);
 
-        $this->assertFalse($link->exists());
+        $this->assertFalse($link->isPublished());
+        $this->assertCount(1, $logger->records);
+        $this->assertSame('error', $logger->records[0]['level']);
+        $this->assertArrayHasKey('exception', $logger->records[0]['context']);
+        $this->assertInstanceOf(\RuntimeException::class, $logger->records[0]['context']['exception']);
+    }
+
+    /**
+     * A ValidationException raised by publishRecursive() must still be logged, but is then
+     * re-thrown rather than swallowed - the content is invalid, which is worth surfacing to
+     * the editor via LeftAndMain's own ValidationException handling.
+     */
+    public function testPublishOwnedRecordLogsAndRethrowsValidationFailures(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $extension = new TemplateDataExtension();
+        $extension->setOwner($siteConfig);
+
+        $link = TemplateDataExtensionTestThrowingSocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'FailureMode' => 'validation',
+        ]);
+        $link->write();
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
+
+        $this->expectException(ValidationException::class);
+        try {
+            $method->invoke($extension, $link);
+        } finally {
+            $this->assertCount(1, $logger->records);
+        }
+    }
+
+    /**
+     * A sibling that publishes cleanly must still go live even when another owned record's
+     * publishRecursive() throws a non-ValidationException - and the SiteConfig save itself
+     * must still succeed. Proves the per-object isolation onAfterWrite() relies on.
+     */
+    public function testOnAfterWritePublishesSiblingsWhenOneFailsWithNonValidationException(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $goodLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $goodLink->write();
+
+        $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+            'FailureMode' => 'generic',
+        ]);
+        $badLink->write();
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        $this->assertTrue($siteConfig->isInDB());
+        $this->assertTrue($goodLink->isPublished());
+        $this->assertFalse($badLink->isPublished());
+    }
+
+    /**
+     * A ValidationException from one owned record must not stop its siblings from being
+     * published, but must still propagate out of SiteConfig::write() once every owned
+     * record has been attempted - so the editor actually sees the failure.
+     */
+    public function testOnAfterWriteSurfacesValidationExceptionAfterPublishingSiblings(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $goodLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $goodLink->write();
+
+        $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+            'FailureMode' => 'validation',
+        ]);
+        $badLink->write();
+
+        $siteConfig->Title = 'Updated Site Name';
+
+        try {
+            $siteConfig->write();
+            $this->fail('Expected a ValidationException to propagate out of SiteConfig::write().');
+        } catch (ValidationException $e) {
+            // expected
+        }
+
+        $this->assertTrue($goodLink->isPublished());
+        $this->assertFalse($badLink->isPublished());
     }
 }
