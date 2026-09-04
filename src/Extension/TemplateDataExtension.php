@@ -17,7 +17,6 @@ use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
@@ -138,38 +137,15 @@ class TemplateDataExtension extends Extension
     }
 
     /**
-     * Tracks whether this specific write passed DataObject::validateWrite() - see
-     * onAfterSkippedWrite() for why. Extension instances are per-owner-instance (see
-     * Extensible::getExtensionInstances()), so this can't leak between records or requests.
-     *
-     * @var bool
-     */
-    private bool $ownerPassedValidation = false;
-
-    /**
-     * DataObject::preWrite() only reaches onBeforeWrite() after validateWrite() has
-     * already passed, which is what makes this flag a reliable signal for
-     * onAfterSkippedWrite() below.
-     *
-     * @return void
-     */
-    public function onBeforeWrite(): void
-    {
-        $this->ownerPassedValidation = true;
-    }
-
-    /**
      * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
      * cascades a publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks
      * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
      * go live without a separate manual publish step.
      *
      * @return void
-     * @throws ValidationException
      */
     public function onAfterWrite(): void
     {
-        $this->ownerPassedValidation = false;
         $this->publishOwnedRecords();
     }
 
@@ -186,20 +162,22 @@ class TemplateDataExtension extends Extension
      * invokeWithExtensions('onAfterSkippedWrite') call - when validateWrite() rejects the
      * write, immediately before re-throwing that ValidationException; nothing was
      * persisted in that case, so publishing here would go live from a save the editor was
-     * just told failed, and would replace the real validation error with a publish one.
-     * $ownerPassedValidation (set by onBeforeWrite(), which preWrite() only reaches once
-     * validateWrite() has already passed) is what tells these two call sites apart.
+     * just told failed. A per-instance flag set from onBeforeWrite() can't reliably tell
+     * these two call sites apart: Extension instances are Injector singletons (shared
+     * across every SiteConfig for the life of the process - see setOwner()/clearOwner()'s
+     * ownerStack, which only makes sense for a shared instance re-owned per hook call), so
+     * any state written here would leak between unrelated records and requests. Asking the
+     * owner to validate itself again is a few extra field checks per save, but it's
+     * correct regardless of what happened on some other write earlier in the process.
      *
      * @return void
-     * @throws ValidationException
      */
     public function onAfterSkippedWrite(): void
     {
-        if (!$this->ownerPassedValidation) {
+        if (!$this->getOwner()->validate()->isValid()) {
             return;
         }
 
-        $this->ownerPassedValidation = false;
         $this->publishOwnedRecords();
     }
 
@@ -215,32 +193,24 @@ class TemplateDataExtension extends Extension
      * silently skipped.
      *
      * Every owned record is attempted independently of its siblings (see
-     * publishOwnedRecord()), so one record's publish failure doesn't stop the rest of this
-     * loop from running. Once every record has been attempted, a ValidationException from
-     * any of them (there can be more than one; only the first is surfaced) is re-thrown so
-     * LeftAndMain::handleRequest() renders it to the editor - the whole reason this hook
-     * exists is that links previously stayed silently in draft with no error shown.
+     * publishOwnedRecord()) - one record's publish failure is logged and doesn't stop the
+     * rest of this loop from running, and doesn't stop SiteConfig's own save from
+     * succeeding. It's deliberately never re-thrown from here: DataObject::write() calls
+     * onAfterWrite()/onAfterSkippedWrite() *before* resetting its own isChanged()
+     * bookkeeping and flushing its cache, so an exception thrown from inside this method
+     * would leave the SiteConfig row committed to the database but the in-memory object
+     * still reporting itself dirty, with stale cached lookups elsewhere in the same
+     * request - a worse failure mode than a link staying in draft with a logged error.
      *
      * @return void
-     * @throws ValidationException
      */
     protected function publishOwnedRecords(): void
     {
         Versioned::withVersionedMode(function (): void {
             Versioned::set_stage(Versioned::DRAFT);
 
-            $publishFailure = null;
-
             foreach ($this->getOwner()->findOwned(false) as $owned) {
-                try {
-                    $this->publishOwnedRecord($owned);
-                } catch (ValidationException $e) {
-                    $publishFailure ??= $e;
-                }
-            }
-
-            if ($publishFailure !== null) {
-                throw $publishFailure;
+                $this->publishOwnedRecord($owned);
             }
         });
     }
@@ -250,7 +220,6 @@ class TemplateDataExtension extends Extension
      *
      * @param DataObject $object
      * @return void
-     * @throws ValidationException
      */
     protected function publishOwnedRecord(DataObject $object): void
     {
@@ -273,31 +242,19 @@ class TemplateDataExtension extends Extension
             // genuine \Error on one owned object still propagates out of the loop in
             // publishOwnedRecords() and stops every subsequent owned object in that save
             // from being attempted, unlike the per-object isolation \Exception gets.
-            $context = sprintf(
+            //
+            // Logged rather than re-thrown, including for ValidationException - see
+            // publishOwnedRecords() for why re-throwing from here is unsafe. Note
+            // isModifiedOnDraft() staying true after a permanent validation failure means
+            // this record will keep being attempted (and re-logged) on every future
+            // SiteConfig save until its underlying validation problem is fixed.
+            Injector::inst()->get(LoggerInterface::class)->error(sprintf(
                 'Failed to publish %s #%d owned by SiteConfig #%d: %s',
                 get_class($object),
                 $object->ID,
                 $this->getOwner()->ID,
                 $e->getMessage()
-            );
-
-            Injector::inst()->get(LoggerInterface::class)->error($context, ['exception' => $e]);
-
-            // A ValidationException means the record's own content is invalid, which is
-            // worth surfacing to the editor (see publishOwnedRecords()); a
-            // BadMethodCallException/LogicException/UnexpectedDataException from a
-            // programming-level ChangeSet problem stays log-only, since there's nothing an
-            // editor could act on for those. Note isModifiedOnDraft() staying true after a
-            // permanent validation failure means this record will keep being attempted (and
-            // re-surfaced to the editor) on every future SiteConfig save until its
-            // underlying validation problem is fixed.
-            //
-            // Re-thrown wrapped in a new ValidationException (rather than the original $e)
-            // so the message the editor actually sees identifies which owned record failed
-            // and why, instead of just the framework's generic ChangeSet-level text.
-            if ($e instanceof ValidationException) {
-                throw ValidationException::create($context);
-            }
+            ), ['exception' => $e]);
         }
     }
 }

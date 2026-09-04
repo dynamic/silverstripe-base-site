@@ -70,46 +70,39 @@ class TemplateDataExtensionTest extends SapphireTest
     }
 
     /**
-     * DataObject::preWrite() invokes the exact same onAfterSkippedWrite() hook on two
-     * distinct branches: the genuine no-field-changes case (only reached after
-     * onBeforeWrite() has already run, once validateWrite() has passed), and the
-     * validate-and-reject case (invoked immediately before re-throwing the
-     * ValidationException, with onBeforeWrite() never having run at all for this write).
-     * Only the first should publish - publishing on the second would go live from a save
-     * the editor was just told failed, and would replace the real validation error with a
-     * publish one. This exercises that discrimination directly against the extension
-     * (rather than forcing a real SiteConfig validation failure through the full
-     * DataObject::write() stack) so it's a focused, reliable test of the
-     * $ownerPassedValidation flag itself.
+     * DataObject::preWrite() invokes this exact same onAfterSkippedWrite() hook on two
+     * distinct branches: the genuine no-field-changes case, and the validate-and-reject
+     * case, invoked immediately before re-throwing the ValidationException with nothing
+     * actually persisted. Only the first should publish. Extension instances are Injector
+     * singletons shared across every owner for the life of the process (see setOwner()/
+     * clearOwner()'s ownerStack), so the gate can't be a flag set on the extension itself -
+     * it has to ask the current owner directly, which is what this proves via a minimal
+     * owner double rather than the extension's real SiteConfig owner.
      */
-    public function testOnAfterSkippedWriteOnlyPublishesWhenValidationPassedFirst(): void
+    public function testOnAfterSkippedWriteDoesNotPublishWhenOwnerFailsValidation(): void
     {
-        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
-
-        $socialLink = SocialLink::create([
-            'SocialChannel' => 'facebook',
-            'ExternalUrl' => 'https://facebook.example/profile',
-            'OwnerID' => $siteConfig->ID,
-            'OwnerClass' => SiteConfig::class,
-            'OwnerRelation' => 'SocialLinks',
-        ]);
-        $socialLink->write();
-
         $extension = new TemplateDataExtension();
-        $extension->setOwner($siteConfig);
+        $owner = new TemplateDataExtensionTestValidationGateOwnerStub(false);
+        $extension->setOwner($owner);
 
-        // Simulates preWrite()'s validation-rejection call site: onAfterSkippedWrite()
-        // fires without onBeforeWrite() ever having run first.
         $extension->onAfterSkippedWrite();
 
-        $this->assertFalse($socialLink->isPublished());
+        $this->assertFalse($owner->findOwnedWasCalled);
+    }
 
-        // Simulates the genuine no-changes call site: onBeforeWrite() runs, then
-        // onAfterSkippedWrite() - this one must publish.
-        $extension->onBeforeWrite();
+    /**
+     * The other half of testOnAfterSkippedWriteDoesNotPublishWhenOwnerFailsValidation():
+     * a validation-passing owner's genuine no-changes save must still publish.
+     */
+    public function testOnAfterSkippedWritePublishesWhenOwnerPassesValidation(): void
+    {
+        $extension = new TemplateDataExtension();
+        $owner = new TemplateDataExtensionTestValidationGateOwnerStub(true);
+        $extension->setOwner($owner);
+
         $extension->onAfterSkippedWrite();
 
-        $this->assertTrue($socialLink->isPublished());
+        $this->assertTrue($owner->findOwnedWasCalled);
     }
 
     /**
@@ -368,11 +361,13 @@ class TemplateDataExtensionTest extends SapphireTest
     }
 
     /**
-     * A ValidationException raised by publishRecursive() must still be logged, but is then
-     * re-thrown rather than swallowed - the content is invalid, which is worth surfacing to
-     * the editor via LeftAndMain's own ValidationException handling.
+     * A ValidationException raised by publishRecursive() is logged and swallowed exactly
+     * like any other exception, not re-thrown - see publishOwnedRecords() for why
+     * re-throwing from inside a DataObject::write() call is unsafe (the row is already
+     * committed by the time onAfterWrite()/onAfterSkippedWrite() run, so an exception
+     * thrown there skips write()'s own isChanged()/cache bookkeeping).
      */
-    public function testPublishOwnedRecordLogsAndRethrowsValidationFailures(): void
+    public function testPublishOwnedRecordLogsAndSwallowsValidationFailuresToo(): void
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
 
@@ -390,13 +385,13 @@ class TemplateDataExtensionTest extends SapphireTest
         Injector::inst()->registerService($logger, LoggerInterface::class);
 
         $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
+        $method->invoke($extension, $link);
 
-        $this->expectException(ValidationException::class);
-        try {
-            $method->invoke($extension, $link);
-        } finally {
-            $this->assertCount(1, $logger->records);
-        }
+        $this->assertFalse($link->isPublished());
+        $this->assertCount(1, $logger->records);
+        $this->assertSame('error', $logger->records[0]['level']);
+        $this->assertArrayHasKey('exception', $logger->records[0]['context']);
+        $this->assertInstanceOf(ValidationException::class, $logger->records[0]['context']['exception']);
     }
 
     /**
@@ -444,12 +439,12 @@ class TemplateDataExtensionTest extends SapphireTest
 
     /**
      * A ValidationException from one owned record must not stop its siblings from being
-     * published, but must still propagate out of SiteConfig::write() once every owned
-     * record has been attempted - so the editor actually sees the failure. As above, the
-     * failing record is created (and therefore iterated) first, so this only passes if the
-     * loop genuinely keeps going after catching the exception.
+     * published, and must not stop SiteConfig::write() itself from succeeding either - see
+     * publishOwnedRecords() for why a publish failure is never re-thrown out of these
+     * hooks. As above, the failing record is created (and therefore iterated) first, so
+     * this only passes if the loop genuinely keeps going after catching the exception.
      */
-    public function testOnAfterWriteSurfacesValidationExceptionAfterPublishingSiblings(): void
+    public function testOnAfterWritePublishesSiblingsWhenOneFailsWithValidationException(): void
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
 
@@ -477,15 +472,42 @@ class TemplateDataExtensionTest extends SapphireTest
         Injector::inst()->registerService(new TemplateDataExtensionTestSpyLogger(), LoggerInterface::class);
 
         $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
 
-        try {
-            $siteConfig->write();
-            $this->fail('Expected a ValidationException to propagate out of SiteConfig::write().');
-        } catch (ValidationException $e) {
-            // expected
-        }
-
+        $this->assertTrue($siteConfig->isInDB());
         $this->assertTrue($goodLink->isPublished());
         $this->assertFalse($badLink->isPublished());
+    }
+
+    /**
+     * Guards against Versioned::withVersionedMode()'s Stage.Draft pin in
+     * publishOwnedRecords() being simplified away: every other test in this class runs
+     * under SapphireTest's default draft reading mode, so all of them would still pass
+     * even without the pin. This one explicitly forces Stage.Live as the ambient reading
+     * mode before saving - a draft-only owned record must still be found and published.
+     */
+    public function testOwnedRecordsPublishEvenWhenAmbientReadingModeIsLive(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        Versioned::withVersionedMode(function () use ($siteConfig): void {
+            Versioned::set_stage(Versioned::LIVE);
+
+            $siteConfig->Title = 'Updated Site Name';
+            $siteConfig->write();
+        });
+
+        $this->assertTrue($socialLink->isPublished());
     }
 }
