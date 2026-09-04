@@ -5,6 +5,7 @@ namespace Dynamic\Base\Test\Extension;
 use Dynamic\Base\Extension\TemplateDataExtension;
 use Dynamic\Base\Model\SocialLink;
 use ReflectionMethod;
+use SilverStripe\Assets\Image;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
@@ -75,6 +76,31 @@ class TemplateDataExtensionTest extends SapphireTest
 
         $this->assertTrue($socialLink->isPublished());
         $this->assertTrue($utilityLink->isPublished());
+    }
+
+    /**
+     * Logo/LogoRetina are has_one relations, also declared in $owns, and also Versioned
+     * (Image extends the Versioned File) - they must be published the same way as the
+     * has_many SocialLinks/UtilityLinks children.
+     */
+    public function testLogoAndLogoRetinaArePublishedOnWrite(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $logo = Image::create();
+        $logo->Name = 'logo.png';
+        $logo->write();
+
+        $logoRetina = Image::create();
+        $logoRetina->Name = 'logo-retina.png';
+        $logoRetina->write();
+
+        $siteConfig->LogoID = $logo->ID;
+        $siteConfig->LogoRetinaID = $logoRetina->ID;
+        $siteConfig->write();
+
+        $this->assertTrue($logo->isPublished());
+        $this->assertTrue($logoRetina->isPublished());
     }
 
     /**
@@ -217,7 +243,7 @@ class TemplateDataExtensionTest extends SapphireTest
             ->getMock();
         $link->method('hasExtension')->willReturn(false);
 
-        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishLink');
+        $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwned');
         $method->setAccessible(true);
         $method->invoke($extension, $link);
 

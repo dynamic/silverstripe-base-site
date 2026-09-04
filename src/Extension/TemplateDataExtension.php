@@ -7,7 +7,6 @@ use Dynamic\Base\Model\SocialLink;
 use Psr\Log\LoggerInterface;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
-use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -18,6 +17,7 @@ use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -138,13 +138,17 @@ class TemplateDataExtension extends Extension
 
     /**
      * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
-     * cascades a publish to its child Link records. Publish them explicitly whenever the
-     * owner is saved so CMS edits go live without a separate manual publish step.
+     * cascades a publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks
+     * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
+     * go live without a separate manual publish step.
+     *
+     * Uses findOwned() (the framework's own $owns-driven traversal) rather than hardcoded
+     * per-relation loops, so this stays correct if $owns ever gains another relation.
      *
      * Pinned to the draft reading stage regardless of ambient mode: the default reading
      * mode outside a CMS request is Stage.Live (Versioned::DEFAULT_MODE), under which a
-     * draft-only link wouldn't be returned by SocialLinks()/UtilityLinks() at all and would
-     * be silently skipped.
+     * draft-only owned record wouldn't be returned by findOwned() at all and would be
+     * silently skipped.
      *
      * @return void
      */
@@ -153,37 +157,39 @@ class TemplateDataExtension extends Extension
         Versioned::withVersionedMode(function (): void {
             Versioned::set_stage(Versioned::DRAFT);
 
-            foreach ($this->getOwner()->SocialLinks() as $link) {
-                $this->publishLink($link);
-            }
-
-            foreach ($this->getOwner()->UtilityLinks() as $link) {
-                $this->publishLink($link);
+            foreach ($this->getOwner()->findOwned(false) as $owned) {
+                $this->publishOwned($owned);
             }
         });
     }
 
     /**
-     * @param Link $link
+     * @param DataObject $object
      * @return void
      */
-    private function publishLink(Link $link): void
+    private function publishOwned(DataObject $object): void
     {
-        if (!$link->hasExtension(Versioned::class)) {
+        if (!$object->hasExtension(Versioned::class)) {
             return;
         }
 
-        if (!$link->isModifiedOnDraft()) {
+        if (!$object->isModifiedOnDraft()) {
             return;
         }
 
         try {
-            $link->publishRecursive();
-        } catch (ValidationException $e) {
+            $object->publishRecursive();
+        } catch (\Exception $e) {
+            // publishRecursive() -> ChangeSet::publish() can throw ValidationException,
+            // BadMethodCallException, LogicException, or UnexpectedDataException depending
+            // on what's wrong with this specific record - all \Exception, not \Error, so a
+            // genuine programming error (TypeError etc.) still propagates instead of being
+            // silently logged as a routine publish failure. One bad record's data shouldn't
+            // break every future SiteConfig save, so isolate that case and log it instead.
             Injector::inst()->get(LoggerInterface::class)->error(sprintf(
                 'Failed to publish %s #%d owned by SiteConfig #%d: %s',
-                get_class($link),
-                $link->ID,
+                get_class($object),
+                $object->ID,
                 $this->getOwner()->ID,
                 $e->getMessage()
             ));
