@@ -7,7 +7,6 @@ use Dynamic\Base\Model\SocialLink;
 use Psr\Log\LoggerInterface;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
@@ -33,7 +32,7 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @method Image LogoRetina()
  * @method DataList|NavigationColumn[] NavigationColumns()
  * @method DataList|SocialLink[] SocialLinks()
- * @method ManyManyList|SiteTree[] UtilityLinks()
+ * @method DataList|Link[] UtilityLinks()
  */
 class TemplateDataExtension extends Extension
 {
@@ -142,17 +141,26 @@ class TemplateDataExtension extends Extension
      * cascades a publish to its child Link records. Publish them explicitly whenever the
      * owner is saved so CMS edits go live without a separate manual publish step.
      *
+     * Pinned to the draft reading stage regardless of ambient mode: the default reading
+     * mode outside a CMS request is Stage.Live (Versioned::DEFAULT_MODE), under which a
+     * draft-only link wouldn't be returned by SocialLinks()/UtilityLinks() at all and would
+     * be silently skipped.
+     *
      * @return void
      */
     public function onAfterWrite(): void
     {
-        foreach ($this->getOwner()->SocialLinks() as $link) {
-            $this->publishLink($link);
-        }
+        Versioned::withVersionedMode(function (): void {
+            Versioned::set_stage(Versioned::DRAFT);
 
-        foreach ($this->getOwner()->UtilityLinks() as $link) {
-            $this->publishLink($link);
-        }
+            foreach ($this->getOwner()->SocialLinks() as $link) {
+                $this->publishLink($link);
+            }
+
+            foreach ($this->getOwner()->UtilityLinks() as $link) {
+                $this->publishLink($link);
+            }
+        });
     }
 
     /**
