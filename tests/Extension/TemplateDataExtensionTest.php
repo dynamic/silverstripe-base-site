@@ -322,10 +322,14 @@ class TemplateDataExtensionTest extends SapphireTest
         $stub = TemplateDataExtensionTestUnversionedOwnedStub::create();
         $stub->write();
 
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
         $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
         $method->invoke($extension, $stub);
 
-        $this->assertTrue($stub->exists());
+        $this->assertFalse($stub->hasExtension(Versioned::class));
+        $this->assertEmpty($logger->records);
     }
 
     /**
@@ -400,7 +404,9 @@ class TemplateDataExtensionTest extends SapphireTest
      * must still succeed. Proves the per-object isolation onAfterWrite() relies on: the
      * failing record is created (and therefore iterated by findOwned()) first, since a
      * loop that aborted on the first failure would still pass this test if the good
-     * record happened to be processed before the bad one.
+     * record happened to be processed before the bad one. This ordering is deterministic,
+     * not incidental: Link declares `default_sort = 'Sort'`, and Link::onBeforeWrite()
+     * assigns each new record the next Sort value, so creation order is iteration order.
      */
     public function testOnAfterWritePublishesSiblingsWhenOneFailsWithNonValidationException(): void
     {

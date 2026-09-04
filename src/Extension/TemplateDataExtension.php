@@ -249,9 +249,10 @@ class TemplateDataExtension extends Extension
             // this record will keep being attempted (and re-logged) on every future
             // SiteConfig save until its underlying validation problem is fixed.
             Injector::inst()->get(LoggerInterface::class)->error(sprintf(
-                'Failed to publish %s #%d owned by SiteConfig #%d: %s',
+                'Failed to publish %s #%d owned by %s #%d: %s',
                 get_class($object),
                 $object->ID,
+                get_class($this->getOwner()),
                 $this->getOwner()->ID,
                 $e->getMessage()
             ), ['exception' => $e]);

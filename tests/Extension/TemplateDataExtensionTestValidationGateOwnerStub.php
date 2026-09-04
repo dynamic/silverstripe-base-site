@@ -47,10 +47,15 @@ class TemplateDataExtensionTestValidationGateOwnerStub
     }
 
     /**
-     * @param bool $includeOwner
+     * Matches RecursivePublishable::findOwned()'s real signature (name, default, and the
+     * $list param), so a future refactor there can't silently desync this stub from the
+     * production method it stands in for.
+     *
+     * @param bool $recursive
+     * @param mixed $list
      * @return array
      */
-    public function findOwned(bool $includeOwner = false): array
+    public function findOwned($recursive = true, $list = null): array
     {
         $this->findOwnedWasCalled = true;
 

@@ -38,7 +38,7 @@ class TemplateDataExtensionTestThrowingSocialLink extends SocialLink implements 
             case 'generic':
                 throw new \RuntimeException('Simulated non-validation failure for test coverage.');
             default:
-                return true;
+                return parent::publishRecursive();
         }
     }
 }
