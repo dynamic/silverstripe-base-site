@@ -41,6 +41,35 @@ class TemplateDataExtensionTest extends SapphireTest
     ];
 
     /**
+     * DataObject::write() takes its onAfterSkippedWrite() branch, not onAfterWrite(),
+     * when nothing about the record's own fields changed value - exactly what a real
+     * "add a social link, click Save" edit produces: MultiLinkField saves the SocialLink
+     * itself directly, so SiteConfig's own Save changes no SiteConfig-owned column. Both
+     * hooks must publish owned records, or this is exactly the bug #174 exists to fix,
+     * still reachable through the most common editing path.
+     */
+    public function testSocialLinksArePublishedOnWriteWithNoSiteConfigFieldChanges(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        // No mutation to any SiteConfig-owned field here - this must still publish.
+        $siteConfig->write();
+
+        $this->assertTrue($socialLink->isPublished());
+    }
+
+    /**
      *
      */
     public function testGetCMSFields()
@@ -78,9 +107,10 @@ class TemplateDataExtensionTest extends SapphireTest
         $this->assertFalse($socialLink->isPublished());
         $this->assertFalse($utilityLink->isPublished());
 
-        // DataObject::write() skips onAfterWrite entirely when the record has no field-level
-        // changes of its own; a real CMS save always submits at least one field, so mutate one
-        // here to exercise the hook the way an actual "Save" click does.
+        // Mutate a SiteConfig field so this specifically exercises the onAfterWrite()
+        // branch of DataObject::write(); testSocialLinksArePublishedOnWriteWithNoSiteConfigFieldChanges()
+        // below covers the onAfterSkippedWrite() branch a real "add a link, Save" click
+        // usually takes instead.
         $siteConfig->Title = 'Updated Site Name';
         $siteConfig->write();
 
@@ -326,20 +356,14 @@ class TemplateDataExtensionTest extends SapphireTest
     /**
      * A sibling that publishes cleanly must still go live even when another owned record's
      * publishRecursive() throws a non-ValidationException - and the SiteConfig save itself
-     * must still succeed. Proves the per-object isolation onAfterWrite() relies on.
+     * must still succeed. Proves the per-object isolation onAfterWrite() relies on: the
+     * failing record is created (and therefore iterated by findOwned()) first, since a
+     * loop that aborted on the first failure would still pass this test if the good
+     * record happened to be processed before the bad one.
      */
     public function testOnAfterWritePublishesSiblingsWhenOneFailsWithNonValidationException(): void
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
-
-        $goodLink = SocialLink::create([
-            'SocialChannel' => 'facebook',
-            'ExternalUrl' => 'https://facebook.example/profile',
-            'OwnerID' => $siteConfig->ID,
-            'OwnerClass' => SiteConfig::class,
-            'OwnerRelation' => 'SocialLinks',
-        ]);
-        $goodLink->write();
 
         $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
             'SocialChannel' => 'instagram',
@@ -350,6 +374,19 @@ class TemplateDataExtensionTest extends SapphireTest
             'FailureMode' => 'generic',
         ]);
         $badLink->write();
+
+        $goodLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $goodLink->write();
+
+        // Registering a spy keeps the expected publish-failure log line out of the real
+        // configured logger during this run.
+        Injector::inst()->registerService(new TemplateDataExtensionTestSpyLogger(), LoggerInterface::class);
 
         $siteConfig->Title = 'Updated Site Name';
         $siteConfig->write();
@@ -362,20 +399,13 @@ class TemplateDataExtensionTest extends SapphireTest
     /**
      * A ValidationException from one owned record must not stop its siblings from being
      * published, but must still propagate out of SiteConfig::write() once every owned
-     * record has been attempted - so the editor actually sees the failure.
+     * record has been attempted - so the editor actually sees the failure. As above, the
+     * failing record is created (and therefore iterated) first, so this only passes if the
+     * loop genuinely keeps going after catching the exception.
      */
     public function testOnAfterWriteSurfacesValidationExceptionAfterPublishingSiblings(): void
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
-
-        $goodLink = SocialLink::create([
-            'SocialChannel' => 'facebook',
-            'ExternalUrl' => 'https://facebook.example/profile',
-            'OwnerID' => $siteConfig->ID,
-            'OwnerClass' => SiteConfig::class,
-            'OwnerRelation' => 'SocialLinks',
-        ]);
-        $goodLink->write();
 
         $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
             'SocialChannel' => 'instagram',
@@ -386,6 +416,19 @@ class TemplateDataExtensionTest extends SapphireTest
             'FailureMode' => 'validation',
         ]);
         $badLink->write();
+
+        $goodLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $goodLink->write();
+
+        // Registering a spy keeps the expected publish-failure log line out of the real
+        // configured logger during this run.
+        Injector::inst()->registerService(new TemplateDataExtensionTestSpyLogger(), LoggerInterface::class);
 
         $siteConfig->Title = 'Updated Site Name';
 

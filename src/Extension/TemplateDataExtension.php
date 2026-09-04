@@ -143,6 +143,35 @@ class TemplateDataExtension extends Extension
      * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
      * go live without a separate manual publish step.
      *
+     * @return void
+     * @throws ValidationException
+     */
+    public function onAfterWrite(): void
+    {
+        $this->publishOwnedRecords();
+    }
+
+    /**
+     * DataObject::write() (DataObject.php) only calls onAfterWrite() when a field on the
+     * record itself actually changed value; otherwise it takes this onAfterSkippedWrite()
+     * branch instead. That's exactly what a real "add a social link, click Save" CMS edit
+     * produces: MultiLinkField/GridField save the SocialLink/UtilityLink/Logo record
+     * directly, so a SiteConfig save that only touches an owned record changes no
+     * SiteConfig-owned column and would otherwise be silently skipped - reproducing this
+     * PR's original bug on the most common editing path. Both hooks funnel through the
+     * same publish logic so it doesn't matter which branch a given save takes.
+     *
+     * @return void
+     * @throws ValidationException
+     */
+    public function onAfterSkippedWrite(): void
+    {
+        $this->publishOwnedRecords();
+    }
+
+    /**
+     * Publishes every record currently owned (via $owns) by the extension's owner.
+     *
      * Uses findOwned() (the framework's own $owns-driven traversal) rather than hardcoded
      * per-relation loops, so this stays correct if $owns ever gains another relation.
      *
@@ -161,7 +190,7 @@ class TemplateDataExtension extends Extension
      * @return void
      * @throws ValidationException
      */
-    public function onAfterWrite(): void
+    protected function publishOwnedRecords(): void
     {
         Versioned::withVersionedMode(function (): void {
             Versioned::set_stage(Versioned::DRAFT);
@@ -207,27 +236,33 @@ class TemplateDataExtension extends Extension
             // on what's wrong with this specific record - all \Exception, not \Error, so a
             // genuine programming error (TypeError etc.) still propagates instead of being
             // caught here. \Exception (not \Throwable) is the deliberate boundary: a
-            // genuine \Error on one owned object still propagates out of onAfterWrite()'s
-            // loop and stops every subsequent owned object in that save from being
-            // attempted, unlike the per-object isolation \Exception gets.
-            Injector::inst()->get(LoggerInterface::class)->error(sprintf(
+            // genuine \Error on one owned object still propagates out of the loop in
+            // publishOwnedRecords() and stops every subsequent owned object in that save
+            // from being attempted, unlike the per-object isolation \Exception gets.
+            $context = sprintf(
                 'Failed to publish %s #%d owned by SiteConfig #%d: %s',
                 get_class($object),
                 $object->ID,
                 $this->getOwner()->ID,
                 $e->getMessage()
-            ), ['exception' => $e]);
+            );
+
+            Injector::inst()->get(LoggerInterface::class)->error($context, ['exception' => $e]);
 
             // A ValidationException means the record's own content is invalid, which is
-            // worth surfacing to the editor (see onAfterWrite()); a
+            // worth surfacing to the editor (see publishOwnedRecords()); a
             // BadMethodCallException/LogicException/UnexpectedDataException from a
             // programming-level ChangeSet problem stays log-only, since there's nothing an
             // editor could act on for those. Note isModifiedOnDraft() staying true after a
             // permanent validation failure means this record will keep being attempted (and
             // re-surfaced to the editor) on every future SiteConfig save until its
             // underlying validation problem is fixed.
+            //
+            // Re-thrown wrapped in a new ValidationException (rather than the original $e)
+            // so the message the editor actually sees identifies which owned record failed
+            // and why, instead of just the framework's generic ChangeSet-level text.
             if ($e instanceof ValidationException) {
-                throw $e;
+                throw ValidationException::create($context);
             }
         }
     }
