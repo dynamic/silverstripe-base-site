@@ -16,12 +16,12 @@ use SilverStripe\Dev\TestOnly;
  * delegates to parent::publishRecursive(), which still resolves to the real
  * RecursivePublishable implementation via the same __call() fallback.
  */
-class TemplateDataExtensionTestThrowingSocialLink extends SocialLink implements TestOnly
+class ThrowingSocialLink extends SocialLink implements TestOnly
 {
     /**
      * @var string
      */
-    private static string $table_name = 'TemplateDataExtensionTestThrowingSocialLink';
+    private static string $table_name = 'ThrowingSocialLink';
 
     /**
      * @var array

@@ -12,10 +12,10 @@ use SilverStripe\ORM\DataObject;
  * Versioned-only method, that it lacks. See
  * TemplateDataExtensionTest::testPublishOwnedRecordSkipsChildWithoutVersionedExtension().
  */
-class TemplateDataExtensionTestUnversionedOwnedStub extends DataObject implements TestOnly
+class UnversionedOwnedStub extends DataObject implements TestOnly
 {
     /**
      * @var string
      */
-    private static $table_name = 'TemplateDataExtensionTestUnversionedOwnedStub';
+    private static $table_name = 'UnversionedOwnedStub';
 }

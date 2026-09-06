@@ -37,8 +37,8 @@ class TemplateDataExtensionTest extends SapphireTest
      * @var array
      */
     protected static $extra_dataobjects = [
-        TemplateDataExtensionTestUnversionedOwnedStub::class,
-        TemplateDataExtensionTestThrowingSocialLink::class,
+        UnversionedOwnedStub::class,
+        ThrowingSocialLink::class,
     ];
 
     /**
@@ -352,7 +352,7 @@ class TemplateDataExtensionTest extends SapphireTest
     {
         $extension = new TemplateDataExtension();
 
-        $stub = TemplateDataExtensionTestUnversionedOwnedStub::create();
+        $stub = UnversionedOwnedStub::create();
         $stub->write();
 
         $logger = new TemplateDataExtensionTestSpyLogger();
@@ -377,7 +377,7 @@ class TemplateDataExtensionTest extends SapphireTest
         $extension = new TemplateDataExtension();
         $extension->setOwner($siteConfig);
 
-        $link = TemplateDataExtensionTestThrowingSocialLink::create([
+        $link = ThrowingSocialLink::create([
             'SocialChannel' => 'facebook',
             'ExternalUrl' => 'https://facebook.example/profile',
             'FailureMode' => 'generic',
@@ -411,7 +411,7 @@ class TemplateDataExtensionTest extends SapphireTest
         $extension = new TemplateDataExtension();
         $extension->setOwner($siteConfig);
 
-        $link = TemplateDataExtensionTestThrowingSocialLink::create([
+        $link = ThrowingSocialLink::create([
             'SocialChannel' => 'facebook',
             'ExternalUrl' => 'https://facebook.example/profile',
             'FailureMode' => 'validation',
@@ -445,7 +445,7 @@ class TemplateDataExtensionTest extends SapphireTest
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
 
-        $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
+        $badLink = ThrowingSocialLink::create([
             'SocialChannel' => 'instagram',
             'ExternalUrl' => 'https://instagram.example/profile',
             'OwnerID' => $siteConfig->ID,
@@ -487,7 +487,7 @@ class TemplateDataExtensionTest extends SapphireTest
     {
         $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
 
-        $badLink = TemplateDataExtensionTestThrowingSocialLink::create([
+        $badLink = ThrowingSocialLink::create([
             'SocialChannel' => 'instagram',
             'ExternalUrl' => 'https://instagram.example/profile',
             'OwnerID' => $siteConfig->ID,
