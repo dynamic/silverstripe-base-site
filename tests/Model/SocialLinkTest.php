@@ -3,6 +3,7 @@
 namespace Dynamic\Base\Tests\Model;
 
 use Dynamic\Base\Model\SocialLink;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Member;
@@ -130,5 +131,74 @@ class SocialLinkTest extends SapphireTest
             'Social_CRUD' => 'Create, Update and Delete a Social Link',
         );
         $this->assertEquals($expected, $object->providePermissions());
+    }
+
+    /**
+     * Tests that the social_channels config setting replaces the hardcoded
+     * fallback list rather than being ignored by it.
+     *
+     * The override has to be deliberately unlike the shipped list: the module's
+     * own _config/social-channels.yml ships a map identical to the hardcoded
+     * fallback, so asserting a default key proves nothing about the config read.
+     */
+    public function testGetSocialChannelsConfigOverride()
+    {
+        $channels = [
+            'bandcamp' => 'Bandcamp',
+            'tumblr' => 'Tumblr',
+        ];
+
+        Config::withConfig(function () use ($channels): void {
+            Config::modify()->set(SocialLink::class, 'social_channels', $channels);
+
+            $object = SocialLink::create();
+            $this->assertSame($channels, $object->getSocialChannels());
+
+            $object->SocialChannel = 'bandcamp';
+            $this->assertSame('Bandcamp', $object->getSocialChannelName());
+
+            // Facebook is configured by the shipped YAML, so it only stops
+            // resolving if the override genuinely replaced that config.
+            $object->SocialChannel = 'facebook';
+            $this->assertNull($object->getSocialChannelName());
+        });
+    }
+
+    /**
+     * Tests that the CMS channel dropdown is built from the overridden config.
+     */
+    public function testGetCMSFieldsUsesConfigOverride()
+    {
+        $channels = [
+            'bandcamp' => 'Bandcamp',
+        ];
+
+        Config::withConfig(function () use ($channels): void {
+            Config::modify()->set(SocialLink::class, 'social_channels', $channels);
+
+            $field = $this->objFromFixture(SocialLink::class, 'facebook')
+                ->getCMSFields()
+                ->dataFieldByName('SocialChannel');
+
+            $this->assertNotNull($field);
+            $this->assertSame($channels, $field->getSource());
+        });
+    }
+
+    /**
+     * Tests that an empty social_channels config falls back to the hardcoded
+     * list, because getSocialChannels() tests the config value with ?:.
+     */
+    public function testGetSocialChannelsFallsBackOnEmptyConfig()
+    {
+        Config::withConfig(function (): void {
+            Config::modify()->set(SocialLink::class, 'social_channels', []);
+
+            $channels = SocialLink::create()->getSocialChannels();
+
+            $this->assertNotEmpty($channels);
+            $this->assertSame('Facebook', $channels['facebook'] ?? null);
+            $this->assertArrayNotHasKey('bandcamp', $channels);
+        });
     }
 }
