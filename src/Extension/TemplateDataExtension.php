@@ -4,9 +4,9 @@ namespace Dynamic\Base\Extension;
 
 use Dynamic\Base\Model\NavigationColumn;
 use Dynamic\Base\Model\SocialLink;
+use Psr\Log\LoggerInterface;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -16,6 +16,9 @@ use SilverStripe\Forms\OptionsetField;
 use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -29,7 +32,7 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @method Image LogoRetina()
  * @method DataList|NavigationColumn[] NavigationColumns()
  * @method DataList|SocialLink[] SocialLinks()
- * @method ManyManyList|SiteTree[] UtilityLinks()
+ * @method DataList|Link[] UtilityLinks()
  */
 class TemplateDataExtension extends Extension
 {
@@ -64,7 +67,7 @@ class TemplateDataExtension extends Extension
         'Logo',
         'LogoRetina',
         'UtilityLinks',
-        'Sociallinks',
+        'SocialLinks',
     ];
 
     /**
@@ -131,5 +134,140 @@ class TemplateDataExtension extends Extension
                     SocialLink::class,
                 ]),
         ]);
+    }
+
+    /**
+     * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
+     * cascades a publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks
+     * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
+     * go live without a separate manual publish step.
+     *
+     * @return void
+     */
+    public function onAfterWrite(): void
+    {
+        $this->publishOwnedRecords();
+    }
+
+    /**
+     * DataObject::write() only calls onAfterWrite() when a field on the record itself
+     * actually changed value; otherwise it takes this onAfterSkippedWrite() branch
+     * instead. That's exactly what a real "add a social link, click Save" CMS edit
+     * produces: MultiLinkField/GridField save the SocialLink/UtilityLink/Logo record
+     * directly, so a SiteConfig save that only touches an owned record changes no
+     * SiteConfig-owned column and would otherwise be silently skipped.
+     *
+     * DataObject::preWrite() *also* fires this same hook - via the identical
+     * invokeWithExtensions('onAfterSkippedWrite') call - when validateWrite() rejects the
+     * write, immediately before re-throwing that ValidationException; nothing was
+     * persisted in that case, so publishing here would go live from a save the editor was
+     * just told failed. A per-instance flag set from onBeforeWrite() can't reliably tell
+     * these two call sites apart: Extension instances are Injector singletons (shared
+     * across every SiteConfig for the life of the process - see setOwner()/clearOwner()'s
+     * ownerStack, which only makes sense for a shared instance re-owned per hook call), so
+     * any state written here would leak between unrelated records and requests.
+     *
+     * Re-checking validate()/ObsoleteClassName is a heuristic for "did preWrite() reject
+     * this", not the exact same check validateWrite() itself makes (it can't be - nothing
+     * this extension can observe distinguishes a rejected write from a genuine
+     * no-changes one beyond re-deriving what validateWrite() would have concluded). It
+     * mirrors validateWrite()'s two rejection paths in order: ObsoleteClassName is checked
+     * first (an object of a class that no longer exists), then validate() (field/business
+     * rules, including via updateValidate()). It does not account for
+     * write($skipValidation: true) - a call which accepts an object validate() would
+     * reject - which would then be misread as a rejected write and its owned records left
+     * unpublished, even though the write actually succeeded.
+     *
+     * @return void
+     */
+    public function onAfterSkippedWrite(): void
+    {
+        $owner = $this->getOwner();
+
+        if ($owner->ObsoleteClassName || !$owner->validate()->isValid()) {
+            return;
+        }
+
+        $this->publishOwnedRecords();
+    }
+
+    /**
+     * Publishes every record currently owned (via $owns) by the extension's owner.
+     *
+     * Uses findOwned() (the framework's own $owns-driven traversal) rather than hardcoded
+     * per-relation loops, so this stays correct if $owns ever gains another relation.
+     *
+     * Pinned to the draft reading stage regardless of ambient mode: the default reading
+     * mode outside a CMS request is Stage.Live (Versioned::DEFAULT_MODE), under which a
+     * draft-only owned record wouldn't be returned by findOwned() at all and would be
+     * silently skipped.
+     *
+     * Every owned record is attempted independently of its siblings (see
+     * publishOwnedRecord()) - one record's publish failure is logged and doesn't stop the
+     * rest of this loop from running, and doesn't stop SiteConfig's own save from
+     * succeeding. It's deliberately never re-thrown from here: DataObject::write() calls
+     * onAfterWrite()/onAfterSkippedWrite() *before* resetting its own isChanged()
+     * bookkeeping and flushing its cache, so an exception thrown from inside this method
+     * would leave the SiteConfig row committed to the database but the in-memory object
+     * still reporting itself dirty, with stale cached lookups elsewhere in the same
+     * request - a worse failure mode than a link staying in draft with a logged error.
+     *
+     * @return void
+     */
+    protected function publishOwnedRecords(): void
+    {
+        Versioned::withVersionedMode(function (): void {
+            Versioned::set_stage(Versioned::DRAFT);
+
+            foreach ($this->getOwner()->findOwned(false) as $owned) {
+                $this->publishOwnedRecord($owned);
+            }
+        });
+    }
+
+    /**
+     * Publishes a single record owned (via $owns) by the extension's owner.
+     *
+     * @param DataObject $object
+     * @return void
+     */
+    protected function publishOwnedRecord(DataObject $object): void
+    {
+        if (!$object->hasExtension(Versioned::class)) {
+            return;
+        }
+
+        if (!$object->isModifiedOnDraft()) {
+            return;
+        }
+
+        try {
+            $object->publishRecursive();
+        } catch (\Exception $e) {
+            // publishRecursive() -> ChangeSet::publish() can throw ValidationException,
+            // BadMethodCallException, LogicException, or UnexpectedDataException depending
+            // on what's wrong with this specific record - all \Exception, not \Error.
+            // Catching \Exception (not \Throwable) means a genuine \Error (TypeError etc.)
+            // still propagates out of this method instead of being swallowed as if it were
+            // a routine, data-level publish failure - it isn't ours to catch and log as
+            // one. That does mean an \Error on one owned object aborts the rest of the
+            // loop in publishOwnedRecords(), unlike the per-object isolation \Exception
+            // gets here; that's an accepted consequence of not misclassifying it, not a
+            // deliberately chosen isolation strategy.
+            //
+            // Logged rather than re-thrown, including for ValidationException - see
+            // publishOwnedRecords() for why re-throwing from here is unsafe. Note
+            // isModifiedOnDraft() staying true after a permanent validation failure means
+            // this record will keep being attempted (and re-logged) on every future
+            // SiteConfig save until its underlying validation problem is fixed.
+            Injector::inst()->get(LoggerInterface::class)->error(sprintf(
+                'Failed to publish %s #%d owned by %s #%d: %s',
+                get_class($object),
+                $object->ID,
+                get_class($this->getOwner()),
+                $this->getOwner()->ID,
+                $e->getMessage()
+            ), ['exception' => $e]);
+        }
     }
 }
