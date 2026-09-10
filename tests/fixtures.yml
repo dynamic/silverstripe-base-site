@@ -72,15 +72,23 @@ Dynamic\Base\Model\NavigationGroup:
     Title: "Group One"
 
 Dynamic\Base\Model\SocialLink:
+  # Field names here must match what SocialLink/ExternalLink/Link actually declare in
+  # $db: LinkText/Sort (Link), ExternalUrl (ExternalLink), SocialChannel (SocialLink).
+  # There is no `Link`, `SortOrder` or stored `Title` column on this class, and unknown
+  # YAML fixture keys are silently dropped rather than erroring, so a stale name loads
+  # "successfully" while leaving its column empty. See #188.
   facebook:
-    Title: "Facebook"
-    Link: "example.com"
-    SortOrder: 1
+    LinkText: "Facebook"
+    ExternalUrl: "https://facebook.com/example"
+    SocialChannel: "facebook"
+    Sort: 1
   twitter:
-    Title: "Twitter"
-    Link: "example.com"
-    SortOrder: 3
+    LinkText: "Twitter"
+    ExternalUrl: "https://x.com/example"
+    SocialChannel: "x"
+    Sort: 3
   linked:
-    Title: "LinkedIn"
-    Link: "example.com"
-    SortOrder: 2
+    LinkText: "LinkedIn"
+    ExternalUrl: "https://linkedin.com/company/example"
+    SocialChannel: "linkedin"
+    Sort: 2
