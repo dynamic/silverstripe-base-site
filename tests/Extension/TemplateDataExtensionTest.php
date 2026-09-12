@@ -6,12 +6,16 @@ use Dynamic\Base\Extension\TemplateDataExtension;
 use Dynamic\Base\Model\SocialLink;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use ReflectionProperty;
 use SilverStripe\Assets\Image;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\LinkField\Models\ExternalLink;
+use SilverStripe\Security\Security;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\ChangeSet;
 use SilverStripe\Versioned\Versioned;
@@ -39,6 +43,8 @@ class TemplateDataExtensionTest extends SapphireTest
     protected static $extra_dataobjects = [
         UnversionedOwnedStub::class,
         ThrowingSocialLink::class,
+        DenyPublishSocialLinkStub::class,
+        ThrowingCanEditSocialLinkStub::class,
     ];
 
     /**
@@ -548,5 +554,597 @@ class TemplateDataExtensionTest extends SapphireTest
         });
 
         $this->assertTrue($socialLink->isPublished());
+    }
+
+    /**
+     * #187: saving SiteConfig must not publish an owned record the current member has no
+     * publish rights on.
+     *
+     * The bypass is real and not theoretical: publishRecursive() hands an inferred ChangeSet
+     * to ChangeSet::publish(), which never consults canPublish() - its own docblock says the
+     * caller must. Before #174 nothing published these records at all, so this only became
+     * reachable with that fix; the whole point of this test is that a member who can save
+     * SiteConfig cannot, on the strength of that right alone, push a SocialLink live.
+     *
+     * Uses the module's real permission model rather than a stub: the member holds
+     * EDIT_SITECONFIG (so SiteConfig::canEdit() passes and the save itself works) but not
+     * Social_CRUD, which is what SocialLink::canEdit() - and therefore Versioned::canPublish()
+     * for a non-ADMIN member - requires.
+     *
+     * The explicit non-ADMIN login is load-bearing, not decoration: SapphireTest::setUp() logs
+     * in as ADMIN for every test in this class because a fixture file is present, and
+     * Versioned::canPublish() short-circuits true for ADMIN before it consults extensions or
+     * canEdit(). Logged in as ADMIN this test would pass with no guard present at all.
+     */
+    public function testOwnedRecordIsNotPublishedWhenCurrentMemberCannotPublish(): void
+    {
+        $this->logInWithPermission('EDIT_SITECONFIG');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+        $this->assertFalse(
+            $socialLink->canPublish(),
+            'Precondition: this member must not be able to publish the link.'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        // Re-read the persisted row rather than asserting isInDB() on the fixture object we
+        // already hold, which would be true even if write() persisted nothing.
+        $this->assertSame(
+            'Updated Site Name',
+            SiteConfig::get()->byID($siteConfig->ID)->Title,
+            'The SiteConfig save itself must still succeed.'
+        );
+        $this->assertFalse($socialLink->isPublished(), 'A record the member cannot publish must stay in draft.');
+        $this->assertNull(
+            Versioned::get_by_stage(SocialLink::class, Versioned::LIVE)->byID($socialLink->ID),
+            'No live row must be written for a record whose publish was skipped.'
+        );
+
+        // Filtered for the skip line rather than counting every record, so an unrelated log line
+        // emitted during the write can't fail this test for a reason it isn't asserting about -
+        // the same shape every other test in this class uses.
+        $skipLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        ));
+        $this->assertCount(1, $skipLines, 'Exactly the one denial must be logged.');
+        $this->assertSame('warning', $skipLines[0]['level']);
+        $this->assertStringContainsString(SocialLink::class, $skipLines[0]['message']);
+        $this->assertSame(
+            [],
+            array_values(array_filter($logger->records, fn (array $r): bool => $r['level'] === 'error')),
+            'A deliberate skip must not be logged at error level.'
+        );
+    }
+
+    /**
+     * A denial must be per-record, not per-write: a permitted sibling in the same SiteConfig
+     * save still goes live while its sibling is skipped, and the SiteConfig save still
+     * succeeds. Mirrors the isolation the existing exception-handling tests prove for
+     * failures, on the permission branch instead.
+     *
+     * The permitted sibling is a plain SocialLink and the denied one a
+     * DenyPublishSocialLinkStub with its flag set, so the two differ only in canPublish() -
+     * both members and both record types otherwise resolve permission the same way here. The
+     * member holds Social_CRUD so the sibling is genuinely permitted, isolating the
+     * difference to the single denied record. Created denied-first, following the same
+     * deterministic iteration ordering the sibling-isolation tests above rely on.
+     */
+    public function testDeniedOwnedRecordDoesNotBlockPermittedSiblingOnSameWrite(): void
+    {
+        $this->logInWithPermission(['EDIT_SITECONFIG', 'Social_CRUD']);
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $deniedLink = DenyPublishSocialLinkStub::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+            'DenyPublish' => true,
+        ]);
+        $deniedLink->write();
+
+        $allowedLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $allowedLink->write();
+
+        $this->assertFalse($deniedLink->canPublish(), 'Precondition: the denied link must not be publishable.');
+        $this->assertTrue($allowedLink->canPublish(), 'Precondition: the sibling must be publishable.');
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        $this->assertTrue($siteConfig->isInDB());
+        $this->assertFalse($deniedLink->isPublished(), 'The denied record must stay in draft.');
+        $this->assertTrue($allowedLink->isPublished(), 'The permitted sibling must still publish.');
+
+        $skipLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        ));
+        $this->assertCount(1, $skipLines, 'Only the denied record may be skipped.');
+        $this->assertStringContainsString(
+            DenyPublishSocialLinkStub::class,
+            $skipLines[0]['message'],
+            'The skip must name the record it skipped, not the permitted sibling.'
+        );
+    }
+
+    /**
+     * Regression guard for #174: an ADMIN must still have every owned record published,
+     * including one that denies canEdit() outright. Versioned::canPublish() short-circuits
+     * true for ADMIN before it ever consults canEdit(), so the guard added for #187 must not
+     * turn into a blanket block for administrators - if it did, #174 would regress for the
+     * commonest CMS user at the same time.
+     */
+    public function testAdminStillPublishesEveryOwnedRecord(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $deniedLink = DenyPublishSocialLinkStub::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+            'DenyPublish' => true,
+        ]);
+        $deniedLink->write();
+
+        $allowedLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $allowedLink->write();
+
+        $this->assertTrue(
+            $deniedLink->canPublish(),
+            'Precondition: ADMIN short-circuits canPublish() for a record that denies canEdit().'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        $this->assertTrue($deniedLink->isPublished(), 'ADMIN must publish the record that denies canEdit().');
+        $this->assertTrue($allowedLink->isPublished());
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )), 'Nothing may be skipped for an ADMIN.');
+    }
+
+    /**
+     * #187, the half of the fix that is easy to miss: the guard covers every record type in
+     * $owns, and Logo/LogoRetina resolve permission completely differently from SocialLink.
+     * File::canEdit() (and so Versioned::canPublish() for a non-ADMIN member) requires
+     * FILE_EDIT_ALL, which CMS_ACCESS_AssetAdmin deliberately is not.
+     *
+     * Scope note, so this is not read as more than it is: it pins the guard at the record level.
+     * It is NOT evidence a CMS user reaches this by uploading - AssetAdmin gates uploads on
+     * File::canCreate() and file selection on canEdit(), so a member with no asset rights usually
+     * cannot get the file in at all. Image::create()/write() here bypasses canCreate() on purpose,
+     * standing in for the reachable form: a file that got in earlier, under permissions it no longer
+     * has. docs/SocialLinks.md says the same in user terms. Takes the onAfterWrite() branch, since
+     * assigning LogoID changes a SiteConfig-owned column.
+     */
+    public function testLogoIsNotPublishedWhenMemberCannotPublishAssets(): void
+    {
+        $this->logInWithPermission(['EDIT_SITECONFIG', 'CMS_ACCESS_AssetAdmin']);
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $logo = Image::create();
+        $logo->Name = 'logo.png';
+        $logo->write();
+
+        $this->assertFalse($logo->isPublished());
+        $this->assertFalse(
+            $logo->canPublish(),
+            'Precondition: EDIT_SITECONFIG plus CMS_ACCESS_AssetAdmin must not imply FILE_EDIT_ALL.'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->LogoID = $logo->ID;
+        $siteConfig->write();
+
+        // Re-read the persisted row, not the in-memory object, so this fails if the write
+        // itself stopped persisting.
+        $this->assertSame(
+            $logo->ID,
+            (int) SiteConfig::get()->byID($siteConfig->ID)->LogoID,
+            'The SiteConfig save must still succeed.'
+        );
+        $this->assertFalse($logo->isPublished(), 'A logo the member cannot publish must stay in draft.');
+        $this->assertNull(
+            Versioned::get_by_stage(Image::class, Versioned::LIVE)->byID($logo->ID),
+            'No live row must exist for the unpublished logo.'
+        );
+
+        $skipLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        ));
+        $this->assertCount(1, $skipLines);
+        $this->assertStringContainsString(Image::class, $skipLines[0]['message']);
+    }
+
+    /**
+     * The other side of the Logo boundary, so the test above cannot pass for the wrong reason
+     * (a blanket block on Images would satisfy it). FILE_EDIT_ALL is what moves it: the same
+     * restricted role plus that one code publishes the logo, and logs nothing.
+     */
+    public function testLogoPublishesWhenMemberHasFileEditAll(): void
+    {
+        $this->logInWithPermission(['EDIT_SITECONFIG', 'FILE_EDIT_ALL']);
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $logo = Image::create();
+        $logo->Name = 'logo-publish.png';
+        $logo->write();
+
+        $this->assertTrue($logo->canPublish(), 'Precondition: FILE_EDIT_ALL must grant publish.');
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->LogoID = $logo->ID;
+        $siteConfig->write();
+
+        $this->assertTrue($logo->isPublished(), 'FILE_EDIT_ALL must let the logo publish.');
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )));
+    }
+
+    /**
+     * The hole that a "no current member means a trusted process" carve-out would leave open:
+     * SiteConfig::write() enforces no permission of its own - EDIT_SITECONFIG is checked by the
+     * CMS controller, not by write() - so these hooks fire on an unauthenticated write from any
+     * caller, including framework code such as SiteConfig::make_site_config(). With no member and
+     * no gate, every draft record parked by the denial above would flush live in one save.
+     *
+     * So the exemption is CLI-with-no-member, not no-member simpliciter, and this test pins the
+     * non-CLI half. PHPUnit runs on the CLI sapi, so Director::is_cli() would be true and the
+     * exemption would apply; the context has to be switched, and Environment::$isCliOverride is the
+     * only way - a private static with no setter, so reflection it is. That coupling is deliberate:
+     * the alternative of extracting a shouldCheckPublishPermission() seam and overriding it would
+     * stop this test exercising the real branch production takes. A framework rename would surface as
+     * a ReflectionException - a loud maintenance signal, not a silent pass - and the finally block
+     * plus the postcondition assertion below stop it leaking either way.
+     */
+    public function testOwnedRecordIsNotPublishedOnAnUnauthenticatedWebRequest(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        $this->logOut();
+        $this->assertNull(Security::getCurrentUser(), 'Precondition: no current member.');
+
+        // setAccessible() is unnecessary and a no-op on this PHP (composer.json requires ^8.3).
+        $isCli = new ReflectionProperty(Environment::class, 'isCliOverride');
+        // Captured rather than assumed - the restore must put back whatever was there, not a
+        // hardcoded null, so this test cannot quietly rewrite the process's CLI state.
+        $wasCli = $isCli->getValue(null);
+        $isCli->setValue(null, false);
+
+        try {
+            $this->assertFalse(Director::is_cli(), 'Precondition: pretending to be a web request.');
+
+            $logger = new TemplateDataExtensionTestSpyLogger();
+            Injector::inst()->registerService($logger, LoggerInterface::class);
+
+            $extension = new TemplateDataExtension();
+            $extension->setOwner($siteConfig);
+
+            $method = new ReflectionMethod(TemplateDataExtension::class, 'publishOwnedRecord');
+            $method->invoke($extension, $socialLink);
+
+            $this->assertFalse(
+                $socialLink->isPublished(),
+                'An unauthenticated non-CLI write must not publish an owned record.'
+            );
+
+            $skipLines = array_values(array_filter(
+                $logger->records,
+                fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+            ));
+            $this->assertCount(1, $skipLines);
+        } finally {
+            $isCli->setValue(null, $wasCli);
+        }
+
+        // Asserted against the captured value only - asserting is_cli() here would hardcode the
+        // expectation that this process is CLI, which is the very assumption the capture above
+        // exists to avoid, and would fail a correct restore in a non-CLI test runner.
+        $this->assertSame(
+            $wasCli,
+            $isCli->getValue(null),
+            'Postcondition: Environment::$isCliOverride must hold the value it had before.'
+        );
+    }
+
+    /**
+     * The denial must also hold on the onAfterSkippedWrite() branch, not only on the
+     * onAfterWrite() branch the other end-to-end permission tests take. SiteConfig is mutated
+     * here in no way at all, which is exactly what makes write() take onAfterSkippedWrite() -
+     * the branch onAfterSkippedWrite()'s own docblock argues is the one a real
+     * "add a link, click Save" takes.
+     */
+    public function testOwnedRecordIsNotPublishedOnTheSkippedWriteBranchEither(): void
+    {
+        $this->logInWithPermission('EDIT_SITECONFIG');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        // No mutation of any SiteConfig-owned field - this is the skipped-write branch.
+        $siteConfig->write();
+
+        $this->assertTrue($siteConfig->isInDB());
+        $this->assertFalse(
+            $socialLink->isPublished(),
+            'The guard must apply on the onAfterSkippedWrite() branch too.'
+        );
+        $this->assertCount(1, array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )));
+    }
+
+    /**
+     * The third row of the permissions table in docs/SocialLinks.md - UtilityLinks - had no test
+     * while the SocialLink and Logo rows each had two, which left the table asking a reader to trust
+     * an untested claim. It also pins what that row really means: a plain link record delegates its
+     * canEdit() to its owner (Link::canPerformAction()), so canPublish() on a UtilityLink resolves
+     * to SiteConfig::canEdit(), and anyone who can save Site Settings can by definition publish its
+     * utility links. For this record type the #187 gate is therefore a no-op rather than a gate, and
+     * this is the test that says so - a UtilityLink owned by a non-ADMIN EDIT_SITECONFIG member goes
+     * live and logs no skip.
+     */
+    public function testUtilityLinkPublishesForAnyMemberWhoCanEditSiteConfig(): void
+    {
+        $this->logInWithPermission('EDIT_SITECONFIG');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $utilityLink = ExternalLink::create([
+            'Title' => 'Contact',
+            'ExternalUrl' => 'https://example.test/contact',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'UtilityLinks',
+        ]);
+        $utilityLink->write();
+
+        $this->assertFalse($utilityLink->isPublished());
+        $this->assertTrue(
+            $utilityLink->canPublish(),
+            'Precondition: a UtilityLink delegates canPublish() to SiteConfig::canEdit().'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        $this->assertTrue(
+            $utilityLink->isPublished(),
+            'Saving Site Settings must publish its own utility links - the gate delegates to the same right.'
+        );
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )), 'A record whose permission delegates to the right just exercised must not be skipped.');
+    }
+
+    /**
+     * A throwing permission hook must not break the SiteConfig save.
+     *
+     * The canPublish() this fix added is not a read of a field - it dispatches into project code
+     * (extendedCan('canPublish') -> an extension's extendCanPublish()/canPublish(), then
+     * $owner->canEdit()). Above the try block it would escape publishOwnedRecords() and reproduce
+     * the exact failure publishOwnedRecords() and publishOwnedRecord() document as the one thing
+     * they exist to avoid: the SiteConfig row committed to the database while the in-memory object
+     * still reports itself dirty, with stale cached lookups for the rest of the request. It now
+     * sits inside the same guarded region as publishRecursive(), so a hook that fails like a
+     * publish is logged like one.
+     *
+     * ThrowingCanEditSocialLinkStub makes canPublish() throw by the real path, since it falls
+     * through to canEdit() for a non-ADMIN member - run as non-ADMIN, or the ADMIN short-circuit
+     * would skip canEdit() entirely and the test would prove nothing.
+     */
+    public function testAThrowingPermissionHookIsLoggedAndDoesNotBreakTheSiteConfigSave(): void
+    {
+        $this->logInWithPermission('EDIT_SITECONFIG');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $link = ThrowingCanEditSocialLinkStub::create([
+            'SocialChannel' => 'instagram',
+            'ExternalUrl' => 'https://instagram.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+            'ThrowOnCanEdit' => true,
+        ]);
+        $link->write();
+
+        $this->assertFalse($link->isPublished());
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        try {
+            $siteConfig->Title = 'Updated Site Name';
+            $siteConfig->write();
+        } catch (\Exception $e) {
+            $this->fail(
+                'A throwing canPublish()/canEdit() hook must not escape SiteConfig::write(), but it did: '
+                . get_class($e) . ': ' . $e->getMessage()
+            );
+        }
+
+        // The documented invariant, asserted directly rather than inferred from "no exception":
+        // once write() has completed the owner must not still report itself dirty.
+        $this->assertFalse($siteConfig->isChanged(), 'SiteConfig must not be left dirty after the save.');
+        $this->assertFalse($link->isPublished(), 'A record whose permission check blew up must stay in draft.');
+
+        $errorLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => $record['level'] === 'error'
+                && str_contains($record['message'], 'Failed to publish')
+        ));
+        $this->assertCount(1, $errorLines, 'The throwing hook must be recorded, not swallowed silently.');
+        $this->assertStringContainsString(
+            ThrowingCanEditSocialLinkStub::class,
+            $errorLines[0]['message'],
+            'The failure must name the record whose permission check threw.'
+        );
+        // Pinned to the exception the stub actually throws, so an unrelated publish failure can't
+        // satisfy this test by also logging "Failed to publish" - the two siblings above do this
+        // via context['exception'] and this one should too.
+        $this->assertArrayHasKey('exception', $errorLines[0]['context']);
+        $this->assertInstanceOf(
+            \RuntimeException::class,
+            $errorLines[0]['context']['exception'],
+            'The logged exception must be the one the permission hook threw.'
+        );
+        $this->assertStringContainsString(
+            'Simulated failure from a permission hook',
+            $errorLines[0]['context']['exception']->getMessage(),
+            'It must be the simulated canEdit() throw, not some other RuntimeException.'
+        );
+    }
+
+    /**
+     * The CLI-with-no-member exemption, proven through the production entry point rather than by
+     * calling publishOwnedRecord() directly. This is the one carve-out branch that CAN be driven
+     * end-to-end: SiteConfig::write() enforces no permission of its own, so a logged-out write
+     * reaches onAfterWrite() exactly as a deploy script's would, and PHPUnit is already a CLI
+     * process. A reflection-only version of this could not prove that: hoisting the check out of
+     * publishOwnedRecord(), or short-circuiting it earlier in onAfterWrite(), leaves a test that
+     * invokes publishOwnedRecord() directly still green.
+     *
+     * Not a discriminator for #187 itself: pre-fix code publishes here too. Its job is to pin the
+     * exemption, so that a future tightening of the gate which forgets it fails something.
+     * testOwnedRecordIsNotPublishedOnAnUnauthenticatedWebRequest is the mirror image - same
+     * logged-out state, non-CLI, and must be denied - so the pair is what pins the CLI half of
+     * the condition specifically.
+     */
+    public function testOwnedRecordPublishesThroughWriteWhenLoggedOutOnCli(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->assertFalse($socialLink->isPublished());
+
+        $this->logOut();
+        $this->assertNull(Security::getCurrentUser(), 'Precondition: no current member.');
+        $this->assertTrue(Director::is_cli(), 'Precondition: running on the CLI sapi.');
+
+        // With no member, SocialLink's own Social_CRUD/canEdit() resolves canPublish() to false,
+        // so it is the null-member carve-out that lets this through - not any permission held by
+        // anyone. Without this the publish below would prove nothing about the carve-out.
+        $this->assertFalse(
+            $socialLink->canPublish(),
+            'Precondition: canPublish() resolves false with no member, so it is the carve-out '
+            . 'that lets this record through.'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        // Mutated so write() takes onAfterWrite(), the production hook, end to end.
+        $siteConfig->Title = 'Updated Site Name';
+        $siteConfig->write();
+
+        // Re-read the persisted row rather than trusting the object in hand.
+        $this->assertSame(
+            'Updated Site Name',
+            SiteConfig::get()->byID($siteConfig->ID)->Title,
+            'The logged-out SiteConfig save must succeed.'
+        );
+        $this->assertTrue(
+            $socialLink->isPublished(),
+            'A CLI write with no logged-in member must publish - the exemption that keeps #174 working.'
+        );
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )), 'Nothing may be skipped in the exempt context.');
     }
 }

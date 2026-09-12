@@ -7,6 +7,7 @@ use Dynamic\Base\Model\SocialLink;
 use Psr\Log\LoggerInterface;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
+use SilverStripe\Control\Director;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -18,6 +19,7 @@ use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -228,6 +230,36 @@ class TemplateDataExtension extends Extension
     /**
      * Publishes a single record owned (via $owns) by the extension's owner.
      *
+     * The record must be publishable by whoever is asking, and nothing downstream checks that:
+     * publishRecursive() hands an inferred ChangeSet to ChangeSet::publish(), whose own docblock
+     * puts the canPublish() call on the caller. SiteConfig isn't versioned, so this extension is
+     * the only thing that publishes these records at all (see onAfterWrite()) - without a check
+     * here, the right to save Site Settings would be the right to publish everything it owns.
+     *
+     * Permission resolves differently per owned type - Social_CRUD for a SocialLink, FILE_EDIT_ALL
+     * for the logos, SiteConfig::canEdit() for utility links - so a denial is per record: siblings
+     * still publish and the save still succeeds. It does not reach records that an owned record owns
+     * in turn; publishRecursive() writes those without re-checking. Nothing here declares $owns on
+     * SocialLink, Link or Image so there is no second level today, but a project subclass that adds
+     * one reopens the bypass a level down, and closing that means checking the built ChangeSet
+     * rather than the single record.
+     *
+     * Exempt: a CLI process with no logged-in member - CLI dev/build, `dev/tasks/*`, test fixtures
+     * - where there is no identity to check and gating them would stop those contexts publishing
+     * anything, regressing #174. Anything with a current member is checked, CLI or not. A web
+     * request is not exempt even when anonymous, because SiteConfig::write() enforces no permission
+     * of its own - the CMS controller does, when it renders the form - and these hooks fire on
+     * every write from any caller, framework code included. "No current member" is therefore not
+     * the same as "trusted". docs/SocialLinks.md covers what browser dev/build actually needs.
+     *
+     * A denial logs a warning, not an error: nothing failed, the publish was not attempted. The
+     * record keeps isModifiedOnDraft() true and stays owned by SiteConfig, so it is reconsidered -
+     * and, while the answer is unchanged, re-logged - on each later save. The editor gets no notice
+     * of the skip beyond that log line; the record is parked in draft, not sealed there, because the
+     * CLI-with-no-member exemption above applies to those later saves too. So this delays a publish
+     * it disapproves of rather than blocking it outright, and docs/SocialLinks.md states that in
+     * full.
+     *
      * @param DataObject $object
      * @return void
      */
@@ -241,7 +273,30 @@ class TemplateDataExtension extends Extension
             return;
         }
 
+        $member = Security::getCurrentUser();
+
+        // Inside the try on purpose. canPublish() is not a read of a field: it dispatches into
+        // project permission hooks and, for a File, into folder-permission lookups, so it can throw
+        // the way the publish can. Outside, that throw would escape onAfterWrite() and leave the
+        // committed row reporting itself dirty for the rest of the request - the failure mode
+        // publishOwnedRecords() exists to prevent.
         try {
+            if ((!Director::is_cli() || $member !== null) && !$object->canPublish($member)) {
+                // Facts only - the reasoning belongs in the docblock and docs/SocialLinks.md,
+                // not in a line this method re-emits on every later save of the same record.
+                Injector::inst()->get(LoggerInterface::class)->warning(sprintf(
+                    'Skipped publishing %s #%d owned by %s #%d: canPublish() denied for %s, '
+                    . 'left in draft.',
+                    get_class($object),
+                    $object->ID,
+                    get_class($this->getOwner()),
+                    $this->getOwner()->ID,
+                    $member ? sprintf('member #%d', $member->ID) : 'no logged-in member'
+                ));
+
+                return;
+            }
+
             $object->publishRecursive();
         } catch (\Exception $e) {
             // publishRecursive() -> ChangeSet::publish() can throw ValidationException,
@@ -254,6 +309,8 @@ class TemplateDataExtension extends Extension
             // loop in publishOwnedRecords(), unlike the per-object isolation \Exception
             // gets here; that's an accepted consequence of not misclassifying it, not a
             // deliberately chosen isolation strategy.
+            //
+            // Covers both guarded calls: publishRecursive() and the canPublish() check above it.
             //
             // Logged rather than re-thrown, including for ValidationException - see
             // publishOwnedRecords() for why re-throwing from here is unsafe. Note
