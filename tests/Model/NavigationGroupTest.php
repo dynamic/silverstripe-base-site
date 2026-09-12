@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\Base\Tests\Model;
+namespace Dynamic\Base\Test\Model;
 
 use Dynamic\Base\Model\NavigationGroup;
 use SilverStripe\Dev\SapphireTest;
