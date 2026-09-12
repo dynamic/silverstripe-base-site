@@ -168,6 +168,30 @@ warning in the log. Surfacing the skip to that user in the CMS is tracked separa
 - `getSocialIcons()` - Returns all icon mappings
 - `getSocialChannelName()` - Returns the display label for the selected channel, or `null` if unmapped
 
+### Extension Hooks
+- `updateSocialChannels(array &$channels): void` - Adds, renames, or removes channels in the list returned by `getSocialChannels()`
+
+`$channels` is an ordered map of `channel key => display label` (for example
+`'mastodon' => 'Mastodon'`) passed **by reference**, so mutate it in place:
+`$channels['bandcamp'] = 'Bandcamp';` adds a channel, `unset($channels['facebook']);` removes
+one, and assigning a key that already exists (`$channels['x'] = 'X';`) renames its label.
+`getSocialChannels()` returns its own local `$channels` variable and never looks at what the
+hook returned, so only in-place mutation has any effect.
+
+**Ordering contract.** `getSocialChannels()` reads the `social_channels` config first, falling
+back to the hardcoded list inside the method when that config is unset or empty, and only then calls
+`$this->extend('updateSocialChannels', $channels)` on whatever that lookup resolved to. The hook
+therefore always receives the already-resolved configured list, and a `social_channels` entry in
+YAML cannot undo a change the hook makes: config decides the hook's input, the hook decides the
+final output, and where both describe the same channel the hook wins.
+
+`getSocialChannelName()` calls `getSocialChannels()` rather than reading the config itself, so
+the hook shapes that label too - a channel the hook renamed resolves to its new label, and a
+channel the hook removed resolves to `null` even though the shipped config still lists it.
+
+`tests/Extension/SocialLinkChannelsExtension.php` is the reference implementation: one hook that
+adds, renames, and removes in a single pass.
+
 ## Customization
 
 ### Adding New Platforms
@@ -184,6 +208,62 @@ Dynamic\Base\Model\SocialLink:
   social_icons:
     'custom-platform': 'bi-custom-icon'
 ```
+
+### Changing Channels In Code
+Config is the right tool for a fixed list. When the list has to be decided at runtime - per
+member, per environment, or derived from data the config system cannot see - use the
+`updateSocialChannels` hook instead (see [Extension Hooks](#extension-hooks)).
+
+Create `app/src/Extension/SocialChannelsExtension.php`:
+```php
+<?php
+
+namespace App\Extension;
+
+use SilverStripe\Core\Extension;
+
+class SocialChannelsExtension extends Extension
+{
+    /**
+     * @param array<string,string> $channels
+     */
+    public function updateSocialChannels(array &$channels): void
+    {
+        // Added here - not present in _config/social-channels.yml
+        $channels['bandcamp'] = 'Bandcamp';
+
+        // Relabel a channel the shipped config already provides
+        $channels['x'] = 'X';
+
+        // Drop a channel this project never uses
+        unset($channels['facebook']);
+    }
+}
+```
+
+Apply it to the model in `app/_config/social-extensions.yml`:
+```yaml
+Dynamic\Base\Model\SocialLink:
+  extensions:
+    - App\Extension\SocialChannelsExtension
+```
+
+That yields the channels `_config/social-channels.yml` defines, minus `facebook`, plus
+`bandcamp`, with `x` labelled `X` instead of `X (Twitter)`.
+
+The CMS follows automatically: `getCMSFields()` builds the `SocialChannel` dropdown from
+`getSocialChannels()`, so the hook changes the dropdown options too - no field or template code
+to touch. Give the new channel an icon by adding it to `social_icons` in config; `getIconClass()`
+reads config only, so this hook never affects the icon.
+
+Removing a channel reaches beyond the list itself. The hook never rewrites existing records - a
+`SocialLink` that already stores `facebook` keeps that value in the database - but the dropdown
+stops offering it, so saving that record again in the CMS can be rejected with "Not an allowed
+value": `DropdownField` inherits `OptionFieldValidator` from `SelectField`, which checks the
+submitted key against `getSocialChannels()`. `SocialChannel` is required too
+(`RequiredFieldsValidator`, `src/Model/SocialLink.php`), so clearing it is not a way round the
+failure. Rename while old records exist - a rename leaves stored keys untouched and only changes
+the label shown in `summary_fields` - and remove the key once no record uses it.
 
 ### Changing Icon Library
 Update icon mappings to use different icon library:
@@ -257,7 +337,7 @@ npm install bootstrap-icons
 
 1. **Maintainable**: No template changes for new platforms
 2. **Configurable**: Easy per-project customization
-3. **Extensible**: Hook system for further customization
+3. **Extensible**: `updateSocialChannels()` changes the channel list at runtime - see [Extension Hooks](#extension-hooks)
 4. **Clean**: Simplified template code
 5. **Future-proof**: Easy to adapt to new platforms or icon libraries
 
@@ -266,7 +346,7 @@ npm install bootstrap-icons
 - Configuration uses SilverStripe's config system
 - Icons loaded via `getIconClass()` method
 - Fallback to default icon for unmapped channels
-- Extension hooks available for custom functionality
+- `updateSocialChannels(array &$channels): void` mutates the config-resolved channel list in place - see [Extension Hooks](#extension-hooks)
 - Bootstrap Icons used by default (easily changeable)
 
 ## Migration from Font Awesome
