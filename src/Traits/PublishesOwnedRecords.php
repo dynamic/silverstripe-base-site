@@ -37,9 +37,8 @@ trait PublishesOwnedRecords
     abstract protected function getOwnedRecordsOwner(): DataObject;
 
     /**
-     * Entry point for a write that changed no column of the owner - which is what an
-     * "add a link, click Save" edit produces, since MultiLinkField persists the Link record
-     * directly rather than touching the owner.
+     * Entry point for a write that changed no column of the owner - what an "add a link, click
+     * Save" edit produces, since MultiLinkField persists the Link record rather than the owner.
      *
      * DataObject::preWrite() fires this same hook when validateWrite() *rejects* the write,
      * immediately before re-throwing ValidationException. Nothing was persisted on that path, so
@@ -122,15 +121,14 @@ trait PublishesOwnedRecords
      * draft and live versions, so an owned record that is itself the owner of a modified draft
      * child is skipped. That is this trait's reuse boundary.
      *
-     * Every owned child here is a leaf as well, and the test for that is the child's effective
-     * $owns resolved through findOwned() - not whether it declares relations, which is a different
-     * question and answers it wrongly. linkfield's concrete Links all declare relations: FileLink
-     * has has_one File, SiteTreeLink has has_one Page plus Anchor and QueryString in $db, and
-     * every DataObject, Links included, inherits FileTracking from assets' FileLinkTracking. What
-     * makes them leaves is that not one of those is a populated owns entry: no Link declares $owns
-     * of its own, so its effective list is only the inherited FileTracking, and FileTracking is
-     * filled from HTMLText shortcode usage, which a Link never has. findOwned() therefore returns
-     * nothing for a Link, and publishRecursive() publishes the link alone.
+     * Every owned child here is a leaf as well, and the test for that is its effective $owns
+     * resolved through findOwned(), not whether it declares relations. linkfield's concrete Links
+     * do declare relations - FileLink has has_one File, SiteTreeLink has has_one Page plus Anchor
+     * and QueryString in $db, and every DataObject inherits FileTracking from assets'
+     * FileLinkTracking - but none declares $owns of its own, so the only entry in an effective
+     * list is that inherited FileTracking, and FileTracking is filled from HTMLText shortcode
+     * usage, which a Link never has. findOwned() therefore returns nothing for a Link, and
+     * publishRecursive() publishes the link alone.
      *
      * Which means a link's own target does not come live with it: publishing a FileLink leaves its
      * File in draft, and publishing a SiteTreeLink leaves its Page in draft. For a Page that is the
@@ -163,9 +161,10 @@ trait PublishesOwnedRecords
     {
         $member = Security::getCurrentUser();
 
-        // Inside the try on purpose, all four: each guard reaches permission hooks and the database
-        // as directly as the publish does (see above), and one of them throwing must not be the
-        // reason the write hook aborts.
+        // Inside the try on purpose, all four. The modification and permission guards reach
+        // permission hooks and the stage tables as directly as the publish does (see above), and a
+        // throw from any of them must not abort the write hook; hasExtension() is only a config
+        // lookup, and it travels with them so no guard sits outside this block.
         try {
             if (!$object->hasExtension(Versioned::class)) {
                 return;
