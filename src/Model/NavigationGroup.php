@@ -22,8 +22,9 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * Class NavigationGroup.
  *
  * NavigationLinks are versioned but this class isn't, so the `$owns` declaration below never
- * cascades a publish on its own - the same inert-ownership shape #174 fixed for SiteConfig.
- * PublishesOwnedRecords is what actually takes those links live when a group is saved.
+ * cascades a publish on its own. PublishesOwnedRecords is what takes those links live when a
+ * group is saved - see docs/en/index.md for the footer chain and what is deliberately not
+ * published.
  *
  * @property string $Title
  * @property int $SortOrder
@@ -95,17 +96,12 @@ class NavigationGroup extends DataObject
     ];
 
     /**
-     * Whether onBeforeWrite() has run for the write() currently in flight on this record.
+     * Whether onBeforeWrite() has run for the write() currently in flight.
      *
-     * Per-record state is the whole point: DataObject::preWrite() runs validateWrite()
-     * *before* onBeforeWrite(), so this is never raised on the validate-and-reject path that
-     * also fires onAfterSkippedWrite(). It lets this class answer the trait's skipped-write
-     * question exactly instead of inheriting the validate() heuristic - that heuristic exists
-     * only because Extension consumers are shared Injector singletons and cannot hold
-     * per-record state.
-     *
-     * Its lifecycle is exactly two statements, both load-bearing: lowered at the head of
-     * preWrite(), raised after parent::onBeforeWrite(). Nothing else touches it.
+     * preWrite() runs validateWrite() *before* onBeforeWrite(), so this is never raised on the
+     * rejected-write path that fires the same onAfterSkippedWrite() hook - which is what lets
+     * this class answer the trait's skipped-write question exactly instead of inheriting the
+     * validate() heuristic. Lowered in preWrite(), raised in onBeforeWrite(), nothing else.
      *
      * @var bool
      */
@@ -178,21 +174,14 @@ class NavigationGroup extends DataObject
     /**
      * Re-initialise the write flag at the head of every write().
      *
-     * The flag's only lowering statement, and sufficient on its own: one producer
-     * (onBeforeWrite()), one consumer (shouldPublishOwnedRecordsOnSkippedWrite()), and
-     * write() calls preWrite() unconditionally first - so both onAfterSkippedWrite() dispatch
-     * sites read a flag belonging to the write in flight: false on preWrite()'s
-     * validate-and-reject path, true on write()'s no-changes branch.
-     *
-     * Lowering here, rather than at the tail of a successful write(), is what closes the abort
-     * window no tail statement could reach: writeBaseRecord(), writeManipulation() and
-     * writeRelations() all run between onBeforeWrite() and onAfterWrite() and any can throw.
-     * A flag raised by such an aborted write would otherwise survive into the next write of the
-     * same instance and publish links from a save the editor was just told failed.
-     *
-     * It cannot live in a finally around write(): the rejected-write dispatch of
-     * onAfterSkippedWrite() happens *inside* parent::preWrite(), so this is the last point
-     * before that hook where a stale value can still be corrected.
+     * This is the flag's only lowering statement, and it is sufficient: write() calls
+     * preWrite() unconditionally, so both onAfterSkippedWrite() dispatch sites read a flag that
+     * belongs to the write in flight. Lowering it here rather than at the tail of a successful
+     * write() closes the window a tail statement cannot reach - writeBaseRecord(),
+     * writeManipulation() and writeRelations() all run between onBeforeWrite() and
+     * onAfterWrite() and any can throw, and a flag raised by such an aborted write would
+     * otherwise publish links on the *next* write of this instance. It cannot live in a finally
+     * around write(), because the rejected-write dispatch happens inside parent::preWrite().
      *
      * @param bool $skipValidation
      * @return void
@@ -207,14 +196,10 @@ class NavigationGroup extends DataObject
     /**
      * Raise the write flag once this write has cleared onBeforeWrite().
      *
-     * Raised *after* parent::onBeforeWrite() so a throw from the extend('onBeforeWrite')
-     * dispatch inside parent leaves the flag down - the right answer, since that write never
-     * reached the point of no return.
-     *
-     * parent::onBeforeWrite() must be called: the framework's brokenOnWrite sentinel throws a
-     * LogicException when an override forgets it.
-     *
-     * Untyped for subclass compatibility - see PublishesOwnedRecords::onAfterSkippedWrite().
+     * Raised after the parent call, so a throw from the extend('onBeforeWrite') dispatch inside
+     * parent leaves it down. parent::onBeforeWrite() is required - the framework's brokenOnWrite
+     * sentinel throws when an override forgets it. Untyped for subclass compatibility, as on
+     * PublishesOwnedRecords::onAfterSkippedWrite().
      *
      * @return void
      */
@@ -226,20 +211,13 @@ class NavigationGroup extends DataObject
     }
 
     /**
-     * Publish the group's owned NavigationLinks after the group is written.
+     * Publish this group's owned NavigationLinks after the group is written.
      *
-     * parent::onAfterWrite() must not be dropped: it fetches generated columns and dispatches
-     * extend('onAfterWrite') to every other extension on this class. Unlike onBeforeWrite()
-     * there is no framework sentinel that fails when this call goes missing, so nothing here
-     * catches it being deleted.
-     *
-     * publishOwnedRecords() runs last, after that parent call, deliberately: parent hands
-     * control to arbitrary third-party extensions, any of which can throw, and aborting before
-     * publishing keeps links in draft behind a save that ended in an error instead of taking
-     * them live from it.
-     *
-     * Untyped for subclass compatibility; the flag is not lowered here, preWrite() owns its
-     * whole lifecycle.
+     * parent::onAfterWrite() fetches generated columns and dispatches extend('onAfterWrite') to
+     * every other extension on this class; unlike onBeforeWrite() nothing in the framework
+     * catches it being dropped. publishOwnedRecords() sits after it deliberately: parent hands
+     * control to arbitrary third-party extensions, any of which can throw, and a save that ends
+     * in an error should not have published anything on its way out.
      *
      * @return void
      */
@@ -251,18 +229,13 @@ class NavigationGroup extends DataObject
     }
 
     /**
-     * Answer the trait's skipped-write gate exactly, without re-running validate(): publish if
-     * and only if onBeforeWrite() ran for this write - true for every write validateWrite()
-     * accepted, false for the one preWrite() rejected.
+     * The trait's skipped-write gate, answered exactly rather than heuristically: publish if
+     * and only if onBeforeWrite() ran for this write.
      *
-     * A pure read. The framework reaches the gate at most once per write() (its two dispatch
-     * sites are mutually exclusive branches) and preWrite() re-initialises the flag first, so
-     * consuming it here would guard nothing while making a second call disagree with the first.
-     *
-     * This is why a footer link no longer stays in draft behind a successful
-     * write($skipValidation: true) on a group whose validate() would have objected - the
-     * heuristic this replaces is documented on
-     * PublishesOwnedRecords::shouldPublishOwnedRecordsOnSkippedWrite().
+     * A pure read, not a consume-and-reset. The framework reaches the gate at most once per
+     * write() (its two dispatch sites are mutually exclusive branches) and preWrite()
+     * re-initialises the flag first, so resetting it here would guard nothing and would make a
+     * second call in the same write disagree with the first.
      *
      * @return bool
      */
@@ -296,6 +269,11 @@ class NavigationGroup extends DataObject
     }
 
     /**
+     * Every member - including none - may edit, which also governs publishing: a linkfield Link
+     * resolves canPublish() through its owner's canEdit(), so the permission gate in
+     * PublishesOwnedRecords::publishOwnedRecords() never denies for links owned by this class.
+     * Restrict this, or add an explicit canPublish() override, if footer links need gating.
+     *
      * @param null $member
      *
      * @return bool

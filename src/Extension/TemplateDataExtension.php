@@ -17,7 +17,6 @@ use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**

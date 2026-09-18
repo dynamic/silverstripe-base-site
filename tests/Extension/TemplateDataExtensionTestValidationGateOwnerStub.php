@@ -8,19 +8,14 @@ use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
 
 /**
- * A minimal owner double for TemplateDataExtension::onAfterSkippedWrite()'s validation gate,
- * so that gate can be covered without dragging a real SiteConfig through the write stack.
- *
- * It is a DataObject rather than a duck-typed stand-in: the alternative was to leave the
- * production seam PublishesOwnedRecords::getOwnedRecordsOwner() untyped purely so this double
- * kept working, which weakens the contract every real consumer depends on. Extending
- * DataObject keeps the seam typed at no cost, because validate(), findOwned() and
- * ObsoleteClassName all come from the parent.
- *
- * Deliberately never written to the database - the two gate tests only ask it validate() and
- * findOwned(), and findOwned() is overridden precisely so that neither isInDB() nor a table
- * lookup decides the outcome the test is asserting.
- */
+* Owner double for TemplateDataExtension::onAfterSkippedWrite()'s validation gate, so that
+* gate is covered without a real SiteConfig in the write stack.
+*
+* A DataObject, not a duck-typed stand-in, so the trait's typed
+* getOwnedRecordsOwner(): DataObject seam stays typed; validate(), findOwned() and
+* ObsoleteClassName all come from the parent. Never written to the database - findOwned()
+* is overridden so neither isInDB() nor a table lookup decides the outcome.
+*/
 class TemplateDataExtensionTestValidationGateOwnerStub extends DataObject implements TestOnly
 {
     /**

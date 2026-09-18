@@ -107,24 +107,22 @@ class NavigationColumnTest extends SapphireTest
     }
 
     /**
-     * Why the publish fix for #185 lives on NavigationGroup and not here.
+     * Saving a NavigationColumn publishes nothing, and the primary reason is that the column
+     * has no publish hook at all: NavigationColumn neither uses PublishesOwnedRecords nor
+     * declares a write hook.
      *
-     * A column's effective $owns is ['FileTracking'], contributed by silverstripe/assets'
-     * FileLinkTracking extension (applied to every DataObject, which also declares that
-     * relation). It is not 'NavigationGroups', so the traversal never descends to the
-     * column's groups, and FileTracking - which records asset-shortcode usage - holds no
-     * rows for a navigation column. DataObject::findRelatedObjects() walks each $owns entry
-     * through the relation of the same name, so with nothing to merge findOwned() returns an
-     * empty list here even though one of the column's groups owns a draft link. A
-     * column-level hook built on the same traversal would therefore publish nothing: inert,
-     * not a second layer of the same fix.
-     *
-     * The group-level hook covers the real editor paths because
-     * GridFieldDetailForm_ItemRequest::onSave() calls write() on the NavigationGroup itself.
+     * The secondary reason matters only if a hook is added later. A column's effective $owns is
+     * just FileTracking (contributed by silverstripe/assets' FileLinkTracking, which is applied
+     * to every DataObject), and that relation records asset-shortcode usage, so it holds no
+     * rows for a navigation column. findOwned() walks each $owns entry through the relation of
+     * the same name, so it returns an empty list here even though one of the column's groups
+     * owns a draft link - a hook built on that traversal would publish nothing without
+     * 'NavigationGroups' being owned as well. The group-level hook covers the real editor paths,
+     * because GridFieldDetailForm_ItemRequest::onSave() calls write() on the group itself.
      *
      * @return void
      */
-    public function testColumnDeclaresNoOwnsSoAColumnLevelHookWouldBeInert(): void
+    public function testSavingANavigationColumnPublishesNothing(): void
     {
         $column = $this->objFromFixture(NavigationColumn::class, 'one');
 
@@ -140,23 +138,17 @@ class NavigationColumnTest extends SapphireTest
         ]);
         $link->write();
 
-        // The relation exists two levels down...
         $this->assertSame(1, $column->NavigationGroups()->count());
         $this->assertSame(1, $group->NavigationLinks()->count());
 
-        // ...but the column's only $owns entry is FileTracking (never NavigationGroups),
-        // and that relation holds no rows here, so the traversal bottoms out empty. The
-        // relation's declared type is deliberately not asserted: it is a silverstripe/assets
-        // implementation detail, and the inertness below holds whatever it is.
         $this->assertNotContains('NavigationGroups', $column->config()->get('owns'));
         $this->assertContains('FileTracking', $column->config()->get('owns'));
         $this->assertSame(0, $column->FileTracking()->count());
         $this->assertSame([], $column->findOwned(false)->toArray());
 
-        // Saving the column therefore changes nothing about the link's stage - the fix for
-        // this chain is the NavigationGroup hook, exercised in NavigationGroupTest.
         $column->Title = 'Column One Renamed';
         $column->write();
+
         $this->assertFalse($link->isPublished());
     }
 }

@@ -161,13 +161,11 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * The reported bug, happy path: a draft NavigationLink must go live when the group that
-     * owns it is saved with a changed column, i.e. via DataObject::write()'s onAfterWrite()
-     * branch. Before #185's fix NavigationGroup's $owns declaration was inert because the
-     * class isn't Versioned, so this stayed in draft forever.
-     *
-     * @return void
-     */
+    * Happy path: a draft NavigationLink goes live when the group that owns it is saved with a
+    * changed column, via DataObject::write()'s onAfterWrite() branch.
+    *
+    * @return void
+    */
     public function testNavigationLinksArePublishedWhenGroupFieldChanges(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -208,12 +206,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * A group whose validate() rejects the write must not push its draft links live:
-     * DataObject::preWrite() fires the very same onAfterSkippedWrite() hook immediately
-     * before re-throwing the ValidationException, with nothing persisted.
-     *
-     * @return void
-     */
+    * A group whose validate() rejects the write publishes nothing: preWrite() fires the same
+    * onAfterSkippedWrite() hook immediately before re-throwing ValidationException, with nothing
+    * persisted.
+    *
+    * @return void
+    */
     public function testNavigationLinksAreNotPublishedWhenGroupFailsValidation(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -303,12 +301,10 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * A child that is not Versioned must be skipped cleanly. If the hasExtension(Versioned)
-     * guard were removed, the very next call in publishOwnedRecord() - isModifiedOnDraft(),
-     * which only Versioned provides - would fatal rather than return quietly.
-     *
-     * @return void
-     */
+    * A child that is not Versioned is skipped cleanly, with nothing logged.
+    *
+    * @return void
+    */
     public function testPublishOwnedRecordSkipsNonVersionedChild(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -405,13 +401,13 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * publishOwnedRecords() pins the reading stage to Draft. Every other test here runs in
-     * SapphireTest's default draft mode, so they would pass without that pin - this one forces
-     * Stage.Live as the ambient reading mode, under which a draft-only link would otherwise
-     * never be returned by findOwned() and would be silently skipped.
-     *
-     * @return void
-     */
+    * publishOwnedRecords() pins the reading stage to Draft. Every other test here runs in
+    * SapphireTest's default draft mode and would pass without the pin, so this one forces
+    * Stage.Live as the ambient mode, under which a draft-only link would never be returned by
+    * findOwned() at all.
+    *
+    * @return void
+    */
     public function testNavigationLinksPublishWhenAmbientReadingModeIsLive(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -455,14 +451,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * Guards NavigationGroup::onAfterWrite() calling parent::onAfterWrite(). That call is
-     * what reaches extend('onAfterWrite') for every other extension on this class (and what
-     * refreshes generated columns); nothing else fails if it is dropped, because unlike
-     * onBeforeWrite() there is no framework sentinel guarding it. Delete the parent call in
-     * NavigationGroup::onAfterWrite() and this is the test that goes red.
-     *
-     * @return void
-     */
+    * parent::onAfterWrite() on NavigationGroup is what dispatches extend('onAfterWrite') to every
+    * other extension on the class and refreshes generated columns, and nothing in the framework
+    * fails when it is dropped - so it is asserted here.
+    *
+    * @return void
+    */
     public function testGroupWriteDispatchesOnAfterWriteToOtherExtensions(): void
     {
         NavigationGroupAfterWriteSpyExtension::$onAfterWriteCalls = 0;
@@ -479,16 +473,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * The heuristic the trait uses for its other consumer, TemplateDataExtension, has a
-     * reachable false negative that this issue's symptom depends on: write($skipValidation:
-     * true) succeeds on a group whose validate() objects (empty Title), but re-running
-     * validate() inside the gate reads that as a rejected write and silently leaves the new
-     * link in draft after a save that actually worked. NavigationGroup answers the question
-     * exactly instead, via a per-record onBeforeWrite() flag - preWrite() validates before
-     * it ever calls onBeforeWrite(), so an accepted write always raises the flag.
-     *
-     * @return void
-     */
+    * A write($skipValidation: true) that genuinely succeeded must publish, even on a group whose
+    * validate() would have objected. The trait's validate()-based default would read that as a
+    * rejection; NavigationGroup's per-record flag answers exactly and publishes.
+    *
+    * @return void
+    */
     public function testNavigationLinksPublishOnSkipValidationWriteWithNoGroupFieldChanges(): void
     {
         $group = NavigationGroup::create(['Title' => 'Valid Group']);
@@ -513,18 +503,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * Guards the flag reset in NavigationGroup::preWrite(). Without it, the flag raised by a
-     * successful write stays up on the instance, and the next write - rejected by
-     * validateWrite() - dispatches onAfterSkippedWrite() from inside preWrite() and its gate
-     * then reads stale `true`, pushing a draft link live from a save the editor was just told
-     * failed, immediately before the ValidationException is re-thrown.
-     *
-     * testNavigationLinksAreNotPublishedWhenGroupFailsValidation() cannot cover this: it takes
-     * its group straight from the fixture, so no successful write ever raises the flag and the
-     * initial false is what the gate reads.
-     *
-     * @return void
-     */
+    * The flag must be lowered by preWrite(), not merely by the previous write completing: this
+    * instance has already had a successful write that raised it, so the rejected write that
+    * follows is the one that proves it was cleared before the gate was consulted.
+    *
+    * @return void
+    */
     public function testRejectedWriteAfterASuccessfulWriteDoesNotPublish(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -555,13 +539,11 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * Pins the documented asymmetry the trait defends in its own comment: publish failures
-     * that are \\Exception are logged and swallowed, but a genuine PHP \\Error escapes
-     * rather than being misclassified as a routine data-level failure. Nothing else in the
-     * suite would notice the catch being widened to \\Throwable - this would.
-     *
-     * @return void
-     */
+    * A genuine PHP \Error escapes publishOwnedRecord() rather than being logged as a routine
+    * data-level failure - the catch is \Exception by design.
+    *
+    * @return void
+    */
     public function testPHPErrorFromAChildEscapesRatherThanBeingSwallowed(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -593,19 +575,14 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * An escaping \Error reached through a real write(), which is what docs/en/index.md
-     * actually promises. The erroring link is created first, so findOwned() reaches it before
-     * its healthy sibling: \Error escapes the catch (\Exception) in publishOwnedRecord() and
-     * there is no isolation above that point, so it aborts the rest of the loop and the whole
-     * write() - the sibling stays in draft and nothing is logged as if it were data.
-     *
-     * The reflection test above only proves publishOwnedRecord() does not catch \Error. This
-     * proves the loop and the save have no isolation either: give the loop per-record \Error
-     * handling and 'the healthy sibling stays in draft' is the assertion that goes red, and
-     * 'the group row is committed' is the half-applied save the docs describe.
-     *
-     * @return void
-     */
+    * An escaping \Error reached through a real write(), which is what docs/en/index.md
+    * documents. The erroring link is created first so findOwned() reaches it before its healthy
+    * sibling: \Error escapes the catch (\Exception) in publishOwnedRecord() and there is no
+    * isolation above that point, so the sibling stays in draft too and nothing is logged as if
+    * the failure were a data condition.
+    *
+    * @return void
+    */
     public function testAnEscapingErrorAbortsTheWriteAndLeavesTheSiblingInDraft(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -660,17 +637,13 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * publishOwnedRecords() is the last statement in NavigationGroup::onAfterWrite(), after
-     * the parent::onAfterWrite() that dispatches extend('onAfterWrite') to arbitrary
-     * third-party extensions. So when one of those throws, the save aborts before any link
-     * is taken live - which is the wanted direction of failure: a save that ends in an error
-     * must not have published anything on its way out.
-     *
-     * Hoisting publishOwnedRecords() above parent::onAfterWrite() publishes the link before
-     * the extension throws and turns the first assertion red.
-     *
-     * @return void
-     */
+    * publishOwnedRecords() is the last statement in NavigationGroup::onAfterWrite(), after the
+    * parent call that hands control to arbitrary third-party extensions - so a throwing extension
+    * aborts the save before any link is taken live. A save that ends in an error publishes
+    * nothing on its way out.
+    *
+    * @return void
+    */
     public function testAThrowingAfterWriteHookAbortsBeforeTheLinksArePublished(): void
     {
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
@@ -707,14 +680,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * shouldPublishOwnedRecordsOnSkippedWrite() is a pure read of the write flag, so asking
-     * it twice about the same write gives the same answer both times, and a write is never
-     * answered by an earlier write's flag because preWrite() re-initialises it first.
-     *
-     * Making the gate consume the flag instead turns the second assertion red.
-     *
-     * @return void
-     */
+    * shouldPublishOwnedRecordsOnSkippedWrite() is a pure read of the write flag: asked twice
+    * about the same write it answers the same both times, and a write is never answered by an
+    * earlier write's flag because preWrite() re-initialises it first.
+    *
+    * @return void
+    */
     public function testTheSkippedWriteGateIsAPureReadAndRepeatsItself(): void
     {
         $group = NavigationGroup::create(['Title' => 'Pure Gate Group']);
