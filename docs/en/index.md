@@ -65,7 +65,14 @@ which has many `NavigationGroup`s, and each group owns its `NavigationLinks`
 `NavigationGroup` is not versioned, so its `$owns` declaration cannot cascade a publish on its
 own. `Dynamic\Base\Traits\PublishesOwnedRecords` publishes those links whenever a group is
 saved - from the footer GridField detail form, or from a `write()` outside the CMS, e.g. a
-BuildTask or deploy script. There is normally no separate manual publish step for footer links.
+BuildTask or deploy script.
+
+Links handled through the link modal are the exception, and there the manual step is still real:
+`LinkFieldController::save()` writes the `Link` and then writes the owner only when the owner
+relation is a `has_one`, and reordering (`linkSort()`) writes the `Link` alone, so for the
+`has_many` `NavigationLinks` relation nothing saves the group at that moment. Save the group's own
+detail form - or let anything else write it later - and the link goes live then; close the modal
+without saving the group and the link stays in draft, with no warning and nothing in the logs.
 
 Saving a `NavigationColumn` publishes nothing, because `NavigationColumn` has no publish hook at
 all: it does not use the trait and declares no write hook. Its effective `$owns` is only
@@ -75,11 +82,18 @@ either - the hook would have to be added, and links are edited on the group, not
 
 Permissions are inherited from the owning record, and here that means they are open:
 `NavigationGroup::canEdit()` returns `true` for everyone, and a `linkfield` `Link` resolves
-`canPublish()` through `canEdit()` to its owner, so publishing a footer link is permitted
-whenever the write itself happens. `NavigationGroup::canEdit()` is where to restrict that.
+`canPublish()` through `canEdit()` to its owner, so publishing a footer link is permitted whenever
+the write itself happens. That widens who can put footer content live: an edit by a member holding
+generic `CMS_ACCESS_CMSMain` but no Settings rights used to sit in draft indefinitely, and now
+reaches Live on the next save of the owning group, because nothing between that edit and the publish
+asks who authored it. `NavigationGroup::canEdit()`, overridden in a descendant class, is the only
+lever - the check is made on the `Link`, so a `canPublish()` on `NavigationGroup` is never
+consulted, and `canEdit()` returns `true` without consulting `extendedCan()` so an Extension cannot
+override it either. Requiring a specific permission there is tracked as
+dynamic/silverstripe-base-site#211.
 Site-owned links are different - `SocialLink`s and the logos sit under `SiteConfig`, whose
 permissions are restrictive, so there the gate in
-`Dynamic\Base\Traits\PublishesOwnedRecords::publishOwnedRecords()` genuinely denies and logs
+`Dynamic\Base\Traits\PublishesOwnedRecords::publishOwnedRecord()` genuinely denies and logs
 "Skipped publishing ... left in draft". See [SocialLinks.md](../SocialLinks.md).
 
 A publish failure on one link - any `\Exception` raised while publishing it, e.g. a validation

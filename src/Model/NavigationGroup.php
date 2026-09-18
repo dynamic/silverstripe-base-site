@@ -270,9 +270,12 @@ class NavigationGroup extends DataObject
 
     /**
      * Every member - including none - may edit, which also governs publishing: a linkfield Link
-     * resolves canPublish() through its owner's canEdit(), so the permission gate in
-     * PublishesOwnedRecords::publishOwnedRecords() never denies for links owned by this class.
-     * Restrict this, or add an explicit canPublish() override, if footer links need gating.
+     * resolves canPublish() through canEdit() to this record, so the gate in
+     * PublishesOwnedRecords::publishOwnedRecord() never denies for links owned by this class, and
+     * saving a group takes live whatever those links then hold. Restrict it here, in a descendant
+     * class: this returns true without consulting extendedCan(), so an Extension cannot override it,
+     * and a canPublish() on this class would be inert for the same reason - the check is made on
+     * the Link, never on its owner. See dynamic/silverstripe-base-site#211.
      *
      * @param null $member
      *

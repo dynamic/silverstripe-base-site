@@ -15,6 +15,8 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\LinkField\Models\ExternalLink;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\Security;
 use SilverStripe\Versioned\ChangeSet;
 use SilverStripe\Versioned\Versioned;
 
@@ -38,6 +40,7 @@ class NavigationGroupTest extends SapphireTest
         UnversionedOwnedStub::class,
         ThrowingSocialLink::class,
         MidWriteFailingNavigationGroup::class,
+        DenyEditNavigationGroupStub::class,
     ];
 
     /**
@@ -767,5 +770,108 @@ class NavigationGroupTest extends SapphireTest
             'A write that failed between onBeforeWrite() and onAfterWrite() must not leave a'
                 . ' flag that lets a later rejected write publish draft links.'
         );
+    }
+
+    /**
+     * The permission gate is reached on this consumer, and it grants.
+     *
+     * Every other case in this class runs with no logged-in member, where the trait's
+     * CLI-with-no-member exemption short-circuits before canPublish() is called at all - so none
+     * of them says anything about the gate. Any member puts the gate in play: the exemption is
+     * (!Director::is_cli() || $member !== null), which is true whenever a member exists, on the
+     * CLI sapi or not. Publishing therefore proves the whole chain answered -
+     * Link::canPublish() -> Versioned::canPublish() (ADMIN short-circuit, then extension hooks)
+     * -> Link::canEdit() -> Link::canPerformAction('canEdit') -> NavigationGroup::canEdit() ->
+     * true. That is the claim docs/en/index.md and NavigationGroup::canEdit() both make, and it
+     * is pinned from the other direction by
+     * testALinkOwnedByAGroupThatDeniesCanEditIsLeftInDraftWithAWarning().
+     *
+     * @return void
+     */
+    public function testThePublishGateIsEvaluatedAndGrantsForALinkOwnedByThisClass(): void
+    {
+        $this->logInWithPermission('CMS_ACCESS_CMSMain');
+
+        $member = Security::getCurrentUser();
+        $this->assertNotNull($member, 'Precondition: the gate only runs when a member is present.');
+        $this->assertFalse(
+            Permission::checkMember($member, 'ADMIN'),
+            'Precondition: a non-ADMIN member, so Versioned::canPublish() cannot short-circuit.'
+        );
+
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+        $link = $this->createDraftNavigationLink($group);
+
+        $this->assertFalse($link->isPublished());
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $group->Title = 'Gate Evaluated Group';
+        $group->write();
+
+        $this->assertTrue(
+            $link->isPublished(),
+            'A member who may edit the owning group must be able to take its link live.'
+        );
+        $this->assertCount(0, array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )), 'The gate granted, so nothing may have been skipped.');
+    }
+
+    /**
+     * The gate is live rather than decorative: when the owning record denies canEdit(), the link
+     * stays in draft and exactly one warning names it.
+     *
+     * This is the behaviour a downstream project changes by overriding NavigationGroup::canEdit() -
+     * the only lever there is, since that method returns true without consulting extendedCan() and
+     * the publish check is made on the Link, not on its owner. Without this case a restriction that
+     * silently stopped footer links publishing would show up only as a warning in someone's log.
+     * Tracked as dynamic/silverstripe-base-site#211.
+     *
+     * @return void
+     */
+    public function testALinkOwnedByAGroupThatDeniesCanEditIsLeftInDraftWithAWarning(): void
+    {
+        $this->logInWithPermission('CMS_ACCESS_CMSMain');
+
+        $this->assertFalse(
+            Permission::checkMember(Security::getCurrentUser(), 'ADMIN'),
+            'Precondition: a non-ADMIN member, so Versioned::canPublish() cannot short-circuit.'
+        );
+
+        $group = DenyEditNavigationGroupStub::create(['Title' => 'Restricted Group']);
+        $group->write();
+
+        $link = ExternalLink::create([
+            'LinkText' => 'Footer link',
+            'ExternalUrl' => 'https://example.test/footer',
+            'OwnerID' => $group->ID,
+            'OwnerClass' => DenyEditNavigationGroupStub::class,
+            'OwnerRelation' => 'NavigationLinks',
+        ]);
+        $link->write();
+
+        $this->assertFalse($link->canEdit());
+        $this->assertFalse($link->isPublished());
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $group->Title = 'Restricted Group Renamed';
+        $group->write();
+
+        $this->assertFalse(
+            $link->isPublished(),
+            'A group that denies canEdit() must not take its owned link live.'
+        );
+
+        $skipLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        ));
+        $this->assertCount(1, $skipLines);
+        $this->assertStringContainsString(DenyEditNavigationGroupStub::class, $skipLines[0]['message']);
     }
 }
