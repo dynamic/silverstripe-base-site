@@ -137,26 +137,31 @@ trait PublishesOwnedRecords
      * reconsidered - and, while the answer is unchanged, re-logged - on each later save. This
      * delays a publish it disapproves of rather than blocking it outright.
      *
+     * Every call that can throw is inside the try, including the two guards: isModifiedOnDraft()
+     * dispatches extend('updateIsOnDraft') and queries the stage tables, so it throws the way
+     * canPublish() and publishRecursive() do. A guard outside the try would abort the write hook
+     * mid-loop - committed row, dirty in-memory object, unflushed cache, remaining links skipped -
+     * which is the state this method exists to avoid.
+     *
      * @param DataObject $object
      * @return void
      */
     protected function publishOwnedRecord(DataObject $object): void
     {
-        if (!$object->hasExtension(Versioned::class)) {
-            return;
-        }
-
-        if (!$object->isModifiedOnDraft()) {
-            return;
-        }
-
         $member = Security::getCurrentUser();
 
-        // Inside the try on purpose: canPublish() dispatches into project permission hooks and,
-        // for a File, into folder-permission lookups, so it can throw the way the publish can.
-        // Outside, that throw would escape the write hook with the same half-written state
-        // publishOwnedRecords() above exists to prevent.
+        // Inside the try on purpose, all four: the guards reach permission hooks and the database
+        // as directly as the publish does (see above), and one of them throwing must not be the
+        // reason the write hook aborts.
         try {
+            if (!$object->hasExtension(Versioned::class)) {
+                return;
+            }
+
+            if (!$object->isModifiedOnDraft()) {
+                return;
+            }
+
             // CLI-with-no-member is exempt: dev/build, dev/tasks/* and test fixtures have no
             // identity to check, and gating them would stop those contexts publishing anything.
             if ((!Director::is_cli() || $member !== null) && !$object->canPublish($member)) {

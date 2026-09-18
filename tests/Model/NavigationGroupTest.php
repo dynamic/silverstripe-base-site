@@ -41,6 +41,7 @@ class NavigationGroupTest extends SapphireTest
         ThrowingSocialLink::class,
         MidWriteFailingNavigationGroup::class,
         DenyEditNavigationGroupStub::class,
+        ThrowingIsModifiedOnDraftLink::class,
     ];
 
     /**
@@ -873,5 +874,81 @@ class NavigationGroupTest extends SapphireTest
         ));
         $this->assertCount(1, $skipLines);
         $this->assertStringContainsString(DenyEditNavigationGroupStub::class, $skipLines[0]['message']);
+    }
+
+    /**
+     * A throwing guard is caught like the publish is: one bad link's modification check must not
+     * abort the write hook, and must not block its siblings.
+     *
+     * isModifiedOnDraft() reaches extend('updateIsOnDraft') and the stage tables, so it throws the
+     * same way canPublish() and publishRecursive() do, and it used to be called outside the try
+     * that exists to keep a throw out of the write hook. Reaching the assertions below is itself
+     * the assertion that write() survived: before the guards moved inside, this test errored with
+     * the simulated RuntimeException escaping NavigationGroup::onAfterWrite().
+     *
+     * @return void
+     */
+    public function testAThrowingModificationCheckIsLoggedAndDoesNotBlockSiblings(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+
+        $throwing = ThrowingIsModifiedOnDraftLink::create([
+            'LinkText' => 'Broken footer link',
+            'ExternalUrl' => 'https://example.test/broken',
+            'OwnerID' => $group->ID,
+            'OwnerClass' => NavigationGroup::class,
+            'OwnerRelation' => 'NavigationLinks',
+        ]);
+        $throwing->write();
+
+        $sibling = $this->createDraftNavigationLink($group);
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $group->Title = 'Guard Failure Group';
+        $group->write();
+
+        $this->assertTrue(
+            $sibling->isPublished(),
+            'A sibling must still publish when another link\'s modification check throws.'
+        );
+        $this->assertFalse($throwing->isPublished(), 'The failing link never published.');
+
+        $errorLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => $record['level'] === 'error'
+                && str_contains($record['message'], 'Failed to publish')
+        ));
+        $this->assertCount(1, $errorLines);
+        $this->assertStringContainsString(ThrowingIsModifiedOnDraftLink::class, $errorLines[0]['message']);
+    }
+
+    /**
+     * The publish is scoped to the group being saved: another group's draft links must stay draft
+     * when a different group is written.
+     *
+     * @return void
+     */
+    public function testSavingOneGroupLeavesAnotherGroupsDraftLinksInDraft(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+        $otherGroup = NavigationGroup::create(['Title' => 'Group Two']);
+        $otherGroup->write();
+
+        $link = $this->createDraftNavigationLink($group);
+        $otherLink = $this->createDraftNavigationLink($otherGroup);
+
+        $this->assertFalse($link->isPublished());
+        $this->assertFalse($otherLink->isPublished());
+
+        $group->Title = 'Renamed Group One';
+        $group->write();
+
+        $this->assertTrue($link->isPublished(), 'The saved group publishes its own link.');
+        $this->assertFalse(
+            $otherLink->isPublished(),
+            'An unrelated group\'s draft link must not be swept live by this save.'
+        );
     }
 }

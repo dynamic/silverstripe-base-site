@@ -62,6 +62,21 @@ Footer navigation is a two-level chain: `SiteConfig` has many `NavigationColumn`
 which has many `NavigationGroup`s, and each group owns its `NavigationLinks`
 (`silverstripe/linkfield` `Link` records, which are versioned).
 
+Permissions on footer links are open. `NavigationGroup::canEdit()` returns `true` for every member,
+including none, and a `linkfield` `Link` resolves `canPublish()` through `canEdit()` to its owner -
+so any member who gets a save of the group to happen takes that group's draft links live, and
+nothing between the link edit and the publish asks who authored the edit. Restricting that means
+overriding `NavigationGroup::canEdit()` in a descendant class: the publish check is made on the
+`Link`, so a `canPublish()` on `NavigationGroup` is never consulted, and `canEdit()` returns `true`
+without consulting `extendedCan()`, so an Extension cannot override it either. Requiring a specific
+permission there is tracked as dynamic/silverstripe-base-site#211. The control that matters today is
+that the footer GridField sits under Site Settings.
+
+Site-owned links are different - `SocialLink`s and the logos sit under `SiteConfig`, whose
+permissions are restrictive, so there the gate in
+`Dynamic\Base\Traits\PublishesOwnedRecords::publishOwnedRecord()` genuinely denies and logs
+"Skipped publishing ... left in draft". See [SocialLinks.md](../SocialLinks.md).
+
 `NavigationGroup` is not versioned, so its `$owns` declaration cannot cascade a publish on its
 own. `Dynamic\Base\Traits\PublishesOwnedRecords` publishes those links whenever a group is
 saved - from the footer GridField detail form, or from a `write()` outside the CMS, e.g. a
@@ -79,22 +94,6 @@ all: it does not use the trait and declares no write hook. Its effective `$owns`
 `FileTracking` (contributed by `silverstripe/assets`' `FileLinkTracking`, which is applied to
 every `DataObject`), so adding `NavigationGroups` to it would not make column saves cascade
 either - the hook would have to be added, and links are edited on the group, not the column.
-
-Permissions are inherited from the owning record, and here that means they are open:
-`NavigationGroup::canEdit()` returns `true` for everyone, and a `linkfield` `Link` resolves
-`canPublish()` through `canEdit()` to its owner, so publishing a footer link is permitted whenever
-the write itself happens. That widens who can put footer content live: an edit by a member holding
-generic `CMS_ACCESS_CMSMain` but no Settings rights used to sit in draft indefinitely, and now
-reaches Live on the next save of the owning group, because nothing between that edit and the publish
-asks who authored it. `NavigationGroup::canEdit()`, overridden in a descendant class, is the only
-lever - the check is made on the `Link`, so a `canPublish()` on `NavigationGroup` is never
-consulted, and `canEdit()` returns `true` without consulting `extendedCan()` so an Extension cannot
-override it either. Requiring a specific permission there is tracked as
-dynamic/silverstripe-base-site#211.
-Site-owned links are different - `SocialLink`s and the logos sit under `SiteConfig`, whose
-permissions are restrictive, so there the gate in
-`Dynamic\Base\Traits\PublishesOwnedRecords::publishOwnedRecord()` genuinely denies and logs
-"Skipped publishing ... left in draft". See [SocialLinks.md](../SocialLinks.md).
 
 A publish failure on one link - any `\Exception` raised while publishing it, e.g. a validation
 failure - is logged and blocks neither the group's save nor its sibling links; check the logs if
