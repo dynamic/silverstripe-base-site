@@ -12,7 +12,13 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Assets\File;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\LinkField\Models\EmailLink;
 use SilverStripe\LinkField\Models\ExternalLink;
+use SilverStripe\LinkField\Models\FileLink;
+use SilverStripe\LinkField\Models\PhoneLink;
+use SilverStripe\LinkField\Models\SiteTreeLink;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -204,6 +210,10 @@ class NavigationGroupTest extends SapphireTest
         $this->assertFalse($link->isPublished());
 
         // No mutation to any NavigationGroup-owned field here - this must still publish.
+        $this->assertFalse(
+            $group->isChanged(),
+            'Precondition: this write must take write()\'s onAfterSkippedWrite() branch.'
+        );
         $group->write();
 
         $this->assertTrue($link->isPublished());
@@ -398,6 +408,10 @@ class NavigationGroupTest extends SapphireTest
         Injector::inst()->registerService(new TemplateDataExtensionTestSpyLogger(), LoggerInterface::class);
 
         // No group-field change: this is the onAfterSkippedWrite() branch.
+        $this->assertFalse(
+            $group->isChanged(),
+            'Precondition: this write must take write()\'s onAfterSkippedWrite() branch.'
+        );
         $group->write();
 
         $this->assertTrue($goodLink->isPublished());
@@ -498,6 +512,12 @@ class NavigationGroupTest extends SapphireTest
         $this->assertFalse($link->isPublished());
 
         // No changed column, so this is the onAfterSkippedWrite() branch again.
+        $this->assertFalse(
+            $group->isChanged(),
+            'Precondition: validation is skipped here, but the branch under test is still the'
+                . ' no-changes one - a changed column would route this through onAfterWrite() and'
+                . ' prove nothing about the skipped-write gate.'
+        );
         $group->write(false, false, false, false, true);
 
         $this->assertTrue(
@@ -698,6 +718,11 @@ class NavigationGroupTest extends SapphireTest
         $method = new ReflectionMethod(NavigationGroup::class, 'shouldPublishOwnedRecordsOnSkippedWrite');
 
         // A no-changes write reached onBeforeWrite(), so the gate answers true - twice.
+        $this->assertFalse(
+            $group->isChanged(),
+            'Precondition: nothing is changed, so this write is the skipped-write branch the'
+                . ' gate is being asked about.'
+        );
         $group->write();
         $this->assertTrue($method->invoke($group));
         $this->assertTrue(
@@ -720,12 +745,12 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
-     * The earlier abort window: DataObject::write() runs writeBaseRecord(),
-     * writeManipulation() and writeRelations() between onBeforeWrite() and onAfterWrite(),
-     * and a failure in any of them reaches neither of the two after-hooks. The flag raised
-     * by such an aborted write then survives into the next write of the same instance, and if
-     * that one is rejected by validateWrite() the draft link is published from a save the
-     * editor was just told failed. Removing preWrite()'s clear turns this red.
+     * The mid-write abort window: DataObject::write() runs writeBaseRecord(),
+     * writeManipulation() and writeRelations() between onBeforeWrite() and onAfterWrite(), and a
+     * failure in any of them reaches neither after-hook. A flag raised by such an aborted write
+     * would otherwise survive into the next write of the same instance, and if that one were
+     * rejected by validateWrite() the draft link would publish from a save the editor was just
+     * told failed. preWrite() lowering the flag at the head of every write is what this pins.
      *
      * @return void
      */
@@ -881,10 +906,8 @@ class NavigationGroupTest extends SapphireTest
      * abort the write hook, and must not block its siblings.
      *
      * isModifiedOnDraft() reaches extend('updateIsOnDraft') and the stage tables, so it throws the
-     * same way canPublish() and publishRecursive() do, and it used to be called outside the try
-     * that exists to keep a throw out of the write hook. Reaching the assertions below is itself
-     * the assertion that write() survived: before the guards moved inside, this test errored with
-     * the simulated RuntimeException escaping NavigationGroup::onAfterWrite().
+     * same way canPublish() and publishRecursive() do, and it sits inside the same try for the
+     * same reason. Reaching the assertions below is the assertion that write() survived the throw.
      *
      * @return void
      */
@@ -949,6 +972,91 @@ class NavigationGroupTest extends SapphireTest
         $this->assertFalse(
             $otherLink->isPublished(),
             'An unrelated group\'s draft link must not be swept live by this save.'
+        );
+    }
+
+    /**
+     * The criterion that makes an owned child a leaf in the cascade is its effective $owns resolved
+     * through findOwned(), not an absence of relations - the two are different questions and the
+     * second one answers wrongly. Every concrete linkfield Link carries the FileTracking entry
+     * assets contributes to SilverStripe\ORM\DataObject, FileLink and SiteTreeLink additionally
+     * declare a has_one to the record they point at, and none of them declares $owns of its own.
+     *
+     * @return void
+     */
+    public function testConcreteLinkTypesAreLeavesByOwnsAndNotByAnAbsenceOfRelations(): void
+    {
+        $linkTypes = [
+            ExternalLink::class => [],
+            EmailLink::class => [],
+            PhoneLink::class => [],
+            FileLink::class => ['File'],
+            SiteTreeLink::class => ['Page'],
+        ];
+
+        foreach ($linkTypes as $class => $targetRelations) {
+            $hasOne = Config::inst()->get($class, 'has_one', Config::UNINHERITED) ?: [];
+
+            foreach ($targetRelations as $relation) {
+                $this->assertArrayHasKey(
+                    $relation,
+                    $hasOne,
+                    $class . ' declares has_one ' . $relation . ', so "declares no relation of its'
+                        . ' own" is not the reason it is a leaf in the publish cascade.'
+                );
+            }
+
+            $this->assertSame(
+                ['FileTracking'],
+                Config::inst()->get($class, 'owns'),
+                $class . '\'s only effective owns entry is the FileTracking one it inherits from'
+                    . ' assets\' FileLinkTracking - it declares none of its own, so findOwned()'
+                    . ' resolves nothing beneath it.'
+            );
+        }
+    }
+
+    /**
+     * The consequence of that for a footer file link: saving the group takes the FileLink live and
+     * leaves the File it points at in draft, because publishRecursive() on the link has nothing
+     * owned beneath it to walk.
+     *
+     * @return void
+     */
+    public function testSavingAGroupPublishesAFileLinkButNotTheFileItPointsAt(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+
+        $file = File::create(['Name' => 'brochure.pdf', 'Title' => 'Brochure']);
+        $file->write();
+
+        $link = FileLink::create([
+            'LinkText' => 'Brochure',
+            'FileID' => $file->ID,
+            'OwnerID' => $group->ID,
+            'OwnerClass' => NavigationGroup::class,
+            'OwnerRelation' => 'NavigationLinks',
+        ]);
+        $link->write();
+
+        $this->assertFalse($file->isPublished(), 'Precondition: the File is draft only.');
+        $this->assertFalse($link->isPublished(), 'Precondition: the FileLink is draft only.');
+        $this->assertCount(
+            0,
+            $link->findOwned(false),
+            'Precondition: the FileLink owns nothing, which is why the cascade stops at it.'
+        );
+
+        $group->write();
+
+        $this->assertTrue(
+            $link->isPublished(),
+            'The FileLink itself must go live with the group that owns it.'
+        );
+        $this->assertFalse(
+            $file->isPublished(),
+            'The cascade must not publish the File - docs/en/index.md documents that the editor'
+                . ' has to publish it, and dynamic/silverstripe-base-site#213 tracks closing it.'
         );
     }
 }

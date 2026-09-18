@@ -120,10 +120,23 @@ trait PublishesOwnedRecords
      *
      * The modification check is shallow: isModifiedOnDraft() compares only this record's own
      * draft and live versions, so an owned record that is itself the owner of a modified draft
-     * child is skipped. That is this trait's reuse boundary. Every owned child here is a leaf in
-     * practice - ExternalLink/EmailLink/PhoneLink/FileLink declare no relation of their own, and
-     * the FileTracking relation they inherit (assets' FileLinkTracking is applied to every
-     * DataObject) is populated from HTMLText shortcode usage, which a Link never has.
+     * child is skipped. That is this trait's reuse boundary.
+     *
+     * Every owned child here is a leaf as well, and the test for that is the child's effective
+     * $owns resolved through findOwned() - not whether it declares relations, which is a different
+     * question and answers it wrongly. linkfield's concrete Links all declare relations: FileLink
+     * has has_one File, SiteTreeLink has has_one Page plus Anchor and QueryString in $db, and
+     * every DataObject, Links included, inherits FileTracking from assets' FileLinkTracking. What
+     * makes them leaves is that not one of those is a populated owns entry: no Link declares $owns
+     * of its own, so its effective list is only the inherited FileTracking, and FileTracking is
+     * filled from HTMLText shortcode usage, which a Link never has. findOwned() therefore returns
+     * nothing for a Link, and publishRecursive() publishes the link alone.
+     *
+     * Which means a link's own target does not come live with it: publishing a FileLink leaves its
+     * File in draft, and publishing a SiteTreeLink leaves its Page in draft. For a Page that is the
+     * intent. For a File it is a live-but-broken-link gap this module does not close -
+     * docs/en/index.md documents what that renders as, and dynamic/silverstripe-base-site#213
+     * tracks closing it.
      *
      * canPublish() is checked because nothing downstream does: publishRecursive() hands an
      * inferred ChangeSet to ChangeSet::publish(), whose docblock puts that call on the caller,
@@ -137,11 +150,11 @@ trait PublishesOwnedRecords
      * reconsidered - and, while the answer is unchanged, re-logged - on each later save. This
      * delays a publish it disapproves of rather than blocking it outright.
      *
-     * Every call that can throw is inside the try, including the two guards: isModifiedOnDraft()
-     * dispatches extend('updateIsOnDraft') and queries the stage tables, so it throws the way
-     * canPublish() and publishRecursive() do. A guard outside the try would abort the write hook
-     * mid-loop - committed row, dirty in-memory object, unflushed cache, remaining links skipped -
-     * which is the state this method exists to avoid.
+     * Every call that can throw is inside the try, the three guards and the publish alike.
+     * isModifiedOnDraft() dispatches extend('updateIsOnDraft') and queries the stage tables, so it
+     * throws the way canPublish() and publishRecursive() do. A guard outside the try would abort
+     * the write hook mid-loop - committed row, dirty in-memory object, unflushed cache, remaining
+     * links skipped - which is the state this method exists to avoid.
      *
      * @param DataObject $object
      * @return void
@@ -150,7 +163,7 @@ trait PublishesOwnedRecords
     {
         $member = Security::getCurrentUser();
 
-        // Inside the try on purpose, all four: the guards reach permission hooks and the database
+        // Inside the try on purpose, all four: each guard reaches permission hooks and the database
         // as directly as the publish does (see above), and one of them throwing must not be the
         // reason the write hook aborts.
         try {
