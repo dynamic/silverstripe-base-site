@@ -27,7 +27,7 @@ class ThrowingSocialLink extends SocialLink implements TestOnly
      * @var array
      */
     private static array $db = [
-        'FailureMode' => "Enum('none,validation,generic')",
+        'FailureMode' => "Enum('none,validation,generic,error')",
     ];
 
     /**
@@ -40,6 +40,10 @@ class ThrowingSocialLink extends SocialLink implements TestOnly
                 throw new ValidationException('Simulated validation failure for test coverage.');
             case 'generic':
                 throw new \RuntimeException('Simulated non-validation failure for test coverage.');
+            // Stands in for a genuine PHP \Error, which publishOwnedRecord()'s
+            // catch (\Exception) must let escape rather than log as a publish failure.
+            case 'error':
+                throw new \Error('Simulated PHP error for test coverage.');
             default:
                 return parent::publishRecursive();
         }

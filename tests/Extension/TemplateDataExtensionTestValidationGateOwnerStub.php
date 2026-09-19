@@ -3,29 +3,25 @@
 namespace Dynamic\Base\Test\Extension;
 
 use SilverStripe\Core\Validation\ValidationResult;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Dev\TestOnly;
+use SilverStripe\ORM\DataObject;
 
 /**
- * A minimal extension-owner double - not a DataObject at all - used to prove
- * TemplateDataExtension::onAfterSkippedWrite()'s validation gate without touching the
- * real SiteConfig owner: Extension instances are Injector singletons shared across every
- * owner, so a real end-to-end reproduction would need to force an actual DataObject
- * validation failure through the full write() stack, which fights SilverStripe's
- * per-instance extension/config caching far more than this focused double does.
- */
-class TemplateDataExtensionTestValidationGateOwnerStub
+* Owner double for TemplateDataExtension::onAfterSkippedWrite()'s validation gate, so that
+* gate is covered without a real SiteConfig in the write stack.
+*
+* A DataObject, not a duck-typed stand-in, so the trait's typed
+* getOwnedRecordsOwner(): DataObject seam stays typed; validate(), findOwned() and
+* ObsoleteClassName all come from the parent. Never written to the database - findOwned()
+* is overridden so neither isInDB() nor a table lookup decides the outcome.
+*/
+class TemplateDataExtensionTestValidationGateOwnerStub extends DataObject implements TestOnly
 {
     /**
-     * Mirrors DataObject::$ObsoleteClassName, which onAfterSkippedWrite() also reads -
-     * always null here, since neither gate test is exercising that specific branch.
-     *
-     * @var string|null
+     * @var string
      */
-    public ?string $ObsoleteClassName = null;
-
-    /**
-     * @var bool
-     */
-    private bool $isValid;
+    private static $table_name = 'ValidationGateOwnerStub';
 
     /**
      * @var bool
@@ -33,12 +29,14 @@ class TemplateDataExtensionTestValidationGateOwnerStub
     public bool $findOwnedWasCalled = false;
 
     /**
-     * @param bool $isValid
+     * Whether validate() should report a valid record. A plain declared public property
+     * rather than a constructor argument: DataObject's own constructor signature is fixed
+     * (TableBuilder instantiates every DataObject in the manifest through it), and a
+     * declared property is written directly instead of going through __set().
+     *
+     * @var bool
      */
-    public function __construct(bool $isValid)
-    {
-        $this->isValid = $isValid;
-    }
+    public bool $isValid = true;
 
     /**
      * @return ValidationResult
@@ -55,18 +53,21 @@ class TemplateDataExtensionTestValidationGateOwnerStub
     }
 
     /**
-     * Matches RecursivePublishable::findOwned()'s real signature (name, default, and the
-     * $list param), so a future refactor there can't silently desync this stub from the
-     * production method it stands in for.
+     * Stands in for RecursivePublishable::findOwned(), which this class cannot inherit in
+     * any enforceable way: findOwned() reaches a DataObject through extension __call
+     * dispatch, so PHP checks nothing here and a future change to the real method will not
+     * break this stub to tell you about it. It matches the real signature by hand - same
+     * name, same defaults, same ArrayList return, no declared return type - and records the
+     * call so the two gate tests can assert the traversal was reached.
      *
      * @param bool $recursive
      * @param mixed $list
-     * @return array
+     * @return ArrayList
      */
-    public function findOwned($recursive = true, $list = null): array
+    public function findOwned($recursive = true, $list = null)
     {
         $this->findOwnedWasCalled = true;
 
-        return [];
+        return ArrayList::create();
     }
 }

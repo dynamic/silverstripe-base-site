@@ -45,6 +45,7 @@ class TemplateDataExtensionTest extends SapphireTest
         ThrowingSocialLink::class,
         DenyPublishSocialLinkStub::class,
         ThrowingCanEditSocialLinkStub::class,
+        TemplateDataExtensionTestValidationGateOwnerStub::class,
     ];
 
     /**
@@ -89,7 +90,8 @@ class TemplateDataExtensionTest extends SapphireTest
     public function testOnAfterSkippedWriteDoesNotPublishWhenOwnerFailsValidation(): void
     {
         $extension = new TemplateDataExtension();
-        $owner = new TemplateDataExtensionTestValidationGateOwnerStub(false);
+        $owner = new TemplateDataExtensionTestValidationGateOwnerStub();
+        $owner->isValid = false;
         $extension->setOwner($owner);
 
         $extension->onAfterSkippedWrite();
@@ -104,7 +106,8 @@ class TemplateDataExtensionTest extends SapphireTest
     public function testOnAfterSkippedWritePublishesWhenOwnerPassesValidation(): void
     {
         $extension = new TemplateDataExtension();
-        $owner = new TemplateDataExtensionTestValidationGateOwnerStub(true);
+        $owner = new TemplateDataExtensionTestValidationGateOwnerStub();
+        $owner->isValid = true;
         $extension->setOwner($owner);
 
         $extension->onAfterSkippedWrite();
