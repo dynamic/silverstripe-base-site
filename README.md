@@ -56,21 +56,29 @@ Base page types and extensions for SilverStripe websites
 ### `SearchContent` is gone from `SeoExtension`
 
 `SeoExtension` no longer declares a `SearchContent` field or a `SearchFields` fulltext
-index over it, and no longer hooks `onBeforeWrite()`. Sites that used SilverStripe's
-built-in fulltext search through that field need to move to their search service (most
-Dynamic sites already use AddSearch).
+index over it, and no longer hooks `onBeforeWrite()`. Sites whose custom code queried
+`SearchContent` directly (templates printing `$SearchContent`, ORM filters on that field,
+or custom `MATCH` queries) will stop seeing that data after this change.
 
 `dev/build` neither drops columns nor removes indexes that a class stops declaring, so
 existing installs keep the stale, frozen data behind - including the storage cost of a large
 `HTMLText` column on every row of `SiteTree_Versions`. To drop it by hand after deploying:
 
 ```sql
-ALTER TABLE SiteTree DROP INDEX SearchFields, DROP COLUMN SearchContent;
-ALTER TABLE SiteTree_Live DROP INDEX SearchFields, DROP COLUMN SearchContent;
-ALTER TABLE SiteTree_Versions DROP INDEX SearchFields, DROP COLUMN SearchContent;
+ALTER TABLE SiteTree DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Live DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Versions DROP COLUMN SearchContent;
 ```
 
-Skip any statement for a table that has no such column or index - for example a site that
+Then run `dev/build` so that SilverStripe core's `FulltextSearchable` (if enabled) rebuilds
+its own `SearchFields` fulltext index without the dropped column.
+
+**Important:** If `FulltextSearchable` is enabled on your site, core also declares a
+fulltext index called `SearchFields` (on `Title, MenuTitle, Content, MetaDescription`).
+Do not drop that index. The SQL above removes only the `SearchContent` column, and
+`dev/build` will recreate core's index automatically.
+
+Skip any statement for a table that has no such column - for example a site that
 never ran an older version of this module. On a large site, altering `SiteTree_Versions`
 can rebuild the whole table, so take a backup and run it in a maintenance window.
 
