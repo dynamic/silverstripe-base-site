@@ -34,7 +34,7 @@ Base page types and extensions for SilverStripe websites
 - **Header Image Support**: Add hero images to pages
 - **Elemental Integration**: Full page builder support with drag-and-drop elements
 - **Shared Drafts**: Collaborate with shared draft content management
-- **SEO Tools**: Google Sitemaps, robots.txt configuration, and a `SearchContent` fulltext index with configurable meta title/description length targets
+- **SEO Tools**: Google Sitemaps, robots.txt configuration, and configurable meta title/description length targets
 - **Site Branding & Navigation**: `SiteConfig`-level logo (with retina variant) or title/slogan toggle, footer navigation columns and link groups, social links, and utility links
 - **CMS Field Organization**: Reorders CMS fields for a more logical editing experience
 - **Better Navigation**: Enhanced CMS navigation via jonom/betternavigator
