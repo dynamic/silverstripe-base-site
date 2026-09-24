@@ -18,8 +18,10 @@ use SilverStripe\Dev\SapphireTest;
 class SeoExtensionTest extends SapphireTest
 {
     /**
-     * Every test in this class touches a DataObject, so ask for the temp database
-     * explicitly rather than relying on a connection-less escape path.
+     * Only the MetaComponents() test needs a database at all - dbObject() escapes via a
+     * MySQL connection - and the two reflection tests need none. It is set anyway so this
+     * class gets a temp database like every other test class in the module, all of which
+     * get one through their fixture file.
      */
     protected $usesDatabase = true;
 
