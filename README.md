@@ -70,13 +70,10 @@ ALTER TABLE SiteTree_Live DROP COLUMN SearchContent;
 ALTER TABLE SiteTree_Versions DROP COLUMN SearchContent;
 ```
 
-Then run `dev/build` so that SilverStripe core's `FulltextSearchable` (if enabled) rebuilds
-its own `SearchFields` fulltext index without the dropped column.
-
-**Important:** If `FulltextSearchable` is enabled on your site, core also declares a
-fulltext index called `SearchFields` (on `Title, MenuTitle, Content, MetaDescription`).
-Do not drop that index. The SQL above removes only the `SearchContent` column, and
-`dev/build` will recreate core's index automatically.
+Dropping the column also removes it from any index that contains it. Sites without
+`FulltextSearchable` lose the old `SearchFields` index entirely. Sites with it keep core's
+`SearchFields` index on `Title, MenuTitle, Content, MetaDescription`, which `dev/build`
+already manages. Don't drop that index by hand.
 
 Skip any statement for a table that has no such column - for example a site that
 never ran an older version of this module. On a large site, altering `SiteTree_Versions`
@@ -84,8 +81,7 @@ can rebuild the whole table, so take a backup and run it in a maintenance window
 
 This removal breaks public API for anyone still using it: templates printing
 `$SearchContent`, ORM filters on that field, and calls to `seoContentFields()` all stop
-working. The module tracks no `CHANGELOG.md` past 6.x, so call this out in the release
-notes for whatever version it lands in.
+working.
 
 ## Maintainers
 
