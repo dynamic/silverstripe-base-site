@@ -71,9 +71,13 @@ ALTER TABLE SiteTree_Versions DROP INDEX SearchFields, DROP COLUMN SearchContent
 ```
 
 Skip any statement for a table that has no such column or index - for example a site that
-never ran an older version of this module. The removal is also a public API change on the
-8.x line: templates printing `$SearchContent`, ORM filters on that field and calls to
-`seoContentFields()` stop working, so this ships as a minor version, not a patch.
+never ran an older version of this module. On a large site, altering `SiteTree_Versions`
+can rebuild the whole table, so take a backup and run it in a maintenance window.
+
+This removal breaks public API for anyone still using it: templates printing
+`$SearchContent`, ORM filters on that field, and calls to `seoContentFields()` all stop
+working. The module tracks no `CHANGELOG.md` past 6.x, so call this out in the release
+notes for whatever version it lands in.
 
 ## Maintainers
 
