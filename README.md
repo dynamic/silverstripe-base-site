@@ -51,6 +51,30 @@ Base page types and extensions for SilverStripe websites
 - [Recommended configuration](docs/en/index.md)
 - [Social Links](docs/SocialLinks.md)
 
+## Upgrading
+
+### `SearchContent` is gone from `SeoExtension` (8.x)
+
+`SeoExtension` no longer declares a `SearchContent` field or a `SearchFields` fulltext
+index over it, and no longer hooks `onBeforeWrite()`. Sites that used SilverStripe's
+built-in fulltext search through that field need to move to their search service (most
+Dynamic sites already use AddSearch).
+
+`dev/build` neither drops columns nor removes indexes that a class stops declaring, so
+existing installs keep the stale, frozen data behind - including the storage cost of a large
+`HTMLText` column on every row of `SiteTree_Versions`. To drop it by hand after deploying:
+
+```sql
+ALTER TABLE SiteTree DROP INDEX SearchFields, DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Live DROP INDEX SearchFields, DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Versions DROP INDEX SearchFields, DROP COLUMN SearchContent;
+```
+
+Skip any statement for a table that has no such column or index - for example a site that
+never ran an older version of this module. The removal is also a public API change on the
+8.x line: templates printing `$SearchContent`, ORM filters on that field and calls to
+`seoContentFields()` stop working, so this ships as a minor version, not a patch.
+
 ## Maintainers
 
  *  [Dynamic](https://www.dynamicagency.com) (<dev@dynamicagency.com>)

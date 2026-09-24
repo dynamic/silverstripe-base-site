@@ -18,6 +18,12 @@ use SilverStripe\Dev\SapphireTest;
 class SeoExtensionTest extends SapphireTest
 {
     /**
+     * Every test in this class touches a DataObject, so ask for the temp database
+     * explicitly rather than relying on a connection-less escape path.
+     */
+    protected $usesDatabase = true;
+
+    /**
      * The extension must not declare a SearchContent DB field or a SearchFields fulltext
      * index of its own: both made every page save expensive for every downstream site.
      *
