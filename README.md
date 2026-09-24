@@ -53,7 +53,7 @@ Base page types and extensions for SilverStripe websites
 
 ## Upgrading
 
-### `SearchContent` is gone from `SeoExtension` (8.x)
+### `SearchContent` is gone from `SeoExtension`
 
 `SeoExtension` no longer declares a `SearchContent` field or a `SearchFields` fulltext
 index over it, and no longer hooks `onBeforeWrite()`. Sites that used SilverStripe's

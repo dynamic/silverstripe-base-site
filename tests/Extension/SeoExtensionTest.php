@@ -18,9 +18,9 @@ use SilverStripe\Dev\SapphireTest;
 class SeoExtensionTest extends SapphireTest
 {
     /**
-     * Set for consistency with the rest of this module's test classes, all of which get a
-     * temp database through their fixture file. Nothing in this class writes to the
-     * database: the two reflection tests need no connection, and neither does
+     * Set for consistency with the other PHPUnit test classes in this module, most of
+     * which get a temp database through their fixture file. Nothing in this class writes
+     * to the database: the two reflection tests need no connection, and neither does
      * MetaComponents(), which truncates through DBString::Plain().
      */
     protected $usesDatabase = true;
