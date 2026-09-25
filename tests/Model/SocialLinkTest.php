@@ -323,4 +323,27 @@ class SocialLinkTest extends SapphireTest
             $this->assertSame('zzz-configured-fallback', $object->getIconClass());
         });
     }
+
+    /**
+     * Tests that OpenInNew defaults to true on a freshly created SocialLink.
+     *
+     * SocialLink::$defaults uses DataObject::$defaults format (key => value pairs),
+     * so OpenInNew should be true by default. Explicitly setting OpenInNew to false
+     * must still result in false - the default only applies when no value is given.
+     */
+    public function testOpenInNewDefaultsToTrue(): void
+    {
+        // Freshly created record should have OpenInNew = true
+        $object = SocialLink::create();
+        $this->assertTrue($object->OpenInNew);
+
+        // The config defaults map must contain the key with value true
+        $defaults = SocialLink::config()->get('defaults');
+        $this->assertIsArray($defaults);
+        $this->assertTrue($defaults['OpenInNew'] ?? false, 'OpenInNew should be true in config defaults');
+
+        // Explicitly setting OpenInNew to false must still come out false
+        $explicitFalse = SocialLink::create(['OpenInNew' => false]);
+        $this->assertFalse($explicitFalse->OpenInNew);
+    }
 }
