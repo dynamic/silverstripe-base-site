@@ -34,7 +34,7 @@ Base page types and extensions for SilverStripe websites
 - **Header Image Support**: Add hero images to pages
 - **Elemental Integration**: Full page builder support with drag-and-drop elements
 - **Shared Drafts**: Collaborate with shared draft content management
-- **SEO Tools**: Google Sitemaps, robots.txt configuration, and a `SearchContent` fulltext index with configurable meta title/description length targets
+- **SEO Tools**: Google Sitemaps, robots.txt configuration, and configurable meta title/description length targets
 - **Site Branding & Navigation**: `SiteConfig`-level logo (with retina variant) or title/slogan toggle, footer navigation columns and link groups, social links, and utility links
 - **CMS Field Organization**: Reorders CMS fields for a more logical editing experience
 - **Better Navigation**: Enhanced CMS navigation via jonom/betternavigator
@@ -50,6 +50,38 @@ Base page types and extensions for SilverStripe websites
 
 - [Recommended configuration](docs/en/index.md)
 - [Social Links](docs/SocialLinks.md)
+
+## Upgrading
+
+### `SearchContent` is gone from `SeoExtension`
+
+`SeoExtension` no longer declares a `SearchContent` field or a `SearchFields` fulltext
+index over it, and no longer hooks `onBeforeWrite()`. Sites whose custom code queried
+`SearchContent` directly (templates printing `$SearchContent`, ORM filters on that field,
+or custom `MATCH` queries) will stop seeing that data after this change.
+
+`dev/build` neither drops columns nor removes indexes that a class stops declaring, so
+existing installs keep the stale, frozen data behind - including the storage cost of a large
+`HTMLText` column on every row of `SiteTree_Versions`. To drop it by hand after deploying:
+
+```sql
+ALTER TABLE SiteTree DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Live DROP COLUMN SearchContent;
+ALTER TABLE SiteTree_Versions DROP COLUMN SearchContent;
+```
+
+Dropping the column also removes it from any index that contains it. Sites without
+`FulltextSearchable` lose the old `SearchFields` index entirely. Sites with it keep core's
+`SearchFields` index on `Title, MenuTitle, Content, MetaDescription`, which `dev/build`
+already manages. Don't drop that index by hand.
+
+Skip any statement for a table that has no such column - for example a site that
+never ran an older version of this module. On a large site, altering `SiteTree_Versions`
+can rebuild the whole table, so take a backup and run it in a maintenance window.
+
+This removal breaks public API for anyone still using it: templates printing
+`$SearchContent`, ORM filters on that field, and calls to `seoContentFields()` all stop
+working.
 
 ## Maintainers
 

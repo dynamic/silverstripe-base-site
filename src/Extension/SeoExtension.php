@@ -13,28 +13,10 @@ use SilverStripe\Core\Extension;
  * Class SeoExtension
  *
  * @property SiteTree|SeoExtension $owner
- * @property string $SearchContent
  */
 class SeoExtension extends Extension
 {
     const META_CHAR_COUNT_MAX = 155;
-
-    /**
-     * @var array
-     */
-    private static $db = [
-        'SearchContent' => 'HTMLText',
-    ];
-
-    /**
-     * @var array
-     */
-    private static $indexes = [
-        'SearchFields' => [
-            'type' => 'fulltext',
-            'columns' => ['SearchContent'],
-        ],
-    ];
 
     /**
      * @param FieldList $fields
@@ -74,31 +56,6 @@ class SeoExtension extends Extension
     }
 
     /**
-     * @return array
-     */
-    public function seoContentFields()
-    {
-        return [
-            'SearchContent',
-        ];
-    }
-
-    /**
-     * @return string|void
-     */
-    protected function generateElementPreview()
-    {
-        if ($this->owner->hasMethod('getElementsForSearch')) {
-            return
-                ltrim(
-                    rtrim(
-                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
-                    )
-                );
-        }
-    }
-
-    /**
      * @return null
      *
      * @deprecated deprecated since version 4.0.9
@@ -119,19 +76,5 @@ class SeoExtension extends Extension
         }
 
         return null;
-    }
-
-    /**
-     *
-     */
-    public function onBeforeWrite(): void
-    {
-
-        // set SearchContent to output of blocks for search
-        if ($this->owner->hasMethod('getElementsForSearch')) {
-            $this->owner->SearchContent = $this->generateElementPreview();
-        } else {
-            $this->owner->SearchContent = $this->owner->Content;
-        }
     }
 }
