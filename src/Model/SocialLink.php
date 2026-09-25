@@ -57,10 +57,10 @@ class SocialLink extends ExternalLink implements PermissionProvider
     ];
 
     /**
-     * @var array|string[]
+     * @var array
      */
     private static array $defaults = [
-        'OpenInNew = true',
+        'OpenInNew' => true,
     ];
 
     /**
