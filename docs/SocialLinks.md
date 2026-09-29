@@ -147,9 +147,12 @@ Live record while the draft remains, `AssetControlExtension::onAfterDelete()` co
 deleted, and `addAssetsFromOtherStages()` immediately re-claims it from the draft record as
 `STATE_PROTECTED` - a protected claim removes an asset from the pending-deletion set - so
 `processManipulation()` protects rather than deletes it. The next save that publishes the logo moves
-it public again. Saving Site Settings never does this unpublishing itself: it only ever publishes
-these records, so the reversal happens to the `Image` record on its own, by whatever un-publishes it
-(`doUnpublish()`, or a project's own publish flow that removes the record from Live).
+it public again, and that reversal does not survive a Site Settings save on its own: an unpublished
+logo is a draft-only record, so the next save of Site Settings publishes it - and moves it public -
+again, with nothing in the log about the un-publish that came first. Saving Site Settings never does
+this unpublishing itself: it only ever publishes these records, so the reversal happens to the
+`Image` record on its own, by whatever un-publishes it (`doUnpublish()`, or a project's own publish
+flow that removes the record from Live).
 
 One deliberate exception: a command-line process with **no logged-in member** publishes without
 checking. Both halves matter - CLI `dev/build` and `dev/tasks/*` run that way, there is no identity
