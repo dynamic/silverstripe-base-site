@@ -127,6 +127,33 @@ permitted siblings, and the SiteConfig save itself still succeeds. If something 
 with a "Skipped publishing" line in the log, saving it again as a member with publish rights on
 that record will publish it.
 
+Publishing a logo also moves its file out of protected asset storage. `Logo` and `LogoRetina` are
+`Image` records and `Image` extends the `Versioned` `File`, so the auto-publish above writes their
+Live record through `Versioned::writeToStage()`, which assets' `AssetControlExtension` picks up in
+its `onBeforeWrite()` hook: `getRecordState()` reports a Live-stage record as public, and
+`processManipulation()` then hands the file to `publishAll()`, which moves it from the protected
+store to the public one. Before that first publish the file sits in the protected store, reachable
+only through `ProtectedFileController`; afterwards it is in the public store, so its URL serves to an
+anonymous visitor without that controller being consulted.
+
+Publishing and making public are two different questions, though. `getRecordState()` reports
+`STATE_PUBLIC` only when `Member::actAs(null, ...)` finds that an anonymous visitor passes
+`canView()` on the record; otherwise it reports `STATE_PROTECTED` even on the Live stage. So a logo
+whose own `CanViewType`, or the folder it inherits from, is restricted from anonymous visitors does
+go Live on the save and stays in the protected store all the same.
+
+The move is not one-way: un-publishing sends the file back. `Versioned::doUnpublish()` deletes the
+Live record while the draft remains, `AssetControlExtension::onAfterDelete()` collects the file as
+deleted, and `addAssetsFromOtherStages()` immediately re-claims it from the draft record as
+`STATE_PROTECTED` - a protected claim removes an asset from the pending-deletion set - so
+`processManipulation()` protects rather than deletes it. An un-publish does not stick, though: the
+logo is left as a draft-only record, so the next Site Settings save publishes it - subject to the
+same per-record publish check described under Permissions - and moves it public again, with nothing
+in the log mentioning the earlier un-publish. Saving Site Settings never performs that un-publishing
+itself: it only ever publishes these records, so the reversal happens to the `Image` record
+separately, by whatever un-publishes it (`doUnpublish()`, or a project's own publish flow that
+removes the record from Live).
+
 One deliberate exception: a command-line process with **no logged-in member** publishes without
 checking. Both halves matter - CLI `dev/build` and `dev/tasks/*` run that way, there is no identity
 to check against, and gating them would stop those contexts publishing anything. A CLI process that
