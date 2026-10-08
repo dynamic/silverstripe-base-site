@@ -5,5 +5,5 @@
         <div class="typography">$Content</div>
     <% end_if %>
 
-    $ElementalHomeArea
+    $ElementalHomePage
 </div>
