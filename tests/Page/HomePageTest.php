@@ -11,6 +11,18 @@ use SilverStripe\Forms\FieldList;
 class HomePageTest extends SapphireTest
 {
     /**
+     * HTML placed in the content block so its presence (or absence) in rendered
+     * markup can be asserted.
+     */
+    private const BLOCK_MARKER = 'elemental-home-page-marker';
+
+    /**
+     * Opening markup of DNADesign\Elemental\Layout\ElementHolder.ss, i.e. proof that a
+     * block was actually rendered as an element rather than that some string survived.
+     */
+    private const ELEMENT_WRAPPER = 'class="element ';
+
+    /**
      * @var string
      */
     protected static $fixture_file = '../fixtures.yml';
@@ -34,31 +46,47 @@ class HomePageTest extends SapphireTest
     {
         $this->logInAs('admin');
         $page = $this->objFromFixture(HomePage::class, 'default');
-        $page->ElementalHomePageID = $this->makeAreaWithContentBlock(
-            'elemental-home-page-marker'
-        )->ID;
+        $page->ElementalHomePageID = $this->makeAreaWithContentBlock(self::BLOCK_MARKER)->ID;
         $page->write();
 
         $output = $this->renderLayout($page);
 
         $this->assertStringContainsString(
-            'elemental-home-page-marker',
+            self::BLOCK_MARKER,
             $output,
             'The HomePage layout template renders blocks from the ElementalHomePage area'
+        );
+        $this->assertStringContainsString(
+            self::ELEMENT_WRAPPER,
+            $output,
+            'The block is rendered through elemental\'s element wrapper, not just as loose text'
         );
     }
 
     /**
-     * An empty `ElementalHomePage` area must render cleanly rather than error.
+     * An empty `ElementalHomePage` area must render the page cleanly, with no element
+     * wrapper markup. The control render above the negative assertion keeps that
+     * assertion falsifiable: the same page, rendered with one block, does emit the
+     * wrapper, so its absence below is a statement about the empty area.
      */
     public function testTemplateRendersEmptyElementalHomePageArea(): void
     {
         $this->logInAs('admin');
         $page = $this->objFromFixture(HomePage::class, 'default');
-        $area = ElementalArea::create();
-        $area->OwnerClassName = HomePage::class;
-        $area->write();
-        $page->ElementalHomePageID = $area->ID;
+
+        // Control: the same page with one block must emit the element wrapper, so the
+        // negative assertion below is reachable rather than vacuous.
+        $page->ElementalHomePageID = $this->makeAreaWithContentBlock(self::BLOCK_MARKER)->ID;
+        $page->write();
+        $control = $this->renderLayout($page);
+        $this->assertStringContainsString(
+            self::ELEMENT_WRAPPER,
+            $control,
+            'Precondition: a HomePage with a block renders an element wrapper'
+        );
+        $this->assertStringContainsString(self::BLOCK_MARKER, $control);
+
+        $page->ElementalHomePageID = $this->makeEmptyArea()->ID;
         $page->write();
 
         $output = $this->renderLayout($page);
@@ -69,9 +97,14 @@ class HomePageTest extends SapphireTest
             'The HomePage layout template still renders the page title with an empty block area'
         );
         $this->assertStringNotContainsString(
-            'elemental-home-page-marker',
+            self::ELEMENT_WRAPPER,
             $output,
-            'An empty ElementalHomePage area renders no block markup'
+            'An empty ElementalHomePage area renders no element markup'
+        );
+        $this->assertStringNotContainsString(
+            self::BLOCK_MARKER,
+            $output,
+            'Switching to an empty area renders none of the previous area\'s blocks'
         );
     }
 
@@ -94,9 +127,7 @@ class HomePageTest extends SapphireTest
      */
     private function makeAreaWithContentBlock(string $html): ElementalArea
     {
-        $area = ElementalArea::create();
-        $area->OwnerClassName = HomePage::class;
-        $area->write();
+        $area = $this->makeEmptyArea();
 
         $block = ElementContent::create();
         $block->BlockTitle = 'Issue 219 block';
@@ -104,6 +135,20 @@ class HomePageTest extends SapphireTest
         $block->ParentID = $area->ID;
         $block->Sort = 1;
         $block->write();
+
+        return $area;
+    }
+
+    /**
+     * Build a saved, empty elemental area owned by HomePage.
+     *
+     * @return ElementalArea
+     */
+    private function makeEmptyArea(): ElementalArea
+    {
+        $area = ElementalArea::create();
+        $area->OwnerClassName = HomePage::class;
+        $area->write();
 
         return $area;
     }
