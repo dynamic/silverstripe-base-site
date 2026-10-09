@@ -53,8 +53,9 @@ class HomePage extends \Page
 
     /**
      * Without this the copy keeps the original's `ElementalHomePageID`, so both pages
-     * render and edit the same block area. Merges with the `ElementalPageExtension`
-     * entry for `ElementalArea`; `ElementalArea` cascade duplicates its own elements.
+     * render and edit the same block area. `ElementalArea` cascade duplicates its own
+     * elements, so the copy gets its own element rows too. Where a project applies
+     * `ElementalPageExtension`, config merges its `ElementalArea` entry with this one.
      *
      * @var array
      */

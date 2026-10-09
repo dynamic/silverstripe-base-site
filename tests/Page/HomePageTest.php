@@ -128,7 +128,6 @@ class HomePageTest extends SapphireTest
         $this->assertSame(1, $area->Elements()->Count());
 
         $copy = $page->duplicate();
-        $copy->write();
 
         $copyAreaID = (int)$copy->ElementalHomePageID;
         $this->assertGreaterThan(
