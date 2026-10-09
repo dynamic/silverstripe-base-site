@@ -14,6 +14,7 @@ use SilverStripe\LinkField\Form\MultiLinkField;
 use SilverStripe\LinkField\Models\Link;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\PolymorphicHasManyList;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\Versioned\GridFieldArchiveAction;
 use Symbiote\GridFieldExtensions\GridFieldAddExistingSearchButton;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
@@ -220,6 +221,28 @@ class NavigationGroup extends DataObject
     protected function shouldPublishOwnedRecordsOnSkippedWrite(): bool
     {
         return $this->beforeWriteCompleted;
+    }
+
+    /**
+     * Archive this group's owned NavigationLinks before the group goes, so deleting a footer group
+     * does not leave Link rows whose OwnerID points at a record that no longer exists - see
+     * dynamic/silverstripe-base-site#210. doArchive() rather than delete(): Link is Versioned, and a
+     * plain delete only removes the stage being read, which left the Live row behind (a link the
+     * trait above has already published has no path back out of the CMS). Links that are not
+     * Versioned are left to the ordinary delete path. The set is copied into an array first, so
+     * archiving each record does not mutate the list the loop is reading.
+     *
+     * @return void
+     */
+    protected function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+
+        foreach ($this->NavigationLinks()->toArray() as $link) {
+            if ($link->hasExtension(Versioned::class)) {
+                $link->doArchive();
+            }
+        }
     }
 
     /**
