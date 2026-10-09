@@ -27,8 +27,9 @@ class SearchPageControllerTest extends SapphireTest
 
     /**
      * With nothing supplying SearchForm() there is nothing to delegate to: the public
-     * method must return null so the template renders an empty form slot rather
-     * than throwing.
+     * method must return null rather than throwing. SearchPage.ss still prints its
+     * <form> markup around a null form, which is the follow-up filed separately; what
+     * this case pins is that the request no longer fatals.
      */
     public function testSearchFormWithoutAnyProviderReturnsNull(): void
     {
