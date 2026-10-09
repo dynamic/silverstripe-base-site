@@ -1110,6 +1110,89 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
+     * The same archive, reached from the other reading stage: a delete() issued by a task or a
+     * cleanup script runs with the reading mode on Live, where looking the owned links up in Draft
+     * would miss every draft-only row and leave it orphaned. The hook reads both stages, so the
+     * ambient stage must not decide the outcome.
+     *
+     * @return void
+     */
+    public function testDeletingAGroupFromTheLiveReadingStageArchivesItsDraftOnlyLinks(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+
+        $publishedLink = $this->createDraftNavigationLink($group, ['LinkText' => 'Published']);
+        $group->Title = 'Renamed Group';
+        $group->write();
+        $this->assertTrue($publishedLink->isPublished(), 'Precondition: the first link is live.');
+
+        $draftLink = $this->createDraftNavigationLink($group, [
+            'LinkText' => 'Draft only',
+            'ExternalUrl' => 'https://example.test/draft-only',
+        ]);
+        $this->assertFalse($draftLink->isPublished(), 'Precondition: the second link is draft only.');
+
+        $publishedID = $publishedLink->ID;
+        $draftID = $draftLink->ID;
+
+        Versioned::withVersionedMode(function () use ($group, $publishedID, $draftID): void {
+            Versioned::set_stage(Versioned::LIVE);
+
+            $group->delete();
+
+            foreach (['published link' => $publishedID, 'draft only link' => $draftID] as $label => $id) {
+                foreach ([Versioned::DRAFT, Versioned::LIVE] as $stage) {
+                    $this->assertNull(
+                        Versioned::get_by_stage(Link::class, $stage)->byID($id),
+                        'The ' . $label . ' must be gone from ' . $stage . ' when the group is'
+                            . ' deleted with the reading mode on Live.'
+                    );
+                }
+            }
+        });
+    }
+
+    /**
+     * A link that exists only on Live - its Draft row removed after publishing - is still owned by
+     * the group, so deleting the group has to clear it. Reading Draft alone never sees this row.
+     *
+     * @return void
+     */
+    public function testDeletingAGroupArchivesALinkThatExistsOnlyOnLive(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+        $link = $this->createDraftNavigationLink($group);
+
+        $group->Title = 'Renamed Group';
+        $group->write();
+        $this->assertTrue($link->isPublished(), 'Precondition: the link is live.');
+
+        $linkID = $link->ID;
+        $link->deleteFromStage(Versioned::DRAFT);
+        $this->assertNull(
+            Versioned::get_by_stage(Link::class, Versioned::DRAFT)->byID($linkID),
+            'Precondition: the link now exists on Live only.'
+        );
+        $this->assertNotNull(
+            Versioned::get_by_stage(Link::class, Versioned::LIVE)->byID($linkID),
+            'Precondition: the link now exists on Live only.'
+        );
+
+        Versioned::withVersionedMode(function () use ($group, $linkID): void {
+            Versioned::set_stage(Versioned::DRAFT);
+
+            $group->delete();
+
+            foreach ([Versioned::DRAFT, Versioned::LIVE] as $stage) {
+                $this->assertNull(
+                    Versioned::get_by_stage(Link::class, $stage)->byID($linkID),
+                    'The live-only link must be gone from ' . $stage . ' after the group is deleted.'
+                );
+            }
+        });
+    }
+
+    /**
      * The empty case: a group that owns no links at all must delete without error, and must not
      * touch another group's links while doing so.
      *
