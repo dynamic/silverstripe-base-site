@@ -109,6 +109,75 @@ class HomePageTest extends SapphireTest
     }
 
     /**
+     * Duplicating a HomePage must give the copy its own `ElementalHomePage` area with its
+     * own block rows (issue #228: without `$cascade_duplicates` the copy kept the
+     * original's `ElementalHomePageID`, so editing blocks on either page changed the
+     * other one).
+     */
+    public function testDuplicateGetsItsOwnElementalHomePageArea(): void
+    {
+        $this->logInAs('admin');
+        $page = $this->objFromFixture(HomePage::class, 'default');
+        $area = $this->makeAreaWithContentBlock(self::BLOCK_MARKER);
+        $page->ElementalHomePageID = $area->ID;
+        $page->write();
+
+        $originalAreaID = (int)$page->ElementalHomePageID;
+        $originalBlockID = (int)$area->Elements()->First()->ID;
+        $this->assertGreaterThan(0, $originalAreaID);
+        $this->assertSame(1, $area->Elements()->Count());
+
+        $copy = $page->duplicate();
+
+        $copyAreaID = (int)$copy->ElementalHomePageID;
+        $this->assertGreaterThan(
+            0,
+            $copyAreaID,
+            'The duplicated HomePage has an ElementalHomePage area'
+        );
+        $this->assertNotSame(
+            $originalAreaID,
+            $copyAreaID,
+            'The duplicated HomePage has its own ElementalHomePage area, not the original\'s'
+        );
+
+        $copyArea = ElementalArea::get()->byID($copyAreaID);
+        $this->assertNotNull($copyArea);
+        $this->assertSame(
+            1,
+            $copyArea->Elements()->Count(),
+            'The copy\'s area holds its own copy of the block'
+        );
+        $this->assertNotSame(
+            $originalBlockID,
+            (int)$copyArea->Elements()->First()->ID,
+            'The copy\'s block is its own row, not the original block row'
+        );
+
+        // The original must be left completely untouched by the duplicate.
+        $this->assertSame(
+            $originalAreaID,
+            (int)HomePage::get()->byID($page->ID)->ElementalHomePageID,
+            'The original keeps pointing at its own area'
+        );
+        $this->assertSame(
+            1,
+            ElementalArea::get()->byID($originalAreaID)->Elements()->Count(),
+            'The original\'s area still holds exactly its own block'
+        );
+        $this->assertSame(
+            $originalBlockID,
+            (int)ElementalArea::get()->byID($originalAreaID)->Elements()->First()->ID,
+            'The original block row is still in place'
+        );
+        $this->assertStringContainsString(
+            self::BLOCK_MARKER,
+            (string)$copyArea->Elements()->First()->obj('HTML')->getValue(),
+            'The copied block carries the original block content'
+        );
+    }
+
+    /**
      * Render the page through the module's own layout template.
      *
      * @param HomePage $page
