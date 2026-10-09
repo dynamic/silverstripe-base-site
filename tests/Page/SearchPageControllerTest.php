@@ -11,10 +11,11 @@ use SilverStripe\CMS\Search\SearchForm;
 use SilverStripe\Dev\SapphireTest;
 
 /**
- * Regression coverage for the SearchForm() parent call on sites that never apply
- * SilverStripe\CMS\Search\ContentControllerSearchExtension
- * (dynamic/silverstripe-base-site#230): the call reached CustomMethods::__call() and
- * threw BadMethodCallException, so <searchpage>/SearchForm was a 500.
+ * Regression coverage for the SearchForm() parent call on sites that never supply a
+ * search form (dynamic/silverstripe-base-site#230): the call reached
+ * CustomMethods::__call() and threw BadMethodCallException, so <searchpage>/SearchForm
+ * was a 500. Also pins the behaviour that must survive that guard - any provider of
+ * SearchForm(), not just core's ContentControllerSearchExtension, still gets through.
  */
 class SearchPageControllerTest extends SapphireTest
 {
@@ -25,21 +26,26 @@ class SearchPageControllerTest extends SapphireTest
     protected $usesDatabase = true;
 
     /**
-     * Without the extension there is no SearchForm to delegate to: the public method
-     * must return null so the template renders an empty form slot rather than throwing.
+     * With nothing supplying SearchForm() there is nothing to delegate to: the public
+     * method must return null so the template renders an empty form slot rather
+     * than throwing.
      */
-    public function testSearchFormWithoutExtensionReturnsNull(): void
+    public function testSearchFormWithoutAnyProviderReturnsNull(): void
     {
         $this->assertFalse(
             SearchPageController::has_extension(ContentControllerSearchExtension::class),
             'Precondition: this module does not apply ContentControllerSearchExtension itself'
+        );
+        $this->assertFalse(
+            method_exists(PageController::class, 'SearchForm'),
+            'Precondition: the test app\'s PageController does not define SearchForm() itself'
         );
 
         $controller = SearchPageController::create(SearchPage::create());
 
         $this->assertNull(
             $controller->SearchForm(),
-            'SearchForm() returns null instead of throwing when no search extension is applied'
+            'SearchForm() returns null instead of throwing when nothing supplies the form'
         );
     }
 
@@ -47,7 +53,7 @@ class SearchPageControllerTest extends SapphireTest
      * The extension applied to ContentController - what FulltextSearchable::enable()
      * does - must still produce the form through the inherited parent call.
      */
-    public function testSearchFormWithExtensionOnContentController(): void
+    public function testSearchFormWithCoreExtensionOnContentController(): void
     {
         ContentController::add_extension(ContentControllerSearchExtension::class);
 
@@ -67,9 +73,10 @@ class SearchPageControllerTest extends SapphireTest
 
     /**
      * The extension applied to the project's PageController must be seen too, which is
-     * why the guard calls static::has_extension() rather than ContentController::has_extension().
+     * why the guard asks its own object whether a custom method answers the call rather
+     * than asking ContentController whether it has an extension.
      */
-    public function testSearchFormWithExtensionOnPageController(): void
+    public function testSearchFormWithCoreExtensionOnPageController(): void
     {
         PageController::add_extension(ContentControllerSearchExtension::class);
 
@@ -89,5 +96,27 @@ class SearchPageControllerTest extends SapphireTest
             SearchPageController::has_extension(ContentControllerSearchExtension::class),
             'Precondition for later tests: the added extension did not leak'
         );
+    }
+
+    /**
+     * A project that supplies SearchForm() some other way - its own search extension,
+     * which is what the pre-guard parent call supported - must keep working. Naming
+     * core's extension in the guard would silently take the form away from those sites.
+     */
+    public function testSearchFormWithProjectSuppliedExtension(): void
+    {
+        PageController::add_extension(SearchPageControllerTestProjectSearchExtension::class);
+
+        try {
+            $controller = SearchPageController::create(SearchPage::create());
+
+            $this->assertInstanceOf(
+                SearchForm::class,
+                $controller->SearchForm(),
+                'SearchForm() delegates to an extension other than ContentControllerSearchExtension'
+            );
+        } finally {
+            PageController::remove_extension(SearchPageControllerTestProjectSearchExtension::class);
+        }
     }
 }

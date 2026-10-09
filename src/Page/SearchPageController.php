@@ -2,7 +2,6 @@
 
 namespace Dynamic\Base\Page;
 
-use SilverStripe\CMS\Search\ContentControllerSearchExtension;
 use SilverStripe\CMS\Search\SearchForm;
 
 /**
@@ -22,17 +21,19 @@ class SearchPageController extends \PageController
     );
 
     /**
-     * The form itself comes from ContentControllerSearchExtension, which a project
-     * applies through its own configuration (usually FulltextSearchable::enable()).
+     * The form itself is supplied by whatever the parent chain offers: core's
+     * ContentControllerSearchExtension (applied by FulltextSearchable::enable()), a
+     * project's own search extension, or a SearchForm() defined directly on the
+     * project's PageController.
      *
-     * @return SearchForm|null null when no search extension is applied, instead of a
-     * fatal error from the parent call reaching CustomMethods::__call().
+     * @return SearchForm|null null when nothing answers the parent call, instead of a
+     * fatal error from that call reaching CustomMethods::__call().
      */
     public function SearchForm()
     {
-        // has_extension() reads inherited configuration, so this covers the extension
-        // applied to either ContentController or PageController.
-        if (!static::has_extension(ContentControllerSearchExtension::class)) {
+        // hasCustomMethod() covers extensions applied anywhere in the inheritance
+        // chain, including the PageController a project owns.
+        if (!method_exists(parent::class, 'SearchForm') && !$this->hasCustomMethod('SearchForm')) {
             return null;
         }
 
