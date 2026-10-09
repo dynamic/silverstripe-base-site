@@ -52,6 +52,17 @@ class HomePage extends \Page
     ];
 
     /**
+     * Without this the copy keeps the original's `ElementalHomePageID`, so both pages
+     * render and edit the same block area. Merges with the `ElementalPageExtension`
+     * entry for `ElementalArea`; `ElementalArea` cascade duplicates its own elements.
+     *
+     * @var array
+     */
+    private static $cascade_duplicates = [
+        'ElementalHomePage',
+    ];
+
+    /**
      * @var array
      */
     private static $defaults = [
