@@ -17,6 +17,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\LinkField\Models\EmailLink;
 use SilverStripe\LinkField\Models\ExternalLink;
 use SilverStripe\LinkField\Models\FileLink;
+use SilverStripe\LinkField\Models\Link;
 use SilverStripe\LinkField\Models\PhoneLink;
 use SilverStripe\LinkField\Models\SiteTreeLink;
 use SilverStripe\ORM\DataObject;
@@ -1057,6 +1058,77 @@ class NavigationGroupTest extends SapphireTest
             $file->isPublished(),
             'The cascade must not publish the File - docs/en/index.md documents that the editor'
                 . ' has to publish it, and dynamic/silverstripe-base-site#213 tracks closing it.'
+        );
+    }
+
+    /**
+     * Regression test for dynamic/silverstripe-base-site#210: deleting a NavigationGroup used to
+     * leave its owned Link records behind in both stages with a dangling OwnerID. Since 8.1.0
+     * PublishesOwnedRecords takes those links live, so the surviving row is a Live one no CMS
+     * screen can reach. Deleting the group now archives them, which clears both stages - and it
+     * has to archive rather than delete, because a plain delete only removes the read stage.
+     *
+     * @return void
+     */
+    public function testDeletingAGroupArchivesItsPublishedAndDraftLinks(): void
+    {
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+
+        // Publish one link by saving the group, then add a second one that stays in draft.
+        $publishedLink = $this->createDraftNavigationLink($group, ['LinkText' => 'Published']);
+        $group->Title = 'Renamed Group';
+        $group->write();
+        $this->assertTrue($publishedLink->isPublished(), 'Precondition: the first link is live.');
+
+        $draftLink = $this->createDraftNavigationLink($group, [
+            'LinkText' => 'Draft only',
+            'ExternalUrl' => 'https://example.test/draft-only',
+        ]);
+        $this->assertFalse($draftLink->isPublished(), 'Precondition: the second link is draft only.');
+
+        $publishedID = $publishedLink->ID;
+        $draftID = $draftLink->ID;
+
+        // The delete a CMS user performs happens with the reading stage on Draft, which is the
+        // stage a plain delete would have cleared - the Live row is the one at issue.
+        Versioned::withVersionedMode(function () use ($group, $publishedID, $draftID): void {
+            Versioned::set_stage(Versioned::DRAFT);
+
+            $group->delete();
+
+            foreach (['published link' => $publishedID, 'draft link' => $draftID] as $label => $id) {
+                $this->assertNull(
+                    Versioned::get_by_stage(Link::class, Versioned::LIVE)->byID($id),
+                    'The ' . $label . ' must not survive its owning group on Live.'
+                );
+                $this->assertNull(
+                    Versioned::get_by_stage(Link::class, Versioned::DRAFT)->byID($id),
+                    'The ' . $label . ' must not survive its owning group on Draft.'
+                );
+            }
+        });
+    }
+
+    /**
+     * The empty case: a group that owns no links at all must delete without error, and must not
+     * touch another group's links while doing so.
+     *
+     * @return void
+     */
+    public function testDeletingAGroupWithNoLinksSucceedsAndLeavesOtherGroupsLinksAlone(): void
+    {
+        $group = NavigationGroup::create(['Title' => 'Empty Group']);
+        $group->write();
+
+        $otherGroup = $this->objFromFixture(NavigationGroup::class, 'one');
+        $otherLink = $this->createDraftNavigationLink($otherGroup);
+
+        $group->delete();
+
+        $this->assertNull(DataObject::get_by_id(NavigationGroup::class, $group->ID));
+        $this->assertNotNull(
+            DataObject::get_by_id(ExternalLink::class, $otherLink->ID),
+            'A link owned by a different group must not be archived by this delete.'
         );
     }
 }
