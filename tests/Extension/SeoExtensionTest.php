@@ -4,26 +4,36 @@ namespace Dynamic\Base\Test\Extension;
 
 use Dynamic\Base\Extension\SeoExtension;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionProperty;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\SapphireTest;
 
 /**
  * Class SeoExtensionTest.
  *
  * Covers the removal of the SearchContent fulltext field, its index and the
- * onBeforeWrite hook that populated it (issue #168), and guards the meta helpers
- * that intentionally stay on the class.
+ * onBeforeWrite hook that populated it (issue #168), the deprecated
+ * seoContentFields()/generateElementPreview() stubs kept until 9.0.0 (issue #221),
+ * and guards the meta helpers that intentionally stay on the class.
  */
 class SeoExtensionTest extends SapphireTest
 {
     /**
      * Set for consistency with the other PHPUnit test classes in this module, most of
      * which get a temp database through their fixture file. Nothing in this class writes
-     * to the database: the two reflection tests need no connection, and neither does
-     * MetaComponents(), which truncates through DBString::Plain().
+     * to the database: the reflection and deprecation tests need no connection, and
+     * neither does MetaComponents(), which truncates through DBString::Plain().
      */
     protected $usesDatabase = true;
+
+    /**
+     * The recipe applies SeoExtension to SiteTree; this module does not, so the test does.
+     */
+    protected static $required_extensions = [
+        SiteTree::class => [SeoExtension::class],
+    ];
 
     /**
      * The extension must not declare a SearchContent DB field or a SearchFields fulltext
@@ -49,10 +59,11 @@ class SeoExtensionTest extends SapphireTest
     }
 
     /**
-     * The write hooks that populated SearchContent must be gone from the class itself,
-     * not just emptied out - otherwise every page save still calls into them.
+     * The write hook that populated SearchContent must be gone from the class itself,
+     * not just emptied out - otherwise every page save still calls into it. The two
+     * helpers stay callable as deprecated stubs until 9.0.0 (issue #221).
      */
-    public function testSearchContentWriteHooksAreRemoved(): void
+    public function testWriteHookIsRemovedAndHelpersAreDeprecatedStubs(): void
     {
         $reflection = new ReflectionClass(SeoExtension::class);
 
@@ -60,14 +71,96 @@ class SeoExtensionTest extends SapphireTest
             $reflection->hasMethod('onBeforeWrite'),
             'SeoExtension must not define an onBeforeWrite hook'
         );
-        $this->assertFalse(
+        $this->assertTrue(
             $reflection->hasMethod('seoContentFields'),
-            'SeoExtension must not declare seoContentFields()'
+            'SeoExtension must keep seoContentFields() as a deprecated stub until 9.0.0'
         );
-        $this->assertFalse(
+        $this->assertTrue(
             $reflection->hasMethod('generateElementPreview'),
-            'SeoExtension must not declare generateElementPreview()'
+            'SeoExtension must keep generateElementPreview() as a deprecated stub until 9.0.0'
         );
+    }
+
+    /**
+     * seoContentFields() is a no-op that a site reaches through the owner, so PHPStan
+     * cannot flag its callers: the runtime notice is the only signal, and it must print
+     * once a site turns deprecations on.
+     */
+    public function testSeoContentFieldsIsADeprecatedNoOp(): void
+    {
+        $page = SiteTree::create();
+
+        // Call through the owner, as a site does. SS6 dispatches extension methods through
+        // a ModelData closure frame, which Deprecation does not count as supported code, so
+        // this path prints the notice with or without SCOPE_GLOBAL; the stub uses
+        // SCOPE_GLOBAL anyway, per the platform deprecation rule.
+        $result = null;
+        $notices = $this->captureDeprecationNotices(function () use ($page, &$result): void {
+            $result = $page->seoContentFields();
+        });
+
+        $this->assertSame([], $result);
+        $this->assertStringContainsString('seoContentFields', implode("\n", $notices));
+    }
+
+    /**
+     * generateElementPreview() is protected API, so it is restored with a notice too.
+     */
+    public function testGenerateElementPreviewRaisesDeprecationNotice(): void
+    {
+        $extension = new SeoExtension();
+        $extension->setOwner(new SiteTree());
+        $method = (new ReflectionMethod(SeoExtension::class, 'generateElementPreview'));
+
+        $notices = $this->captureDeprecationNotices(function () use ($extension, $method): void {
+            $method->invoke($extension);
+        });
+
+        $this->assertStringContainsString('generateElementPreview', implode("\n", $notices));
+    }
+
+    /**
+     * Run $callback with deprecations on and return the E_USER_DEPRECATED messages it
+     * raised. Deprecation::notice() buffers until outputNotices(), so that is flushed
+     * inside the handler's lifetime.
+     *
+     * @return list<string>
+     */
+    private function captureDeprecationNotices(callable $callback): array
+    {
+        $wasEnabled = Deprecation::isEnabled();
+        Deprecation::enable();
+        if (!Deprecation::isEnabled()) {
+            $this->markTestSkipped(
+                'SS_DEPRECATION_ENABLED is set to a falsy value here, which overrides '
+                . 'Deprecation::enable(), so the deprecation notice cannot be observed.'
+            );
+        }
+
+        // Flush anything earlier tests buffered through the normal handler first, and only
+        // capture this extension's own messages, so other deprecations are not swallowed.
+        Deprecation::outputNotices();
+
+        $notices = [];
+        set_error_handler(function (int $errno, string $message) use (&$notices): bool {
+            if (!str_contains($message, 'SeoExtension::')) {
+                return false;
+            }
+            $notices[] = $message;
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $callback();
+            Deprecation::outputNotices();
+        } finally {
+            restore_error_handler();
+            if (!$wasEnabled) {
+                Deprecation::disable();
+            }
+        }
+
+        return $notices;
     }
 
     /**
