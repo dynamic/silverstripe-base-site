@@ -14,18 +14,26 @@ use SilverStripe\Dev\SapphireTest;
  * Class SeoExtensionTest.
  *
  * Covers the removal of the SearchContent fulltext field, its index and the
- * onBeforeWrite hook that populated it (issue #168), and guards the meta helpers
- * that intentionally stay on the class.
+ * onBeforeWrite hook that populated it (issue #168), the deprecated
+ * seoContentFields()/generateElementPreview() stubs kept until 9.0.0 (issue #221),
+ * and guards the meta helpers that intentionally stay on the class.
  */
 class SeoExtensionTest extends SapphireTest
 {
     /**
      * Set for consistency with the other PHPUnit test classes in this module, most of
      * which get a temp database through their fixture file. Nothing in this class writes
-     * to the database: the two reflection tests need no connection, and neither does
-     * MetaComponents(), which truncates through DBString::Plain().
+     * to the database: the reflection and deprecation tests need no connection, and
+     * neither does MetaComponents(), which truncates through DBString::Plain().
      */
     protected $usesDatabase = true;
+
+    /**
+     * The recipe applies SeoExtension to SiteTree; this module does not, so the test does.
+     */
+    protected static $required_extensions = [
+        SiteTree::class => [SeoExtension::class],
+    ];
 
     /**
      * The extension must not declare a SearchContent DB field or a SearchFields fulltext
@@ -55,7 +63,7 @@ class SeoExtensionTest extends SapphireTest
      * not just emptied out - otherwise every page save still calls into it. The two
      * helpers stay callable as deprecated stubs until 9.0.0 (issue #221).
      */
-    public function testSearchContentWriteHooksAreRemoved(): void
+    public function testWriteHookIsRemovedAndHelpersAreDeprecatedStubs(): void
     {
         $reflection = new ReflectionClass(SeoExtension::class);
 
@@ -80,12 +88,15 @@ class SeoExtensionTest extends SapphireTest
      */
     public function testSeoContentFieldsIsADeprecatedNoOp(): void
     {
-        $extension = new SeoExtension();
-        $extension->setOwner(new SiteTree());
+        $page = SiteTree::create();
 
+        // Call through the owner, as a site does. SS6 dispatches extension methods through
+        // a ModelData closure frame, which Deprecation does not count as supported code, so
+        // this path prints the notice with or without SCOPE_GLOBAL; the stub uses
+        // SCOPE_GLOBAL anyway, per the platform deprecation rule.
         $result = null;
-        $notices = $this->captureDeprecationNotices(function () use ($extension, &$result): void {
-            $result = $extension->seoContentFields();
+        $notices = $this->captureDeprecationNotices(function () use ($page, &$result): void {
+            $result = $page->seoContentFields();
         });
 
         $this->assertSame([], $result);
@@ -126,8 +137,15 @@ class SeoExtensionTest extends SapphireTest
             );
         }
 
+        // Flush anything earlier tests buffered through the normal handler first, and only
+        // capture this extension's own messages, so other deprecations are not swallowed.
+        Deprecation::outputNotices();
+
         $notices = [];
         set_error_handler(function (int $errno, string $message) use (&$notices): bool {
+            if (!str_contains($message, 'SeoExtension::')) {
+                return false;
+            }
             $notices[] = $message;
             return true;
         }, E_USER_DEPRECATED);
