@@ -8,6 +8,7 @@ use Innoweb\SocialMeta\Extensions\SiteTreeExtension;
 use SilverStripe\CMS\Model\VirtualPage;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Core\Extension;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Class SeoExtension
@@ -52,6 +53,49 @@ class SeoExtension extends Extension
                     'content' => $this->owner->dbObject('MetaDescription')->LimitCharacters($metaLimit),
                 ],
             ];
+        }
+    }
+
+    /**
+     * The SearchContent field this listed was removed in 8.1.0, so this returns an empty list.
+     *
+     * @return array
+     *
+     * @deprecated 8.1.0 Will be removed without equivalent functionality to replace it in a future major release.
+     */
+    public function seoContentFields()
+    {
+        Deprecation::notice(
+            '8.1.0',
+            'SeoExtension::seoContentFields() is deprecated and returns an empty list: the SearchContent field was'
+            . ' removed. It will be removed without equivalent functionality in a future major release.',
+            Deprecation::SCOPE_GLOBAL
+        );
+
+        return [];
+    }
+
+    /**
+     * @return string|void
+     *
+     * @deprecated 8.1.0 Will be removed without equivalent functionality to replace it in a future major release.
+     */
+    protected function generateElementPreview()
+    {
+        Deprecation::notice(
+            '8.1.0',
+            'SeoExtension::generateElementPreview() is deprecated. It will be removed without equivalent'
+            . ' functionality in a future major release.',
+            Deprecation::SCOPE_GLOBAL
+        );
+
+        if ($this->owner->hasMethod('getElementsForSearch')) {
+            return
+                ltrim(
+                    rtrim(
+                        preg_replace("/\r|\n|\s+/", " ", $this->owner->getElementsForSearch())
+                    )
+                );
         }
     }
 
