@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `SocialLink` class provides a comprehensive social media link management system for SilverStripe sites. It supports 17 popular social media platforms with configurable Bootstrap Icons integration.
+The `SocialLink` class provides a comprehensive social media link management system for SilverStripe sites. The platforms it supports are the ones listed under [Supported Social Channels](#supported-social-channels) below; that list is configuration, so it is not repeated here as a count. Icons for every channel are configurable Bootstrap Icons classes.
 
 ## Features
 
@@ -176,7 +176,7 @@ instead of inferring them from the command line, and that default flip is itself
 would stop `dev/build` and BuildTasks publishing at all, which is what #174 fixed.
 
 The editor who triggered a denial sees nothing in the CMS: the only output is the "Skipped publishing"
-warning in the log. Surfacing the skip to that user in the CMS is tracked separately as issue 197.
+warning in the log.
 
 ### In Templates
 ```html
@@ -342,9 +342,15 @@ social links and the logo while every one of those changes stays in draft.
 
 ## CSS Classes
 
-Each social link receives CSS classes for styling:
-- Base class: `social-icon`
-- Channel-specific class: `social-icon-{channel}` (e.g., `social-icon-facebook`)
+base-site ships no `SocialLink` template: the module defines the model, the channel config and the
+icon class, and emits no markup of its own, so it adds no CSS class to a rendered social link.
+
+The class names documented here come from the template example in [In Templates](#in-templates)
+above - a pattern a consuming theme writes, not something the module generates. The Essentials
+theme's `Includes/Footer.ss` uses that same pattern (`class="social-icon {$SocialChannel.LowerCase}"`),
+so a Facebook link renders the two classes `social-icon facebook` there:
+- `social-icon` - the class shared by every link, and the one the Essentials theme's SCSS styles
+- the lowercased channel key as a second class (`facebook`, `mastodon`, ...) - for per-channel styling, opt-in in your own template
 
 ## Bootstrap Icons Requirement
 
