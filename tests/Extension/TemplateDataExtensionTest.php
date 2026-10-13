@@ -7,6 +7,8 @@ use Dynamic\Base\Model\SocialLink;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use ReflectionProperty;
+use SilverStripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Environment;
@@ -47,6 +49,35 @@ class TemplateDataExtensionTest extends SapphireTest
         ThrowingCanEditSocialLinkStub::class,
         TemplateDataExtensionTestValidationGateOwnerStub::class,
     ];
+
+    /**
+     * A real 1x1 PNG, so File::setFromString() stores bytes the asset store can hash and the
+     * FileHash column ends up populated. Used by the two #195 pin tests, which compare hashes
+     * between stages and so need a working backend rather than a content-less File record.
+     */
+    private const PNG_RED = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1Pe'
+        . 'AAAADElEQVR4nGPgktMAAACGAFG1S+AKAAAAAElFTkSuQmCC';
+
+    /**
+     * A second real 1x1 PNG, differing from PNG_RED in content only, i.e. in FileHash.
+     */
+    private const PNG_BLUE = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1Pe'
+        . 'AAAADElEQVR4nGM4IacBAALAAQ/aQIG5AAAAAElFTkSuQmCC';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // The #195 pin tests below store real content and compare FileHash between stages, which
+        // needs an asset backend. Activated for the whole class so no test writes into the real
+        // store; the content-less Images the older tests create are unaffected.
+        TestAssetStore::activate('AssetStorage');
+    }
+
+    protected function tearDown(): void
+    {
+        TestAssetStore::reset();
+        parent::tearDown();
+    }
 
     /**
      * DataObject::write() takes its onAfterSkippedWrite() branch, not onAfterWrite(),
@@ -1149,5 +1180,103 @@ class TemplateDataExtensionTest extends SapphireTest
             $logger->records,
             fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
         )), 'Nothing may be skipped in the exempt context.');
+    }
+
+    /**
+     * Pin for #195: silverstripe/assets applies FileLinkTracking to every DataObject, and that
+     * extension contributes both `FileTracking` to $owns and the matching many_many. The publish
+     * cascade this module uses walks findOwned() - the same traversal core's own
+     * RecursivePublishableHandler walks on a CMS save - so it traverses FileTracking, and a draft
+     * File attached there goes live with the Settings save.
+     *
+     * The behaviour is pinned, not restricted: narrowing this trait's traversal could not stop a
+     * CMS save from publishing FileTracking files anyway, because core publishes the owned
+     * relations itself after every CMS save. See docs/en/index.md, "What a Site Settings save
+     * publishes".
+     */
+    public function testFileTrackingFilesPublishOnSiteConfigWrite(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $file = File::create();
+        $file->Name = 'embedded-file.png';
+        $file->setFromString(base64_decode(self::PNG_RED), 'embedded-file.png');
+        $file->write();
+        $this->assertFalse($file->isPublished(), 'A newly created File starts in draft.');
+
+        $siteConfig->FileTracking()->add($file);
+        $this->assertSame(1, $siteConfig->FileTracking()->count());
+
+        // Mutated so write() takes onAfterWrite(), the production hook, end to end.
+        $siteConfig->Title = 'FileTracking site name';
+        $siteConfig->write();
+
+        $this->assertTrue(
+            $file->isPublished(),
+            'Saving Site Settings publishes a File held in the SiteConfig\'s FileTracking relation.'
+        );
+        $this->assertNotNull(
+            Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($file->ID),
+            'A live row must exist for the File, not just an isPublished() answer.'
+        );
+    }
+
+    /**
+     * Pin for #195: on Silverstripe CMS 6.3+ Files > Edit image saves the edited file as a new
+     * draft version of the same File record. The next Site Settings save publishes that draft,
+     * because the Logo is an owned relation of the SiteConfig and the cascade walks it. This is
+     * the behaviour the 6.3 release notes describe as "the live site keeps the old image until
+     * you publish", so it is documented in docs/en/index.md alongside this pin.
+     */
+    public function testDraftEditOfAPublishedLogoGoesLiveOnSiteConfigWrite(): void
+    {
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $logo = Image::create();
+        $logo->Name = 'logo-edit.png';
+        $logo->setFromString(base64_decode(self::PNG_RED), 'logo-edit.png');
+        $logo->write();
+        $siteConfig->LogoID = $logo->ID;
+        $siteConfig->Title = 'Edited logo site name';
+        $siteConfig->write();
+
+        $originalHash = $logo->FileHash;
+        $this->assertNotEmpty($originalHash, 'Storing content must populate the draft FileHash.');
+
+        // Files > Edit image: a new draft version of the same File record, not a new record.
+        $imagesBeforeEdit = Image::get()->count();
+        $logo->setFromString(base64_decode(self::PNG_BLUE), 'logo-edit.png');
+        $logo->write();
+        $this->assertSame(
+            $imagesBeforeEdit,
+            Image::get()->count(),
+            'An edited logo is a new version of the same File record, not a second record.'
+        );
+
+        $editedHash = $logo->FileHash;
+        $liveLogo = Versioned::get_by_stage(Image::class, Versioned::LIVE)->byID($logo->ID);
+        $this->assertNotNull($liveLogo, 'The logo was published by the first Settings save.');
+        $this->assertNotSame(
+            $editedHash,
+            $liveLogo->FileHash,
+            'A draft edit of a published logo must not reach Live before the next Settings save.'
+        );
+        $this->assertSame(
+            $originalHash,
+            $liveLogo->FileHash,
+            'Live still holds the bytes the first Settings save published.'
+        );
+
+        // The next Settings save. Mutated so write() takes onAfterWrite().
+        $siteConfig->Title = 'Edited logo site name again';
+        $siteConfig->write();
+
+        $liveLogo = Versioned::get_by_stage(Image::class, Versioned::LIVE)->byID($logo->ID);
+        $this->assertNotNull($liveLogo);
+        $this->assertSame(
+            $editedHash,
+            $liveLogo->FileHash,
+            'Saving Site Settings publishes the draft edit of the logo: the new bytes go live.'
+        );
     }
 }
