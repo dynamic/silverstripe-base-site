@@ -123,3 +123,23 @@ save stay in draft. What is left behind depends on which branch `write()` took:
 
 That is intentional: an `\Error` is a bug in the process, not a data condition to log and carry
 on from.
+
+## What a Site Settings save publishes
+
+Saving Site Settings publishes every record the `SiteConfig` owns, not just the fields on the
+Settings form. `Dynamic\Base\Traits\PublishesOwnedRecords` walks `findOwned()` — the same traversal
+core's `RecursivePublishableHandler` runs on every CMS save, so a save made through the CMS
+publishes those relations whatever this module's trait does. On an Essentials install the effective
+`$owns` holds 11 relations from four packages: `FileTracking` (contributed by
+`silverstripe/assets`' `FileLinkTracking`, which is applied to every `DataObject`); `Logo`,
+`LogoRetina`, `UtilityLinks` and `SocialLinks` (this module); `LogoFooter`
+(`silverstripe/essentials-tools`); `DefaultSharingImage` (innoweb/social-share); and
+`MicroDataSiteLogo`, `SocialMetaSiteImage`, `MicroDataAdditionalLocations`,
+`MicroDataOpeningHours` (innoweb/social-metadata). A file an editor embedded in a Settings HTML
+field through a shortcode is therefore published by the next Settings save, and so is a draft footer
+logo, sharing image or schema image — not only the four relations this module declares. Both
+behaviours are pinned by `testFileTrackingFilesPublishOnSiteConfigWrite()` and
+`testDraftEditOfAPublishedLogoGoesLiveOnSiteConfigWrite()` in
+`tests/Extension/TemplateDataExtensionTest.php`.
+
+On Silverstripe CMS 6.3+, Files > Edit image saves the edited logo as a draft of the same file. The next Settings save publishes it. Publish or revert the edit in Files before saving Settings if it is not ready.
