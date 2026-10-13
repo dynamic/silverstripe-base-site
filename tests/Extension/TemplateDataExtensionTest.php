@@ -1244,9 +1244,14 @@ class TemplateDataExtensionTest extends SapphireTest
         $this->assertNotEmpty($originalHash, 'Storing content must populate the draft FileHash.');
 
         // Files > Edit image: a new draft version of the same File record, not a new record.
+        $imagesBeforeEdit = Image::get()->count();
         $logo->setFromString(base64_decode(self::PNG_BLUE), 'logo-edit.png');
         $logo->write();
-        $this->assertSame($logo->ID, Image::get()->byID($logo->ID)->ID, 'The edit stays the same File record.');
+        $this->assertSame(
+            $imagesBeforeEdit,
+            Image::get()->count(),
+            'An edited logo is a new version of the same File record, not a second record.'
+        );
 
         $editedHash = $logo->FileHash;
         $liveLogo = Versioned::get_by_stage(Image::class, Versioned::LIVE)->byID($logo->ID);
