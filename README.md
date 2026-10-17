@@ -80,8 +80,9 @@ never ran an older version of this module. On a large site, altering `SiteTree_V
 can rebuild the whole table, so take a backup and run it in a maintenance window.
 
 This removal breaks public API for anyone still using it: templates printing
-`$SearchContent`, ORM filters on that field, and calls to `seoContentFields()` all stop
-working.
+`$SearchContent` and ORM filters on that field stop working.
+Calls to `seoContentFields()` are deprecated and return an empty list, and
+`generateElementPreview()` is deprecated; both are removed in 9.0.0.
 
 ## Maintainers
 
