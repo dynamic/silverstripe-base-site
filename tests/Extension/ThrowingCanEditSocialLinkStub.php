@@ -26,6 +26,7 @@ class ThrowingCanEditSocialLinkStub extends SocialLink implements TestOnly
      */
     private static array $db = [
         'ThrowOnCanEdit' => 'Boolean',
+        'ThrowErrorOnCanEdit' => 'Boolean',
     ];
 
     /**
@@ -37,6 +38,11 @@ class ThrowingCanEditSocialLinkStub extends SocialLink implements TestOnly
     {
         if ($this->ThrowOnCanEdit) {
             throw new \RuntimeException('Simulated failure from a permission hook for test coverage.');
+        }
+
+        if ($this->ThrowErrorOnCanEdit) {
+            // What a hook that assumes a member raises when there is none.
+            throw new \TypeError('Simulated PHP error from a permission hook for test coverage.');
         }
 
         return parent::canEdit($member, $context);

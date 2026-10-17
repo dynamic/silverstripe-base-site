@@ -848,6 +848,37 @@ class NavigationGroupTest extends SapphireTest
     }
 
     /**
+     * #231: a CLI write with no member reports the deprecated carve-out only for a record that
+     * canPublish() would deny. A footer link resolves canPublish() to NavigationGroup::canEdit(),
+     * which allows everyone, so it keeps publishing after the carve-out is removed in 9.0.0 (#206)
+     * and logs nothing about it now.
+     *
+     * @return void
+     */
+    public function testACliWriteWithNoMemberDoesNotReportTheCarveOutForALinkCanPublishAllows(): void
+    {
+        $this->logOut();
+        $this->assertNull(Security::getCurrentUser(), 'Precondition: no current member.');
+
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+        $link = $this->createDraftNavigationLink($group);
+
+        $this->assertTrue($link->canPublish(), 'Precondition: canPublish() allows a footer link.');
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $group->Title = 'CLI Group';
+        $group->write();
+
+        $this->assertTrue($link->isPublished());
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Member::actAs()')
+        )), 'A publish canPublish() allows must not be reported as relying on the carve-out.');
+    }
+
+    /**
      * The gate is live rather than decorative: when the owning record denies canEdit(), the link
      * stays in draft and exactly one warning names it.
      *
