@@ -75,12 +75,15 @@ that the footer GridField sits under Site Settings.
 Site-owned links are different - `SocialLink`s and the logos sit under `SiteConfig`, whose
 permissions are restrictive, so there the gate in
 `Dynamic\Base\Traits\PublishesOwnedRecords::publishOwnedRecord()` genuinely denies and logs
-"Skipped publishing ... left in draft". See [SocialLinks.md](../SocialLinks.md).
+"Skipped publishing ... left in draft" on a write from code. A CMS save publishes them regardless;
+see [Publishing on save](#publishing-on-save) and [SocialLinks.md](../SocialLinks.md).
 
-`NavigationGroup` is not versioned, so its `$owns` declaration cannot cascade a publish on its
-own. `Dynamic\Base\Traits\PublishesOwnedRecords` publishes those links whenever a group is
-saved - from the footer GridField detail form, or from a `write()` outside the CMS, e.g. a
-BuildTask or deploy script.
+`NavigationGroup` is not versioned. After a save from the footer GridField detail form, core calls
+`publishRecursive()` on the group, which cascades through its `$owns` declaration without a
+`canPublish()` check (see [Publishing on save](#publishing-on-save)). On every write, including a
+`write()` outside the CMS such as a BuildTask or deploy script,
+`Dynamic\Base\Traits\PublishesOwnedRecords` publishes each owned link itself and checks
+`canPublish()` for each one.
 
 Links handled through the link modal are the exception, and there the manual step is still real:
 `LinkFieldController::save()` writes the `Link` and then writes the owner only when the owner
@@ -145,3 +148,34 @@ and `testDraftEditOfAPublishedLogoGoesLiveOnSiteConfigWrite()` pins the edited-l
 `tests/Extension/TemplateDataExtensionTest.php`.
 
 On Silverstripe CMS 6.3+, Files > Edit image saves the edited logo as a draft of the same file. The next Settings save publishes it. Publish or revert the edit in Files before saving Settings if it is not ready.
+
+## Publishing on save
+
+`SiteConfig` and `NavigationGroup` are not versioned, so the records they own (social and utility
+links, logos, footer links) are published for them when they are saved. Two things do that.
+
+- **Core, on a CMS save.** `silverstripe/versioned` publishes an unversioned record's owned records
+  after the CMS saves it, with no `canPublish()` check. A save from an admin section, Site Settings
+  included (`SiteConfigLeftAndMain` extends `SingleRecordAdmin`), runs
+  `RecursivePublishableHandler::onAfterSave()`, which `versioned` attaches to every `LeftAndMain`. A
+  save from a GridField detail form, such as a footer `NavigationGroup`, runs
+  `VersionedGridFieldItemRequest::saveFormIntoRecord()`, which `VersionedGridFieldDetailForm` uses for
+  every `RecursivePublishable` record whose class does not set `versioned_gridfield_extensions: false`
+  and whose GridField sets no item request class of its own.
+  Both call `publishRecursive()` on the saved record.
+- **This module, on every write.** `Dynamic\Base\Traits\PublishesOwnedRecords` publishes from the
+  owner's own write hooks, so a write from code (a BuildTask, a deploy script) publishes too. It checks
+  `canPublish()` on each record and leaves a denied record in draft with a "Skipped publishing ... left
+  in draft" warning.
+
+The trait's permission check therefore governs writes from code only. On a CMS save core publishes
+after the write, so a record the trait denied goes live anyway: a member who can edit Site Settings
+but cannot publish the chosen logo file still takes the logo live, and the log still holds the trait's
+"Skipped publishing" line for it. This is the framework's intended behaviour: through the CMS, the
+right to edit an unversioned owner is the right to publish what it owns.
+`testCmsSavePublishesOwnedRecordsRegardlessOfCanPublish()` in
+`tests/Extension/TemplateDataExtensionTest.php` pins it.
+
+The same publish takes the Files behind footer and utility `FileLink`s live with their links wherever
+`FileLink.owns` includes `File`. Essentials sites get that config from
+`dynamic/silverstripe-elemental-links`.

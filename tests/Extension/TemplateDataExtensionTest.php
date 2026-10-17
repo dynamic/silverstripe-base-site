@@ -21,6 +21,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\LinkField\Models\ExternalLink;
 use SilverStripe\Security\Security;
 use SilverStripe\SiteConfig\SiteConfig;
+use SilverStripe\SiteConfig\SiteConfigLeftAndMain;
 use SilverStripe\Versioned\ChangeSet;
 use SilverStripe\Versioned\Versioned;
 
@@ -868,6 +869,50 @@ class TemplateDataExtensionTest extends SapphireTest
             $logger->records,
             fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
         )));
+    }
+
+    /**
+     * #220: the trait's canPublish() gate covers programmatic writes only. A CMS save also runs
+     * core's RecursivePublishableHandler::onAfterSave(), attached to every LeftAndMain, which calls
+     * publishRecursive() on an unversioned record with no permission check. That is the framework's
+     * intended publish-on-save, documented in docs/en/index.md under "Publishing on save", and this
+     * pins it: the Logo the trait left in draft goes live on the CMS hook, while the trait's
+     * "Skipped publishing ... left in draft" line stays in the log.
+     */
+    public function testCmsSavePublishesOwnedRecordsRegardlessOfCanPublish(): void
+    {
+        $this->logInWithPermission(['EDIT_SITECONFIG', 'CMS_ACCESS_AssetAdmin']);
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $logo = Image::create();
+        $logo->Name = 'logo-cms-save.png';
+        $logo->write();
+
+        $this->assertFalse(
+            $logo->canPublish(),
+            'Precondition: the member has no FILE_EDIT_ALL, so canPublish() denies the logo.'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        $siteConfig->LogoID = $logo->ID;
+        $siteConfig->write();
+
+        $this->assertFalse($logo->isPublished(), 'The trait gate leaves the logo in draft on write().');
+
+        // What LeftAndMain::save() does after the write.
+        (new SiteConfigLeftAndMain())->extend('onAfterSave', $siteConfig);
+
+        $this->assertNotNull(
+            Versioned::get_by_stage(Image::class, Versioned::LIVE)->byID($logo->ID),
+            'The CMS save hook publishes the logo whatever canPublish() says.'
+        );
+        $this->assertCount(1, array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
+        )), 'The trait still logs its skip, although the logo is now live.');
     }
 
     /**

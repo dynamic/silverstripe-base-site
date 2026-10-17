@@ -13,9 +13,11 @@ use SilverStripe\Versioned\Versioned;
 /**
  * Publishes a saved record's owned ($owns) children to Live.
  *
- * An unversioned owner's $owns declaration never cascades a publish on its own. This trait is
- * what publishes them instead, and it is shared by the module's unversioned owners: SiteConfig
- * (through TemplateDataExtension) and NavigationGroup.
+ * An unversioned owner's $owns declaration cascades a publish only when something calls
+ * publishRecursive() on the owner. Core does that after a CMS save (see publishOwnedRecord());
+ * nothing does it for a write() from code. This trait publishes them on every write, and it is
+ * shared by the module's unversioned owners: SiteConfig (through TemplateDataExtension) and
+ * NavigationGroup.
  *
  * Scope: one level of $owns, each owned child treated as a leaf. A consumer that owns records
  * which themselves declare $owns must revisit that check - see publishOwnedRecord().
@@ -137,9 +139,14 @@ trait PublishesOwnedRecords
      * docs/en/index.md documents what that renders as, and dynamic/silverstripe-base-site#213
      * tracks closing it.
      *
-     * canPublish() is checked because nothing downstream does: publishRecursive() hands an
-     * inferred ChangeSet to ChangeSet::publish(), whose docblock puts that call on the caller,
-     * and these owners aren't versioned - this trait is the only thing that publishes them. It
+     * canPublish() is checked because publishRecursive() does not check it: it hands an inferred
+     * ChangeSet to ChangeSet::publish(), whose docblock puts that call on the caller. The check
+     * governs this trait's own publish, which is the only one a programmatic write() gets. A CMS
+     * save also publishes these unversioned owners' records through core, with no permission
+     * check, after the write: RecursivePublishableHandler::onAfterSave() on a LeftAndMain save
+     * (Site Settings included) and VersionedGridFieldItemRequest on a GridField save (the footer
+     * groups). That is the framework's intended publish-on-save, so on a CMS save a record denied
+     * here goes live anyway; docs/en/index.md documents it under "Publishing on save". The check
      * still defers to the record's own permission chain, so it is only as strong as that chain:
      * for a linkfield Link, canPublish() resolves through canEdit() to the owner's canEdit(),
      * and an owner that grants canEdit() to everyone (this module's NavigationGroup) therefore

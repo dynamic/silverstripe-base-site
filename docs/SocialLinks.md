@@ -119,13 +119,18 @@ publish step. A publish failure on one owned record is logged and doesn't block 
 SiteConfig save or its other owned records; check the logs if a link doesn't go live as
 expected.
 
-"Attempts to" is literal: each owned record is published only if the current member can
-publish it. Saving Site Settings does not treat SiteConfig edit rights as implying publish
+On a `SiteConfig::write()` from code, "attempts to" is literal: each owned record is published
+only if the current member can publish it, and SiteConfig edit rights do not imply publish
 rights on the records SiteConfig owns. A record that fails the check is left in draft and a
 warning is logged; because each record is decided on its own, a denied record never blocks its
 permitted siblings, and the SiteConfig save itself still succeeds. If something stays in draft
 with a "Skipped publishing" line in the log, saving it again as a member with publish rights on
 that record will publish it.
+
+A save from the Site Settings screen is different. After the write, the framework's own
+publish-on-save publishes every owned record with no permission check, so a record denied there
+goes live anyway, after its "Skipped publishing" line is logged. See "Publishing on save" in
+[docs/en/index.md](en/index.md#publishing-on-save).
 
 Publishing a logo also moves its file out of protected asset storage. `Logo` and `LogoRetina` are
 `Image` records and `Image` extends the `Versioned` `File`, so the auto-publish above writes their
@@ -147,9 +152,9 @@ Live record while the draft remains, `AssetControlExtension::onAfterDelete()` co
 deleted, and `addAssetsFromOtherStages()` immediately re-claims it from the draft record as
 `STATE_PROTECTED` - a protected claim removes an asset from the pending-deletion set - so
 `processManipulation()` protects rather than deletes it. An un-publish does not stick, though: the
-logo is left as a draft-only record, so the next Site Settings save publishes it - subject to the
-same per-record publish check described under Permissions - and moves it public again, with nothing
-in the log mentioning the earlier un-publish. Saving Site Settings never performs that un-publishing
+logo is left as a draft-only record, so the next Site Settings save publishes it (a write from
+code applies the per-record publish check described under Permissions first) and moves it public
+again, with nothing in the log mentioning the earlier un-publish. Saving Site Settings never performs that un-publishing
 itself: it only ever publishes these records, so the reversal happens to the `Image` record
 separately, by whatever un-publishes it (`doUnpublish()`, or a project's own publish flow that
 removes the record from Live).
@@ -178,8 +183,7 @@ migration, a fixture re-run - publishes a record that was denied, with only the 
 above to say so. Until 9.0.0 the gate therefore delays a publish it disapproves of rather than blocking
 it outright.
 
-The editor who triggered a denial sees nothing in the CMS: the only output is the "Skipped publishing"
-warning in the log.
+A denial on a write from code shows nowhere but the "Skipped publishing" warning in the log.
 
 ### In Templates
 ```html
@@ -317,9 +321,15 @@ in this order: `ADMIN` is granted outright; otherwise an extension on the record
 called); and only if none of them has an opinion does it fall back to `canEdit()`. If your project
 gates publishing through such a hook, that hook wins over the table below.
 
+This check applies to a `SiteConfig::write()` from code. A save from the Site Settings screen
+publishes every owned record regardless; see "Publishing on save" in
+[docs/en/index.md](en/index.md#publishing-on-save). In the CMS the permissions below decide what an
+editor can add or change (links through `canEdit()`, files through Asset Admin's checks), not what
+goes live.
+
 Because each owned record answers for itself, the permission that matters depends on the record:
 
-| Owned record | Permission that decides whether a save publishes it |
+| Owned record | Permission that decides whether a write from code publishes it |
 |---|---|
 | `SocialLink` | `Social_CRUD` (SocialLink's own `canEdit()`) |
 | `UtilityLinks` | `EDIT_SITECONFIG` - plain link records delegate to their owner's `canEdit()`, so this row is not really a gate: anyone who can save Site Settings can publish them |
@@ -331,17 +341,17 @@ upload on `File::canCreate()` against the target folder and gates selecting an e
 `$file->canEdit()` - so a member with no asset rights generally cannot get a logo into Site Settings in
 the first place. What is reachable is the permissions-changed-after-the-fact case: a file created while
 the member held the right, or in a folder that granted edit and later stopped, or written
-programmatically - it fails `File::canEdit()` at save time, stays in draft while the `SiteConfig` save
-reports success, and a Live frontend renders no logo until someone who can publish that file saves Site
-Settings again. Folder-scoped edit rights are a supported SilverStripe pattern and satisfy this
+programmatically. A `SiteConfig::write()` from code then fails `File::canEdit()`, leaves the logo in
+draft while the save reports success, and a Live frontend renders no logo until it is published; a Site
+Settings save in the CMS publishes it anyway. Folder-scoped edit rights are a supported SilverStripe pattern and satisfy this
 check, so a member with no `FILE_EDIT_ALL` whose logo lives in a folder granting them edit publishes
-without incident. When it does not publish, the only signal is the "Skipped publishing" warning, which
+without incident. When the check denies, the only signal is the "Skipped publishing" warning, which
 names the member it denied.
 
-To give a CMS author the full workflow - edit social links, upload the logo, and have saving Site
-Settings push it all live - grant `EDIT_SITECONFIG` and `Social_CRUD`, plus either `FILE_EDIT_ALL` or
-edit rights on the folder the logo lives in. Granting only `EDIT_SITECONFIG` means they can change
-social links and the logo while every one of those changes stays in draft.
+To give a CMS author the full workflow - edit social links and upload or choose the logo - grant
+`EDIT_SITECONFIG` and `Social_CRUD`, plus either `FILE_EDIT_ALL` or edit rights on the folder the logo
+lives in. Saving Site Settings then publishes all of it. The same grants let a write from code made as
+that member publish the same records.
 
 ## CSS Classes
 
