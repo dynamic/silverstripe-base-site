@@ -119,13 +119,18 @@ publish step. A publish failure on one owned record is logged and doesn't block 
 SiteConfig save or its other owned records; check the logs if a link doesn't go live as
 expected.
 
-"Attempts to" is literal: each owned record is published only if the current member can
-publish it. Saving Site Settings does not treat SiteConfig edit rights as implying publish
+On a `SiteConfig::write()` from code, "attempts to" is literal: each owned record is published
+only if the current member can publish it, and SiteConfig edit rights do not imply publish
 rights on the records SiteConfig owns. A record that fails the check is left in draft and a
 warning is logged; because each record is decided on its own, a denied record never blocks its
 permitted siblings, and the SiteConfig save itself still succeeds. If something stays in draft
 with a "Skipped publishing" line in the log, saving it again as a member with publish rights on
 that record will publish it.
+
+A save from the Site Settings screen is different. After the write, the framework's own
+publish-on-save publishes every owned record with no permission check, so a record denied there
+goes live anyway, after its "Skipped publishing" line is logged. See "Publishing on save" in
+[docs/en/index.md](en/index.md#publishing-on-save).
 
 Publishing a logo also moves its file out of protected asset storage. `Logo` and `LogoRetina` are
 `Image` records and `Image` extends the `Versioned` `File`, so the auto-publish above writes their
