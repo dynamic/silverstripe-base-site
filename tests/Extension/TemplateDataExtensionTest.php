@@ -14,6 +14,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\LinkField\Models\ExternalLink;
@@ -1180,6 +1181,66 @@ class TemplateDataExtensionTest extends SapphireTest
             $logger->records,
             fn (array $record): bool => str_contains($record['message'], 'Skipped publishing')
         )), 'Nothing may be skipped in the exempt context.');
+    }
+
+    /**
+     * #231: the CLI-with-no-member carve-out is deprecated in 8.1.0 and removed in 9.0.0 (#206).
+     * A publish that goes ahead only because of it still happens, and now leaves a warning naming
+     * the record, so a deploy script or task that relies on it can be found before 9.0.0.
+     *
+     * Same logged-out CLI write as testOwnedRecordPublishesThroughWriteWhenLoggedOutOnCli(), run
+     * inside Deprecation::withSuppressedNotice() so the Deprecation::notice() raised beside the
+     * warning cannot surface as a test error when SS_DEPRECATION_ENABLED is set. The warning is
+     * asserted on its own: it must be logged whether or not deprecation notices are enabled.
+     */
+    public function testCliPublishWithNoMemberLogsTheDeprecatedCarveOut(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->logOut();
+        $this->assertNull(Security::getCurrentUser(), 'Precondition: no current member.');
+        $this->assertTrue(Director::is_cli(), 'Precondition: running on the CLI sapi.');
+        $this->assertFalse(
+            $socialLink->canPublish(),
+            'Precondition: canPublish() resolves false with no member, so only the carve-out '
+            . 'lets this record through.'
+        );
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        Deprecation::withSuppressedNotice(function () use ($siteConfig): void {
+            $siteConfig->Title = 'Updated Site Name';
+            $siteConfig->write();
+        });
+
+        $this->assertTrue(
+            $socialLink->isPublished(),
+            'No behaviour change in 8.1.0: the carve-out still publishes.'
+        );
+
+        $carveOutLines = array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => $record['level'] === 'warning'
+                && str_contains($record['message'], 'Member::actAs()')
+        ));
+        $this->assertCount(1, $carveOutLines, 'The carve-out publish must be logged once.');
+        $this->assertStringContainsString(
+            sprintf('%s #%d', SocialLink::class, $socialLink->ID),
+            $carveOutLines[0]['message'],
+            'The warning must name the record that was published through the carve-out.'
+        );
     }
 
     /**

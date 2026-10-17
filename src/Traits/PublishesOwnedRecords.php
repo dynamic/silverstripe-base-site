@@ -5,6 +5,7 @@ namespace Dynamic\Base\Traits;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
@@ -176,7 +177,11 @@ trait PublishesOwnedRecords
 
             // CLI-with-no-member is exempt: dev/build, dev/tasks/* and test fixtures have no
             // identity to check, and gating them would stop those contexts publishing anything.
-            if ((!Director::is_cli() || $member !== null) && !$object->canPublish($member)) {
+            // The exemption is deprecated in 8.1.0 and removed in 9.0.0 (#206); see
+            // logCliCarveOutPublish().
+            $viaCliCarveOut = Director::is_cli() && $member === null;
+
+            if (!$viaCliCarveOut && !$object->canPublish($member)) {
                 Injector::inst()->get(LoggerInterface::class)->warning(sprintf(
                     'Skipped publishing %s #%d owned by %s #%d: canPublish() denied for %s, '
                     . 'left in draft.',
@@ -190,7 +195,13 @@ trait PublishesOwnedRecords
                 return;
             }
 
+            $onlyViaCliCarveOut = $viaCliCarveOut && !$this->canPublishWithoutCliCarveOut($object);
+
             $object->publishRecursive();
+
+            if ($onlyViaCliCarveOut) {
+                $this->logCliCarveOutPublish($object);
+            }
         } catch (\Exception $e) {
             // \Exception, not \Throwable: publishRecursive() raises ValidationException,
             // BadMethodCallException, LogicException or UnexpectedDataException depending on what
@@ -208,5 +219,57 @@ trait PublishesOwnedRecords
                 $e->getMessage()
             ), ['exception' => $e]);
         }
+    }
+
+    /**
+     * Whether a CLI publish with no member would still go ahead once the carve-out is removed in
+     * 9.0.0 (#206), i.e. whether canPublish() allows it with no member. Records that pass (a
+     * footer link, whose canPublish() resolves to NavigationGroup::canEdit()) are unaffected by
+     * the removal and raise nothing.
+     *
+     * The call is new on the carve-out path, which never asked canPublish() before, so a throw
+     * from a permission hook is caught here and read as a denial rather than reaching
+     * publishOwnedRecord()'s catch, which would skip a publish that goes ahead today.
+     *
+     * @param DataObject $object
+     * @return bool
+     */
+    protected function canPublishWithoutCliCarveOut(DataObject $object): bool
+    {
+        try {
+            return (bool) $object->canPublish(null);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Report a publish that went ahead only because of the deprecated CLI-with-no-member
+     * carve-out. Both signals are off by default: the notice prints only with
+     * SS_DEPRECATION_ENABLED in dev, and the framework attaches no handler to LoggerInterface.
+     *
+     * The notice uses SCOPE_GLOBAL because SS6 hides a notice whose caller is supported-module
+     * code, which is every caller of this trait's write hooks.
+     *
+     * @param DataObject $object
+     * @return void
+     */
+    protected function logCliCarveOutPublish(DataObject $object): void
+    {
+        Deprecation::notice(
+            '8.1.0',
+            'Publishing owned records from the CLI with no member is deprecated; wrap the write in '
+            . 'Member::actAs()',
+            Deprecation::SCOPE_GLOBAL
+        );
+
+        Injector::inst()->get(LoggerInterface::class)->warning(sprintf(
+            'Published %s #%d owned by %s #%d from the CLI with no member, which canPublish() would '
+            . 'deny. This exemption is removed in 9.0.0: wrap the write in Member::actAs().',
+            get_class($object),
+            $object->ID,
+            get_class($this->getOwnedRecordsOwner()),
+            $this->getOwnedRecordsOwner()->ID
+        ));
     }
 }
