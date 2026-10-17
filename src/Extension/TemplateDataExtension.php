@@ -137,10 +137,11 @@ class TemplateDataExtension extends Extension
     }
 
     /**
-     * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above never
-     * cascades a publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks
-     * are all Versioned). Publish them explicitly whenever the owner is saved so CMS edits
-     * go live without a separate manual publish step.
+     * SiteConfig itself isn't versioned, so the `$owns` ownership declaration above cascades a
+     * publish to its owned records (Logo, LogoRetina, SocialLinks, UtilityLinks are all
+     * Versioned) only when something calls publishRecursive() on it: core does after a CMS save,
+     * nothing does for a write() from code. Publish them on every write so writes from code
+     * (BuildTasks, deploy scripts) go live too.
      *
      * @return void
      */

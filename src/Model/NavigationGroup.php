@@ -22,10 +22,11 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 /**
  * Class NavigationGroup.
  *
- * NavigationLinks are versioned but this class isn't, so the `$owns` declaration below never
- * cascades a publish on its own. PublishesOwnedRecords is what takes those links live when a
- * group is saved - see docs/en/index.md for the footer chain and what is deliberately not
- * published.
+ * NavigationLinks are versioned but this class isn't, so the `$owns` declaration below cascades a
+ * publish only when something calls publishRecursive() on the group: core's
+ * VersionedGridFieldItemRequest does on a GridField save, and PublishesOwnedRecords does on every
+ * write, including one from code - see docs/en/index.md for the footer chain and what is
+ * deliberately not published.
  *
  * @property string $Title
  * @property int $SortOrder

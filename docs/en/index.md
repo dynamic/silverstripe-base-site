@@ -78,10 +78,11 @@ permissions are restrictive, so there the gate in
 "Skipped publishing ... left in draft" on a write from code. A CMS save publishes them regardless;
 see [Publishing on save](#publishing-on-save) and [SocialLinks.md](../SocialLinks.md).
 
-`NavigationGroup` is not versioned, so its `$owns` declaration cannot cascade a publish on its
-own. `Dynamic\Base\Traits\PublishesOwnedRecords` publishes those links whenever a group is
-saved - from the footer GridField detail form, or from a `write()` outside the CMS, e.g. a
-BuildTask or deploy script.
+`NavigationGroup` is not versioned, so its `$owns` declaration cascades a publish only when
+something calls `publishRecursive()` on the group: core does after a save from the footer GridField
+detail form (see [Publishing on save](#publishing-on-save)), and
+`Dynamic\Base\Traits\PublishesOwnedRecords` does on every write, including a `write()` outside the
+CMS, e.g. a BuildTask or deploy script.
 
 Links handled through the link modal are the exception, and there the manual step is still real:
 `LinkFieldController::save()` writes the `Link` and then writes the owner only when the owner
@@ -158,7 +159,8 @@ links, logos, footer links) are published for them when they are saved. Two thin
   `RecursivePublishableHandler::onAfterSave()`, which `versioned` attaches to every `LeftAndMain`. A
   save from a GridField detail form, such as a footer `NavigationGroup`, runs
   `VersionedGridFieldItemRequest::saveFormIntoRecord()`, which `VersionedGridFieldDetailForm` uses for
-  every `RecursivePublishable` record whose class does not set `versioned_gridfield_extensions: false`.
+  every `RecursivePublishable` record whose class does not set `versioned_gridfield_extensions: false`
+  and whose GridField sets no item request class of its own.
   Both call `publishRecursive()` on the saved record.
 - **This module, on every write.** `Dynamic\Base\Traits\PublishesOwnedRecords` publishes from the
   owner's own write hooks, so a write from code (a BuildTask, a deploy script) publishes too. It checks
