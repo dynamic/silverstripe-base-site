@@ -160,6 +160,11 @@ to check against, and gating them would stop those contexts publishing anything.
 *does* set a current member is still checked, so a background job that runs as the member who queued
 it is subject to the same per-record check as a CMS user.
 
+The exception is deprecated in 8.1.0 and removed in 9.0.0. A publish that goes ahead only because of
+it, one that `canPublish()` would deny, raises a deprecation notice and logs a warning naming the
+record. A task or deploy script that must keep publishing wraps its write in `Member::actAs()`, e.g.
+`Member::actAs(Injector::inst()->get(DefaultAdminService::class)->findOrCreateDefaultAdmin(), fn () => $siteConfig->write())`.
+
 A web request is likewise *not* exempt, even an anonymous one: `SiteConfig::write()` performs no
 permission check of its own (the CMS controller enforces `EDIT_SITECONFIG` when it renders the form),
 so an unauthenticated save that reaches these hooks is denied like any other. Browser `dev/build` is
@@ -169,11 +174,9 @@ so in those runs records can stay in draft like any other denial.
 
 What a skip does is park the draft, not seal it. The command-line exception above applies to those later
 saves too, so an unauthenticated `SiteConfig::write()` on the CLI - a deploy step, a `dev/tasks/*`
-migration, a fixture re-run - publishes a record that was denied, and nothing tells anyone it happened.
-The gate therefore delays a publish it disapproves of rather than blocking it outright. Turning it into
-a hard block means declaring the trusted contexts explicitly - a config flag, defaulting to checked -
-instead of inferring them from the command line, and that default flip is itself a behaviour change: it
-would stop `dev/build` and BuildTasks publishing at all, which is what #174 fixed.
+migration, a fixture re-run - publishes a record that was denied, with only the deprecation warning
+above to say so. Until 9.0.0 the gate therefore delays a publish it disapproves of rather than blocking
+it outright.
 
 The editor who triggered a denial sees nothing in the CMS: the only output is the "Skipped publishing"
 warning in the log.

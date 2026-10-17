@@ -149,8 +149,8 @@ trait PublishesOwnedRecords
      * reconsidered - and, while the answer is unchanged, re-logged - on each later save. This
      * delays a publish it disapproves of rather than blocking it outright.
      *
-     * Every call that can throw is inside the try, the three guards and the publish alike.
-     * isModifiedOnDraft() dispatches extend('updateIsOnDraft') and queries the stage tables, so it
+     * Every call that can throw is inside the try: the guards, the publish and the carve-out
+     * report after it. isModifiedOnDraft() dispatches extend('updateIsOnDraft') and queries the stage tables, so it
      * throws the way canPublish() and publishRecursive() do. A guard outside the try would abort
      * the write hook mid-loop - committed row, dirty in-memory object, unflushed cache, remaining
      * links skipped - which is the state this method exists to avoid.
@@ -162,7 +162,7 @@ trait PublishesOwnedRecords
     {
         $member = Security::getCurrentUser();
 
-        // Inside the try on purpose, all four. The modification and permission guards reach
+        // Inside the try on purpose, every guard. The modification and permission guards reach
         // permission hooks and the stage tables as directly as the publish does (see above), and a
         // throw from any of them must not abort the write hook; hasExtension() is only a config
         // lookup, and it travels with them so no guard sits outside this block.
@@ -195,14 +195,20 @@ trait PublishesOwnedRecords
                 return;
             }
 
-            $onlyViaCliCarveOut = $viaCliCarveOut && !$this->canPublishWithoutCliCarveOut($object);
+            [$permittedWithoutCarveOut, $probeError] = $viaCliCarveOut
+                ? $this->probeCanPublishWithoutCliCarveOut($object)
+                : [true, null];
 
             $object->publishRecursive();
 
-            if ($onlyViaCliCarveOut) {
-                $this->logCliCarveOutPublish($object);
+            if (!$permittedWithoutCarveOut) {
+                $this->logCliCarveOutPublish($object, $probeError);
             }
         } catch (\Exception $e) {
+            // Also reached if logCliCarveOutPublish() throws after a successful publish, in which
+            // case the line below misreports a live record; Deprecation::notice() rethrows almost
+            // nothing, so that needs a logger that fails on warning() but not on error().
+            //
             // \Exception, not \Throwable: publishRecursive() raises ValidationException,
             // BadMethodCallException, LogicException or UnexpectedDataException depending on what
             // is wrong with this record. A genuine \Error is a bug in the process, not a data
@@ -227,34 +233,39 @@ trait PublishesOwnedRecords
      * footer link, whose canPublish() resolves to NavigationGroup::canEdit()) are unaffected by
      * the removal and raise nothing.
      *
-     * The call is new on the carve-out path, which never asked canPublish() before, so a throw
-     * from a permission hook is caught here and read as a denial rather than reaching
-     * publishOwnedRecord()'s catch, which would skip a publish that goes ahead today.
+     * The carve-out path never asked canPublish() before 8.1.0, and this answer only decides
+     * whether to report, so it must not change the outcome: anything it throws, \Error included,
+     * is caught here and returned as a denial alongside the throwable, and the record still
+     * publishes. This is deliberately wider than publishOwnedRecord()'s \Exception catch, which
+     * guards the publish itself.
      *
      * @param DataObject $object
-     * @return bool
+     * @return array{0: bool, 1: ?\Throwable} whether canPublish(null) allows the publish, and
+     *     what it threw when it threw
      */
-    protected function canPublishWithoutCliCarveOut(DataObject $object): bool
+    protected function probeCanPublishWithoutCliCarveOut(DataObject $object): array
     {
         try {
-            return (bool) $object->canPublish(null);
-        } catch (\Exception $e) {
-            return false;
+            return [(bool) $object->canPublish(null), null];
+        } catch (\Throwable $e) {
+            return [false, $e];
         }
     }
 
     /**
      * Report a publish that went ahead only because of the deprecated CLI-with-no-member
-     * carve-out. Both signals are off by default: the notice prints only with
-     * SS_DEPRECATION_ENABLED in dev, and the framework attaches no handler to LoggerInterface.
+     * carve-out. Both signals are off by default: the notice prints only when deprecations are
+     * enabled (SS_DEPRECATION_ENABLED or Deprecation::enable()) in dev, and the framework
+     * attaches no handler to LoggerInterface.
      *
-     * The notice uses SCOPE_GLOBAL because SS6 hides a notice whose caller is supported-module
-     * code, which is every caller of this trait's write hooks.
+     * The notice uses SCOPE_GLOBAL because what is deprecated is a behaviour, not this method:
+     * SCOPE_METHOD would prefix the message with "<class>->logCliCarveOutPublish is deprecated".
      *
      * @param DataObject $object
+     * @param \Throwable|null $probeError what canPublish(null) threw, if it threw
      * @return void
      */
-    protected function logCliCarveOutPublish(DataObject $object): void
+    protected function logCliCarveOutPublish(DataObject $object, ?\Throwable $probeError = null): void
     {
         Deprecation::notice(
             '8.1.0',
@@ -264,12 +275,15 @@ trait PublishesOwnedRecords
         );
 
         Injector::inst()->get(LoggerInterface::class)->warning(sprintf(
-            'Published %s #%d owned by %s #%d from the CLI with no member, which canPublish() would '
-            . 'deny. This exemption is removed in 9.0.0: wrap the write in Member::actAs().',
+            'Published %s #%d owned by %s #%d from the CLI with no member, %s. This exemption is '
+            . 'removed in 9.0.0: wrap the write in Member::actAs().',
             get_class($object),
             $object->ID,
             get_class($this->getOwnedRecordsOwner()),
-            $this->getOwnedRecordsOwner()->ID
-        ));
+            $this->getOwnedRecordsOwner()->ID,
+            $probeError
+                ? sprintf('although canPublish() threw (%s)', $probeError->getMessage())
+                : 'which canPublish() would deny'
+        ), $probeError ? ['exception' => $probeError] : []);
     }
 }

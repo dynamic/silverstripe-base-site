@@ -1244,6 +1244,64 @@ class TemplateDataExtensionTest extends SapphireTest
     }
 
     /**
+     * #231: the carve-out report asks canPublish(null), which the carve-out path never asked
+     * before 8.1.0. A permission hook that throws there, an \Exception or a PHP \Error alike, must
+     * not change the outcome: the record still publishes, nothing escapes the write, and the
+     * warning carries what was thrown instead of claiming canPublish() denied it.
+     */
+    public function testAThrowingCanPublishOnTheCliCarveOutStillPublishesAndIsReported(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $links = [];
+        $cases = ['ThrowOnCanEdit' => \RuntimeException::class, 'ThrowErrorOnCanEdit' => \TypeError::class];
+        foreach ($cases as $flag => $thrown) {
+            $link = ThrowingCanEditSocialLinkStub::create([
+                'SocialChannel' => 'instagram',
+                'ExternalUrl' => 'https://instagram.example/' . $flag,
+                'OwnerID' => $siteConfig->ID,
+                'OwnerClass' => SiteConfig::class,
+                'OwnerRelation' => 'SocialLinks',
+                $flag => true,
+            ]);
+            $link->write();
+            $links[$thrown] = $link;
+        }
+
+        $this->logOut();
+        $this->assertTrue(Director::is_cli(), 'Precondition: running on the CLI sapi.');
+
+        $logger = new TemplateDataExtensionTestSpyLogger();
+        Injector::inst()->registerService($logger, LoggerInterface::class);
+
+        Deprecation::withSuppressedNotice(function () use ($siteConfig): void {
+            $siteConfig->Title = 'Updated Site Name';
+            $siteConfig->write();
+        });
+
+        $this->assertSame([], array_values(array_filter(
+            $logger->records,
+            fn (array $record): bool => $record['level'] === 'error'
+        )), 'A throwing probe must not be logged as a failed publish.');
+
+        foreach ($links as $thrown => $link) {
+            $this->assertTrue($link->isPublished(), "A {$thrown} from canPublish() must not stop the publish.");
+
+            $lines = array_values(array_filter(
+                $logger->records,
+                fn (array $record): bool => $record['level'] === 'warning'
+                    && str_contains($record['message'], sprintf('#%d owned by', $link->ID))
+                    && str_contains($record['message'], 'Member::actAs()')
+            ));
+            $this->assertCount(1, $lines, "The {$thrown} case must be reported once.");
+            $this->assertStringContainsString('canPublish() threw', $lines[0]['message']);
+            $this->assertInstanceOf($thrown, $lines[0]['context']['exception'] ?? null);
+        }
+    }
+
+    /**
      * Pin for #195: silverstripe/assets applies FileLinkTracking to every DataObject, and that
      * extension contributes both `FileTracking` to $owns and the matching many_many. The publish
      * cascade this module uses walks findOwned() - the same traversal core's own
