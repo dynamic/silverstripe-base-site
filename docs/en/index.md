@@ -78,11 +78,12 @@ permissions are restrictive, so there the gate in
 "Skipped publishing ... left in draft" on a write from code. A CMS save publishes them regardless;
 see [Publishing on save](#publishing-on-save) and [SocialLinks.md](../SocialLinks.md).
 
-`NavigationGroup` is not versioned, so its `$owns` declaration cascades a publish only when
-something calls `publishRecursive()` on the group: core does after a save from the footer GridField
-detail form (see [Publishing on save](#publishing-on-save)), and
-`Dynamic\Base\Traits\PublishesOwnedRecords` does on every write, including a `write()` outside the
-CMS, e.g. a BuildTask or deploy script.
+`NavigationGroup` is not versioned. After a save from the footer GridField detail form, core calls
+`publishRecursive()` on the group, which cascades through its `$owns` declaration without a
+`canPublish()` check (see [Publishing on save](#publishing-on-save)). On every write, including a
+`write()` outside the CMS such as a BuildTask or deploy script,
+`Dynamic\Base\Traits\PublishesOwnedRecords` publishes each owned link itself and checks
+`canPublish()` for each one.
 
 Links handled through the link modal are the exception, and there the manual step is still real:
 `LinkFieldController::save()` writes the `Link` and then writes the owner only when the owner
