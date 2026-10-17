@@ -4,6 +4,7 @@ namespace Dynamic\Base\Test\Extension;
 
 use Dynamic\Base\Extension\TemplateDataExtension;
 use Dynamic\Base\Model\SocialLink;
+use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -1240,6 +1241,48 @@ class TemplateDataExtensionTest extends SapphireTest
             sprintf('%s #%d', SocialLink::class, $socialLink->ID),
             $carveOutLines[0]['message'],
             'The warning must name the record that was published through the carve-out.'
+        );
+    }
+
+    /**
+     * #231: the carve-out report is new logging on a path that logged nothing before 8.1.0. A
+     * logger that cannot write (for example a file handler the CLI user cannot open) must not
+     * turn a working CLI write into an exception: the write completes and the record publishes.
+     */
+    public function testABrokenLoggerDoesNotBreakTheCliCarveOutWrite(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        $siteConfig = $this->objFromFixture(SiteConfig::class, 'default');
+
+        $socialLink = SocialLink::create([
+            'SocialChannel' => 'facebook',
+            'ExternalUrl' => 'https://facebook.example/profile',
+            'OwnerID' => $siteConfig->ID,
+            'OwnerClass' => SiteConfig::class,
+            'OwnerRelation' => 'SocialLinks',
+        ]);
+        $socialLink->write();
+
+        $this->logOut();
+        $this->assertTrue(Director::is_cli(), 'Precondition: running on the CLI sapi.');
+
+        $brokenLogger = new class extends AbstractLogger {
+            public function log($level, $message, array $context = []): void
+            {
+                throw new \UnexpectedValueException('The stream or file could not be opened');
+            }
+        };
+        Injector::inst()->registerService($brokenLogger, LoggerInterface::class);
+
+        Deprecation::withSuppressedNotice(function () use ($siteConfig): void {
+            $siteConfig->Title = 'Updated Site Name';
+            $siteConfig->write();
+        });
+
+        $this->assertTrue(
+            $socialLink->isPublished(),
+            'The carve-out still publishes when the logger cannot write.'
         );
     }
 

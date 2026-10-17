@@ -202,13 +202,14 @@ trait PublishesOwnedRecords
             $object->publishRecursive();
 
             if (!$permittedWithoutCarveOut) {
-                $this->logCliCarveOutPublish($object, $probeError);
+                try {
+                    $this->logCliCarveOutPublish($object, $probeError);
+                } catch (\Throwable $reportError) {
+                    // Reporting must not change the outcome: the record is already live, and a
+                    // logger that cannot write must not abort a CLI write that works without it.
+                }
             }
         } catch (\Exception $e) {
-            // Also reached if logCliCarveOutPublish() throws after a successful publish, in which
-            // case the line below misreports a live record; Deprecation::notice() rethrows almost
-            // nothing, so that needs a logger that fails on warning() but not on error().
-            //
             // \Exception, not \Throwable: publishRecursive() raises ValidationException,
             // BadMethodCallException, LogicException or UnexpectedDataException depending on what
             // is wrong with this record. A genuine \Error is a bug in the process, not a data
