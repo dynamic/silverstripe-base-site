@@ -133,11 +133,12 @@ trait PublishesOwnedRecords
      * usage, which a Link never has. findOwned() therefore returns nothing for a Link, and
      * publishRecursive() publishes the link alone.
      *
-     * Which means a link's own target does not come live with it: publishing a FileLink leaves its
-     * File in draft, and publishing a SiteTreeLink leaves its Page in draft. For a Page that is the
-     * intent. For a File it is a live-but-broken-link gap this module does not close -
-     * docs/en/index.md documents what that renders as, and dynamic/silverstripe-base-site#213
-     * tracks closing it.
+     * Which means a link's own target does not come live with it: publishing a SiteTreeLink leaves
+     * its Page in draft, which is the intent. A FileLink publishes its File only when
+     * FileLink.owns includes File. Essentials sites get that from
+     * dynamic/silverstripe-elemental-links. A base-site install without that module does not, so
+     * the File stays in draft and has to be published first; docs/en/index.md documents what the
+     * live site renders in that case.
      *
      * canPublish() is checked because publishRecursive() does not check it: it hands an inferred
      * ChangeSet to ChangeSet::publish(), whose docblock puts that call on the caller. The check

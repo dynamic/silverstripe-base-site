@@ -1087,8 +1087,9 @@ class NavigationGroupTest extends SapphireTest
         );
         $this->assertFalse(
             $file->isPublished(),
-            'The cascade must not publish the File - docs/en/index.md documents that the editor'
-                . ' has to publish it, and dynamic/silverstripe-base-site#213 tracks closing it.'
+            'Without FileLink.owns including File (which dynamic/silverstripe-elemental-links adds)'
+                . ' the cascade must not publish the File - docs/en/index.md documents that the'
+                . ' editor has to publish it first.'
         );
     }
 
