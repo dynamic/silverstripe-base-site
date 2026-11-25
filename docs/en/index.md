@@ -92,16 +92,17 @@ relation is a `has_one`, and reordering (`linkSort()`) writes the `Link` alone, 
 detail form - or let anything else write it later - and the link goes live then; close the modal
 without saving the group and the link stays in draft, with no warning and nothing in the logs.
 
-A link to a file or a page publishes the link, not its target. A `linkfield` `Link` declares no
-`$owns` of its own - its effective list holds only the `FileTracking` entry every `DataObject`
-inherits - so the cascade's `findOwned()` finds nothing beneath it: publishing a `FileLink` does
-not publish the `File` it points at, and publishing a `SiteTreeLink` does not publish its `Page`.
-For a page that is deliberate; linking to a page should not publish it. For a file it is a real
-gap: pick a file that Asset Admin holds in draft, add it to a group and save, and the `FileLink`
-goes live while the `File` stays in draft, so on the live site `FileLink::getURL()` finds no file
-and renders that footer entry with an empty `href`, with nothing logged. Publish the file first (or
-own it from a page that is published) before saving the group. Closing the cascade itself is
-tracked as dynamic/silverstripe-base-site#213.
+A link to a page publishes the link, not its target. A `linkfield` `Link` declares no `$owns` of
+its own - its effective list holds only the `FileTracking` entry every `DataObject` inherits - so
+the cascade's `findOwned()` finds nothing beneath it, and publishing a `SiteTreeLink` does not
+publish its `Page`. That is deliberate; linking to a page should not publish it.
+
+A `FileLink` publishes its `File` only when `FileLink.owns` includes `File`. Essentials sites get
+this from `dynamic/silverstripe-elemental-links`. A base-site install without that module does not,
+so publish the file first there (or own it from a page that is published) before saving the group.
+Otherwise a file that Asset Admin holds in draft, added to a group and saved, leaves the `FileLink`
+live while the `File` stays in draft, so on the live site `FileLink::getURL()` finds no file and
+renders that footer entry with an empty `href`, with nothing logged.
 
 Saving a `NavigationColumn` publishes nothing, because `NavigationColumn` has no publish hook at
 all: it does not use the trait and declares no write hook. Its effective `$owns` is only
