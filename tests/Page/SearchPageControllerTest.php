@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\Base\Test;
+namespace Dynamic\Base\Test\Page;
 
 use Dynamic\Base\Page\SearchPage;
 use Dynamic\Base\Page\SearchPageController;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\Base\Test;
+namespace Dynamic\Base\Test\Page;
 
 use SilverStripe\CMS\Search\SearchForm;
 use SilverStripe\Core\Extension;

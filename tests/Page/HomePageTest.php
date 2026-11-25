@@ -1,6 +1,6 @@
 <?php
 
-namespace Dynamic\Base\Test;
+namespace Dynamic\Base\Test\Page;
 
 use DNADesign\Elemental\Models\ElementContent;
 use DNADesign\Elemental\Models\ElementalArea;
