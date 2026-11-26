@@ -8,6 +8,7 @@ use Dynamic\Base\Test\Extension\ThrowingSocialLink;
 use Dynamic\Base\Test\Extension\UnversionedOwnedStub;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Validation\ValidationException;
@@ -64,6 +65,18 @@ class NavigationGroupTest extends SapphireTest
             NavigationGroupThrowingAfterWriteExtension::class,
         ],
     ];
+
+    /**
+     * Remove any asset store a test activated.
+     *
+     * @return void
+     */
+    protected function tearDown(): void
+    {
+        TestAssetStore::reset();
+
+        parent::tearDown();
+    }
 
     /**
      * Create a draft Link owned by the given NavigationGroup, mirroring what MultiLinkField
@@ -1012,12 +1025,17 @@ class NavigationGroupTest extends SapphireTest
      * through findOwned(), not an absence of relations - the two are different questions and the
      * second one answers wrongly. Every concrete linkfield Link carries the FileTracking entry
      * assets contributes to SilverStripe\ORM\DataObject, FileLink and SiteTreeLink additionally
-     * declare a has_one to the record they point at, and none of them declares $owns of its own.
+     * declare a has_one to the record they point at, and linkfield declares $owns on none of them.
+     *
+     * This pins linkfield as shipped, so it is skipped where config adds File to FileLink.owns,
+     * as dynamic/silverstripe-elemental-links does.
      *
      * @return void
      */
     public function testConcreteLinkTypesAreLeavesByOwnsAndNotByAnAbsenceOfRelations(): void
     {
+        $this->skipIfFileLinkOwnsItsFile();
+
         $linkTypes = [
             ExternalLink::class => [],
             EmailLink::class => [],
@@ -1053,10 +1071,15 @@ class NavigationGroupTest extends SapphireTest
      * leaves the File it points at in draft, because publishRecursive() on the link has nothing
      * owned beneath it to walk.
      *
+     * That holds only while FileLink.owns excludes File, so the test is skipped where config adds
+     * it, as dynamic/silverstripe-elemental-links does.
+     *
      * @return void
      */
     public function testSavingAGroupPublishesAFileLinkButNotTheFileItPointsAt(): void
     {
+        $this->skipIfFileLinkOwnsItsFile();
+
         $group = $this->objFromFixture(NavigationGroup::class, 'one');
 
         $file = File::create(['Name' => 'brochure.pdf', 'Title' => 'Brochure']);
@@ -1091,6 +1114,62 @@ class NavigationGroupTest extends SapphireTest
                 . ' the cascade must not publish the File - docs/en/index.md documents that the'
                 . ' editor has to publish it first.'
         );
+    }
+
+    /**
+     * The other side of the condition: where FileLink.owns includes File, saving the group takes
+     * the File live along with the FileLink.
+     *
+     * @return void
+     */
+    public function testSavingAGroupPublishesTheFileWhenFileLinkOwnsIt(): void
+    {
+        Config::modify()->merge(FileLink::class, 'owns', ['File']);
+        TestAssetStore::activate('NavigationGroupTest');
+
+        $group = $this->objFromFixture(NavigationGroup::class, 'one');
+
+        $file = File::create(['Name' => 'brochure.txt', 'Title' => 'Brochure']);
+        $file->setFromString('Brochure', 'brochure.txt');
+        $file->write();
+
+        $link = FileLink::create([
+            'LinkText' => 'Brochure',
+            'FileID' => $file->ID,
+            'OwnerID' => $group->ID,
+            'OwnerClass' => NavigationGroup::class,
+            'OwnerRelation' => 'NavigationLinks',
+        ]);
+        $link->write();
+
+        $this->assertFalse($file->isPublished(), 'Precondition: the File is draft only.');
+        $this->assertFalse($link->isPublished(), 'Precondition: the FileLink is draft only.');
+
+        $group->write();
+
+        $this->assertTrue(
+            $link->isPublished(),
+            'The FileLink itself must go live with the group that owns it.'
+        );
+        $this->assertTrue(
+            $file->isPublished(),
+            'With File in FileLink.owns, saving the group must publish the File too.'
+        );
+    }
+
+    /**
+     * Skip a test that pins linkfield's FileLink as shipped, where config makes it own its File.
+     *
+     * @return void
+     */
+    private function skipIfFileLinkOwnsItsFile(): void
+    {
+        if (in_array('File', (array) Config::inst()->get(FileLink::class, 'owns'), true)) {
+            $this->markTestSkipped(
+                'FileLink.owns includes File (dynamic/silverstripe-elemental-links adds it);'
+                    . ' this test pins the behaviour without it.'
+            );
+        }
     }
 
     /**
