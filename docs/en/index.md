@@ -92,10 +92,10 @@ relation is a `has_one`, and reordering (`linkSort()`) writes the `Link` alone, 
 detail form - or let anything else write it later - and the link goes live then; close the modal
 without saving the group and the link stays in draft, with no warning and nothing in the logs.
 
-A link to a page publishes the link, not its target. A `linkfield` `Link` declares no `$owns` of
-its own - its effective list holds only the `FileTracking` entry every `DataObject` inherits - so
-the cascade's `findOwned()` finds nothing beneath it, and publishing a `SiteTreeLink` does not
-publish its `Page`. That is deliberate; linking to a page should not publish it.
+A link to a page publishes the link, not its target. A `SiteTreeLink` declares no `$owns` of its
+own - its effective list holds only the `FileTracking` entry every `DataObject` inherits - so the
+cascade's `findOwned()` finds nothing beneath it, and publishing a `SiteTreeLink` does not publish
+its `Page`. That is deliberate; linking to a page should not publish it.
 
 A `FileLink` publishes its `File` only when `FileLink.owns` includes `File`. Essentials sites get
 this from `dynamic/silverstripe-elemental-links`. A base-site install without that module does not,

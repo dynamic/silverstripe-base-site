@@ -124,16 +124,17 @@ trait PublishesOwnedRecords
      * draft and live versions, so an owned record that is itself the owner of a modified draft
      * child is skipped. That is this trait's reuse boundary.
      *
-     * Every owned child here is a leaf as well, and the test for that is its effective $owns
-     * resolved through findOwned(), not whether it declares relations. linkfield's concrete Links
-     * do declare relations - FileLink has has_one File, SiteTreeLink has has_one Page plus Anchor
-     * and QueryString in $db, and every DataObject inherits FileTracking from assets'
-     * FileLinkTracking - but none declares $owns of its own, so the only entry in an effective
-     * list is that inherited FileTracking, and FileTracking is filled from HTMLText shortcode
-     * usage, which a Link never has. findOwned() therefore returns nothing for a Link, and
-     * publishRecursive() publishes the link alone.
+     * With linkfield's Links as linkfield ships them, every owned child here is a leaf as well,
+     * and the test for that is its effective $owns resolved through findOwned(), not whether it
+     * declares relations. The concrete Links do declare relations - FileLink has has_one File,
+     * SiteTreeLink has has_one Page plus Anchor and QueryString in $db, and every DataObject
+     * inherits FileTracking from assets' FileLinkTracking - but linkfield declares no $owns on
+     * any of them, so the only entry in an effective list is that inherited FileTracking, and
+     * FileTracking is filled from HTMLText shortcode usage, which a Link never has. findOwned()
+     * therefore returns nothing for such a Link, and publishRecursive() publishes the link
+     * alone. Project or module config can add to a Link's $owns; the FileLink case is below.
      *
-     * Which means a link's own target does not come live with it: publishing a SiteTreeLink leaves
+     * So a link's own target does not come live with it by default: publishing a SiteTreeLink leaves
      * its Page in draft, which is the intent. A FileLink publishes its File only when
      * FileLink.owns includes File. Essentials sites get that from
      * dynamic/silverstripe-elemental-links. A base-site install without that module does not, so
